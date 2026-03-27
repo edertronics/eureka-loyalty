@@ -113,7 +113,7 @@ export default function ScannerPage() {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{ backgroundColor: '#0a0820' }}
+      style={{ backgroundColor: '#0D0A8F' }}
     >
       {/* Header */}
       <div className="mb-8 text-center">

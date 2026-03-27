@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   if (checking) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0820' }}>
+      <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0D0A8F' }}>
         <div className="text-white/50 text-sm">Cargando...</div>
       </main>
     )
@@ -87,7 +87,7 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-4" style={{ backgroundColor: '#0a0820' }}>
+      <main className="min-h-screen flex flex-col items-center justify-center px-4" style={{ backgroundColor: '#0D0A8F' }}>
         <img src="/eureka-logo.png" alt="Eureka Burger" className="h-24 w-auto mb-8" />
 
         <div
@@ -132,7 +132,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8" style={{ backgroundColor: '#0a0820' }}>
+    <main className="min-h-screen px-4 py-8" style={{ backgroundColor: '#0D0A8F' }}>
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <img src="/eureka-logo.png" alt="Eureka Burger" className="h-10 w-auto" />
