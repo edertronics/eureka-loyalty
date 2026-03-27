@@ -54,7 +54,7 @@ export default function RegisterPage() {
     >
       {/* Logo / Header */}
       <div className="mb-8 text-center">
-        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-60 w-auto mx-auto" />
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-72 w-auto mx-auto" />
       </div>
 
       {step === 'form' && (

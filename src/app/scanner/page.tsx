@@ -61,7 +61,7 @@ export default function ScannerPage() {
       {/* Header */}
       <div className="mb-8 text-center">
         <p className="text-white/50 text-xs uppercase tracking-widest mb-2">Staff Scanner</p>
-        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-40 w-auto mx-auto" />
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-48 w-auto mx-auto" />
       </div>
 
       <div className="w-full max-w-sm space-y-4">
