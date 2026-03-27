@@ -6,7 +6,7 @@ export default function Home() {
       className="min-h-screen flex flex-col items-center justify-center px-4 py-16 text-center"
       style={{ backgroundColor: '#110DDE' }}
     >
-      <img src="/eureka-logo.png" alt="Eureka Burger" className="h-24 w-auto mb-3" />
+      <img src="/eureka-logo.png" alt="Eureka Burger" className="h-72 w-auto mb-3" />
 
       <p className="text-white/60 text-sm mt-6 mb-8 max-w-xs">
         Programa de lealtad digital · Junta sellos y gana premios
