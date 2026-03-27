@@ -47,7 +47,7 @@ export default function RegisterPage() {
       style={{ backgroundColor: EUREKA_BLUE }}
     >
       {/* Logo */}
-      <div className="mt-4 mb-8">
+      <div className="mt-16 mb-8">
         <img src="/eureka-logo.png" alt="Eureka Burger" className="h-36 w-auto mx-auto" />
       </div>
 
@@ -202,8 +202,11 @@ function SuccessStep({ customer }: { customer: { name: string; qr_code: string }
 
       {/* Texto dentro del ancho del QR */}
       <div style={{ width: 250 }}>
-        <p className="text-white/70 text-sm mt-4" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-          Ya eres parte del club. Muestra este QR en cada visita para acumular tus sellos.
+        <p className="text-white text-base font-black mt-4" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+          ¡Ya eres parte del club!
+        </p>
+        <p className="text-white/70 text-sm mt-1" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+          Muestra este QR en cada visita para acumular tus sellos.
         </p>
         <p className="text-xs mt-2" style={{ color: EUREKA_GOLD, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
           ID: {customer.qr_code}
