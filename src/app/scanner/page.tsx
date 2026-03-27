@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
-const EUREKA_BLUE = '#110DDE'
 const EUREKA_ORANGE = '#EC4E20'
 const EUREKA_GOLD = '#F6AE2D'
 
@@ -21,7 +20,10 @@ export default function ScannerPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<StampResult | null>(null)
   const [error, setError] = useState('')
+  const [cameraActive, setCameraActive] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const scannerRef = useRef<import('qr-scanner').default | null>(null)
 
   async function handleStamp(qr: string) {
     if (!qr.trim()) return
@@ -53,6 +55,61 @@ export default function ScannerPage() {
     handleStamp(qrInput)
   }
 
+  async function startCamera() {
+    setCameraActive(true)
+    setError('')
+    setResult(null)
+  }
+
+  function stopCamera() {
+    if (scannerRef.current) {
+      scannerRef.current.stop()
+      scannerRef.current.destroy()
+      scannerRef.current = null
+    }
+    setCameraActive(false)
+  }
+
+  useEffect(() => {
+    if (!cameraActive || !videoRef.current) return
+
+    let destroyed = false
+
+    async function initScanner() {
+      const QrScanner = (await import('qr-scanner')).default
+      if (destroyed || !videoRef.current) return
+
+      const scanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          scanner.stop()
+          scanner.destroy()
+          scannerRef.current = null
+          setCameraActive(false)
+          handleStamp(result.data)
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: 'environment',
+        }
+      )
+      scannerRef.current = scanner
+      await scanner.start()
+    }
+
+    initScanner()
+
+    return () => {
+      destroyed = true
+      if (scannerRef.current) {
+        scannerRef.current.stop()
+        scannerRef.current.destroy()
+        scannerRef.current = null
+      }
+    }
+  }, [cameraActive])
+
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
@@ -65,18 +122,40 @@ export default function ScannerPage() {
       </div>
 
       <div className="w-full max-w-sm space-y-4">
-        {/* Scanner input */}
+
+        {/* Cámara */}
+        {cameraActive ? (
+          <div className="rounded-2xl overflow-hidden" style={{ border: `2px solid ${EUREKA_ORANGE}` }}>
+            <video ref={videoRef} className="w-full" />
+            <button
+              onClick={stopCamera}
+              className="w-full py-3 font-black text-white uppercase tracking-widest text-sm"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={startCamera}
+            className="w-full py-4 rounded-2xl font-black text-white uppercase tracking-widest text-sm transition-all active:scale-95"
+            style={{ backgroundColor: EUREKA_ORANGE }}
+          >
+            📷 Escanear QR con cámara
+          </button>
+        )}
+
+        {/* Manual input */}
         <form onSubmit={handleSubmit}>
           <div
             className="rounded-2xl p-5"
             style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
             <p className="text-white/70 text-sm text-center mb-4">
-              Escanea el QR del cliente o ingrésalo manualmente
+              O ingrésalo manualmente
             </p>
             <input
               ref={inputRef}
-              autoFocus
               type="text"
               value={qrInput}
               onChange={e => setQrInput(e.target.value)}
