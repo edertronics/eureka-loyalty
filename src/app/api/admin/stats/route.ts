@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const cookie = req.cookies.get('admin_auth')
+  if (!cookie || cookie.value !== process.env.ADMIN_PASSWORD) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
   try {
     const businessSlug = 'eureka-burgers'
 

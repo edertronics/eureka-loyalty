@@ -22,20 +22,62 @@ interface Stats {
 }
 
 export default function AdminPage() {
+  const [authed, setAuthed] = useState(false)
+  const [checking, setChecking] = useState(true)
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
   const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(false)
 
+  // Verificar si ya hay sesión activa
   useEffect(() => {
     fetch('/api/admin/stats')
-      .then(r => r.json())
-      .then(data => {
-        setStats(data)
-        setLoading(false)
+      .then(r => {
+        if (r.ok) {
+          r.json().then(data => {
+            setStats(data)
+            setAuthed(true)
+          })
+        }
+        setChecking(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => setChecking(false))
   }, [])
 
-  if (loading) {
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setLoginLoading(true)
+    setLoginError('')
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error)
+      }
+
+      setStatsLoading(true)
+      setAuthed(true)
+      fetch('/api/admin/stats')
+        .then(r => r.json())
+        .then(data => {
+          setStats(data)
+          setStatsLoading(false)
+        })
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  if (checking) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0820' }}>
         <div className="text-white/50 text-sm">Cargando...</div>
@@ -43,34 +85,65 @@ export default function AdminPage() {
     )
   }
 
+  if (!authed) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-4" style={{ backgroundColor: '#0a0820' }}>
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-24 w-auto mb-8" />
+
+        <div
+          className="w-full max-w-sm rounded-2xl p-6"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+        >
+          <h1 className="text-white font-bold text-lg text-center mb-1">Panel Admin</h1>
+          <p className="text-white/40 text-sm text-center mb-6">Acceso restringido</p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              autoFocus
+              className="w-full rounded-xl px-4 py-3 text-white text-center outline-none text-sm"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            />
+
+            {loginError && (
+              <p className="text-sm text-center py-2 px-3 rounded-lg" style={{ backgroundColor: `${EUREKA_ORANGE}30`, color: EUREKA_ORANGE }}>
+                {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loginLoading || !password}
+              className="w-full py-3 rounded-xl font-black text-white uppercase tracking-widest text-sm transition-all active:scale-95 disabled:opacity-40"
+              style={{ backgroundColor: EUREKA_ORANGE }}
+            >
+              {loginLoading ? 'Verificando...' : 'Entrar'}
+            </button>
+          </form>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen px-4 py-8" style={{ backgroundColor: '#0a0820' }}>
-      {/* Header */}
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-8">
-          <span className="text-2xl font-black text-white" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>EUR</span>
-          <span className="text-2xl font-black" style={{ color: EUREKA_ORANGE }}>⚡</span>
-          <span className="text-2xl font-black text-white" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>KA</span>
-          <span className="ml-2 text-white/50 text-sm">Admin</span>
+        <div className="flex items-center gap-3 mb-8">
+          <img src="/eureka-logo.png" alt="Eureka Burger" className="h-10 w-auto" />
+          <span className="text-white/50 text-sm">Admin</span>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-3 gap-3 mb-8">
-          <KPICard
-            value={stats?.total_customers ?? 0}
-            label="Clientes"
-            color={EUREKA_BLUE}
-          />
-          <KPICard
-            value={stats?.total_stamps ?? 0}
-            label="Sellos"
-            color={EUREKA_ORANGE}
-          />
-          <KPICard
-            value={stats?.total_rewards ?? 0}
-            label="Premios"
-            color={EUREKA_GOLD}
-          />
+          <KPICard value={stats?.total_customers ?? 0} label="Clientes" color={EUREKA_BLUE} />
+          <KPICard value={stats?.total_stamps ?? 0} label="Sellos" color={EUREKA_ORANGE} />
+          <KPICard value={stats?.total_rewards ?? 0} label="Premios" color={EUREKA_GOLD} />
         </div>
 
         {/* Actions */}
@@ -93,21 +166,15 @@ export default function AdminPage() {
         </div>
 
         {/* Customer list */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <div
-            className="px-4 py-3 border-b"
-            style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
-          >
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="px-4 py-3 border-b" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}>
             <h2 className="text-white font-bold text-sm">Clientes recientes</h2>
           </div>
 
-          {!stats?.recent_customers?.length ? (
-            <div className="px-4 py-8 text-center text-white/40 text-sm">
-              Aún no hay clientes registrados
-            </div>
+          {statsLoading ? (
+            <div className="px-4 py-8 text-center text-white/40 text-sm">Cargando...</div>
+          ) : !stats?.recent_customers?.length ? (
+            <div className="px-4 py-8 text-center text-white/40 text-sm">Aún no hay clientes registrados</div>
           ) : (
             <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
               {stats.recent_customers.map(c => (
@@ -120,13 +187,9 @@ export default function AdminPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold" style={{ color: EUREKA_ORANGE }}>
-                      {c.stamps} sellos
-                    </p>
+                    <p className="text-sm font-bold" style={{ color: EUREKA_ORANGE }}>{c.stamps} sellos</p>
                     {c.rewards_redeemed > 0 && (
-                      <p className="text-xs" style={{ color: EUREKA_GOLD }}>
-                        {c.rewards_redeemed} premios
-                      </p>
+                      <p className="text-xs" style={{ color: EUREKA_GOLD }}>{c.rewards_redeemed} premios</p>
                     )}
                   </div>
                 </div>
@@ -141,10 +204,7 @@ export default function AdminPage() {
 
 function KPICard({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <div
-      className="rounded-xl p-4 text-center"
-      style={{ backgroundColor: `${color}15`, border: `1px solid ${color}40` }}
-    >
+    <div className="rounded-xl p-4 text-center" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}40` }}>
       <p className="text-2xl font-black" style={{ color }}>{value}</p>
       <p className="text-xs text-white/60 mt-1">{label}</p>
     </div>
