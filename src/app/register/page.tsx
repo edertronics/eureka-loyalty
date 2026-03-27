@@ -47,8 +47,8 @@ export default function RegisterPage() {
       style={{ backgroundColor: EUREKA_BLUE }}
     >
       {/* Logo */}
-      <div className="mb-8">
-        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-28 w-auto mx-auto" />
+      <div className="mt-4 mb-8">
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-36 w-auto mx-auto" />
       </div>
 
       {step === 'form' && (
@@ -181,35 +181,37 @@ function SuccessStep({ customer }: { customer: { name: string; qr_code: string }
   const firstName = customer.name.split(' ')[0]
 
   return (
-    <div className="w-full max-w-sm text-center">
-      <div className="text-5xl mb-4">⚡</div>
+    <div className="w-full max-w-sm text-center flex flex-col items-center">
+      <div className="text-3xl mb-3">⚡</div>
       <h2
         className="text-white text-4xl mb-2 uppercase"
         style={{ fontFamily: 'var(--font-bebas), Impact, Arial Narrow, sans-serif', letterSpacing: '0.08em' }}
       >
         ¡Listo, {firstName}!
       </h2>
-      <p className="text-white/70 text-sm mb-6" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-        Ya eres parte del club. Muestra este QR en cada visita para acumular tus sellos.
-      </p>
 
       {/* QR Code */}
-      <div className="p-6 mx-auto w-fit" style={{ backgroundColor: 'white' }}>
+      <div className="p-5 mt-4" style={{ backgroundColor: 'white' }}>
         <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${customer.qr_code}&color=110DDE`}
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${customer.qr_code}&color=EC4E20`}
           alt="Tu QR de lealtad"
-          width={200}
-          height={200}
+          width={220}
+          height={220}
         />
       </div>
 
-      <p className="text-xs mt-4" style={{ color: EUREKA_GOLD, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-        ID: {customer.qr_code}
-      </p>
-
-      <p className="text-xs text-white/40 mt-6" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-        Guarda una captura de pantalla de tu QR para tenerlo siempre a la mano
-      </p>
+      {/* Texto dentro del ancho del QR */}
+      <div style={{ width: 250 }}>
+        <p className="text-white/70 text-sm mt-4" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+          Ya eres parte del club. Muestra este QR en cada visita para acumular tus sellos.
+        </p>
+        <p className="text-xs mt-2" style={{ color: EUREKA_GOLD, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+          ID: {customer.qr_code}
+        </p>
+        <p className="text-xs text-white/30 mt-4" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+          Guarda una captura de pantalla de tu QR para tenerlo siempre a la mano
+        </p>
+      </div>
     </div>
   )
 }
