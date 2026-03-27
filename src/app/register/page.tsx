@@ -54,24 +54,7 @@ export default function RegisterPage() {
     >
       {/* Logo / Header */}
       <div className="mb-8 text-center">
-        {/* Lightning bolt + brand name */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <span className="text-4xl font-black text-white tracking-tighter" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-            EUR
-          </span>
-          <span className="text-4xl font-black tracking-tighter" style={{ color: EUREKA_ORANGE, fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-            ⚡
-          </span>
-          <span className="text-4xl font-black text-white tracking-tighter" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-            KA
-          </span>
-        </div>
-        <p className="text-white text-sm font-bold tracking-widest uppercase opacity-80">
-          BURGERS
-        </p>
-        <p className="text-xs italic tracking-widest mt-1" style={{ color: EUREKA_GOLD }}>
-          from California
-        </p>
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-20 w-auto mx-auto" />
       </div>
 
       {step === 'form' && (

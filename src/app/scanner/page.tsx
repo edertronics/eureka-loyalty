@@ -60,12 +60,8 @@ export default function ScannerPage() {
     >
       {/* Header */}
       <div className="mb-8 text-center">
-        <p className="text-white/50 text-xs uppercase tracking-widest mb-1">Staff Scanner</p>
-        <div className="flex items-center justify-center gap-1">
-          <span className="text-2xl font-black text-white" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>EUR</span>
-          <span className="text-2xl font-black" style={{ color: EUREKA_ORANGE }}>⚡</span>
-          <span className="text-2xl font-black text-white" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>KA</span>
-        </div>
+        <p className="text-white/50 text-xs uppercase tracking-widest mb-2">Staff Scanner</p>
+        <img src="/eureka-logo.png" alt="Eureka Burger" className="h-14 w-auto mx-auto" />
       </div>
 
       <div className="w-full max-w-sm space-y-4">

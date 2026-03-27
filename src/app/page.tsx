@@ -6,13 +6,7 @@ export default function Home() {
       className="min-h-screen flex flex-col items-center justify-center px-4 py-16 text-center"
       style={{ backgroundColor: '#110DDE' }}
     >
-      <div className="flex items-center justify-center gap-2 mb-3">
-        <span className="text-5xl font-black text-white tracking-tighter" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>EUR</span>
-        <span className="text-5xl font-black" style={{ color: '#EC4E20' }}>⚡</span>
-        <span className="text-5xl font-black text-white tracking-tighter" style={{ fontFamily: 'Helvetica Neue, sans-serif' }}>KA</span>
-      </div>
-      <p className="text-white text-sm font-bold tracking-widest uppercase mb-1">BURGERS</p>
-      <p className="text-xs italic tracking-widest" style={{ color: '#F6AE2D' }}>from California</p>
+      <img src="/eureka-logo.png" alt="Eureka Burger" className="h-24 w-auto mb-3" />
 
       <p className="text-white/60 text-sm mt-6 mb-8 max-w-xs">
         Programa de lealtad digital · Junta sellos y gana premios
