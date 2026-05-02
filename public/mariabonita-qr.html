@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>María Bonita — Tarjeta de Lealtad</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f5f0e8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page {
+      width: 210mm;
+      background: #f5f0e8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      padding: 40px;
+    }
+
+    /* Header con logo */
+    .header {
+      text-align: center;
+    }
+
+    .logo-text {
+      font-size: 64px;
+      font-weight: 900;
+      color: #e57900;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .logo-sub {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e57900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .tagline {
+      font-size: 14px;
+      color: #888;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* Contenedor de las dos tarjetas */
+    .cards-row {
+      display: flex;
+      gap: 24px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Tarjeta individual */
+    .card {
+      flex: 1;
+      max-width: 280px;
+      border-radius: 24px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+
+    .card-cafe {
+      background: #e57900;
+    }
+
+    .card-cafe::before {
+      background: #fff;
+    }
+
+    .card-unas {
+      background: #d529a3;
+    }
+
+    .card-unas::before {
+      background: #fff;
+    }
+
+    .card-icon {
+      font-size: 36px;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* QR code */
+    .qr-wrapper {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .qr-wrapper img {
+      display: block;
+      width: 160px;
+      height: 160px;
+    }
+
+    .qr-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.9);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* Stamps preview */
+    .stamps-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stamp {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .stamp.filled {
+      background: rgba(255,255,255,0.9);
+    }
+
+    .reward-badge {
+      background: rgba(255,255,255,0.2);
+      border: 1.5px solid rgba(255,255,255,0.4);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 11px;
+      color: #fff;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    /* URL */
+    .url-pill {
+      background: rgba(255,255,255,0.15);
+      border-radius: 50px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    /* Instrucciones */
+    .instructions {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px 32px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .instructions h3 {
+      font-size: 16px;
+      font-weight: 900;
+      color: #333;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .steps {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e57900;
+      color: #fff;
+      font-weight: 900;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step p {
+      font-size: 12px;
+      color: #555;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 600;
+    }
+
+    .footer strong {
+      color: #e57900;
+    }
+
+    /* Print */
+    @media print {
+      body { background: #f5f0e8; padding: 0; }
+      .page { padding: 20px; }
+      .card { box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .instructions { box-shadow: none; }
+      @page { size: A4; margin: 10mm; }
+    }
+
+    .print-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #e57900;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 16px rgba(229,121,0,0.4);
+      transition: transform 0.15s;
+    }
+    .print-btn:hover { transform: scale(1.05); }
+    @media print { .print-btn { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-text">MARÍA BONITA</div>
+    <div class="logo-sub">Uñitas &amp; Cafecito</div>
+    <div class="tagline">Escanea, acumula sellos y gana premios</div>
+  </div>
+
+  <!-- Dos tarjetas -->
+  <div class="cards-row">
+
+    <!-- Cafecito -->
+    <div class="card card-cafe">
+      <div class="card-icon">☕</div>
+      <div class="card-title">Programa Cafecito</div>
+      <div class="card-subtitle">8 cafés = 1 gratis</div>
+
+      <div class="qr-wrapper">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=000000&bgcolor=ffffff&data=https://easyloyalty.io/mariabonita-cafe"
+          alt="QR Cafecito"
+          loading="eager"
+        />
+      </div>
+
+      <div class="stamps-row">
+        <div class="stamp filled">☕</div>
+        <div class="stamp filled">☕</div>
+        <div class="stamp filled">☕</div>
+        <div class="stamp">☕</div>
+        <div class="stamp">☕</div>
+        <div class="stamp">☕</div>
+        <div class="stamp">☕</div>
+        <div class="stamp">☕</div>
+      </div>
+
+      <div class="reward-badge">🎁 Tu café 8 es gratis</div>
+      <div class="url-pill">easyloyalty.io/mariabonita-cafe</div>
+    </div>
+
+    <!-- Uñitas -->
+    <div class="card card-unas">
+      <div class="card-icon">💅</div>
+      <div class="card-title">Programa Uñitas</div>
+      <div class="card-subtitle">6 visitas = 1 gratis</div>
+
+      <div class="qr-wrapper">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=000000&bgcolor=ffffff&data=https://easyloyalty.io/mariabonita-unas"
+          alt="QR Uñitas"
+          loading="eager"
+        />
+      </div>
+
+      <div class="stamps-row">
+        <div class="stamp filled">💅</div>
+        <div class="stamp filled">💅</div>
+        <div class="stamp">💅</div>
+        <div class="stamp">💅</div>
+        <div class="stamp">💅</div>
+        <div class="stamp">💅</div>
+      </div>
+
+      <div class="reward-badge">🎁 Tu servicio 6 es gratis</div>
+      <div class="url-pill">easyloyalty.io/mariabonita-unas</div>
+    </div>
+
+  </div>
+
+  <!-- Instrucciones -->
+  <div class="instructions">
+    <h3>¿Cómo funciona?</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Escanea el QR con tu cámara</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p>Registra tu nombre y teléfono</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Pide tu sello en cada visita</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <p>¡Completa y canjea tu premio!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Guarda tu tarjeta en <strong>Apple Wallet</strong> o <strong>Google Wallet</strong> para no perderla
+  </div>
+
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir tarjeta</button>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue } from "next/font/google";
 import "./globals.css";
 
@@ -10,8 +10,15 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Eureka Burgers · Loyalty",
-  description: "Programa de lealtad digital — BURGERS ARE ALWAYS A GOOD IDEA",
+  title: "Easy Loyalty",
+  description: "Programa de lealtad digital para tu negocio",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

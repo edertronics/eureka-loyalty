@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+google-wallet-credentials.json
+Certificates.p12
+certificate.pem
+key.pem
+wwdr.pem
+wwdr.der

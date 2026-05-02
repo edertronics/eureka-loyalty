@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendWalletPush } from '@/lib/apns'
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,6 +76,18 @@ export async function POST(req: NextRequest) {
         business_id: customer.business_id,
         staff_id: staff_id || null,
       })
+    }
+
+    // Enviar push a Apple Wallet para que actualice la tarjeta del cliente
+    const { data: devices } = await supabaseAdmin
+      .from('device_registrations')
+      .select('push_token')
+      .eq('serial_number', customer.qr_code)
+
+    if (devices && devices.length > 0) {
+      await Promise.allSettled(
+        devices.map((d) => sendWalletPush(d.push_token))
+      )
     }
 
     return NextResponse.json({
