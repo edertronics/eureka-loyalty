@@ -31,9 +31,15 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 
 Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un slug propio y sus clientes acumulan sellos sin app.
 
-**Dominio producción:** `easyloyalty.io`
-**Vercel team:** `edertronics-projects` | **Project:** `loyalty-app`
+**Dominio producción:** `easyloyalty.io` (landing) | `app.easyloyalty.io` (app)
+**Vercel team:** `edertronics-projects` | **Project real:** `eureka-loyalty` (ignorar `loyalty-app`)
 **Supabase:** `udcvtwjumcunbgcqnvpn.supabase.co`
+
+## Arquitectura de dominios
+- `easyloyalty.io` → rewrite en middleware a `public/landing-page.html`
+- `app.easyloyalty.io` → la app Next.js (registro, tarjetas, admin, scanner)
+- Editar siempre `public/landing-page.html` para cambios del sitio público
+- Nunca decirle al usuario que navegue a `/landing-page.html` — la URL es `easyloyalty.io`
 
 ---
 
@@ -97,6 +103,17 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - **Emails implementados:**
   - Bienvenida al registrarse (si el cliente da email)
   - Premio ganado al completar la tarjeta
+
+## Modelo de negocio (decisiones tomadas)
+- **Trial:** 3 meses gratis
+- **Cobro:** Stripe (pendiente) — pedir tarjeta DESPUÉS de personalizar la tarjeta, cobro automático al vencer
+- **Flujo onboarding ideal:** Registro → Personalización → Datos de pago → Dashboard
+
+## Onboarding (registro/page.tsx)
+- Paso 1: Nombre del negocio + slug
+- Paso 2: Programa (colores con swatches + hex input + color picker nativo, sellos, premio, preview)
+- Paso 3: Contraseña de acceso
+- Los colores tienen: swatches rápidos + `<input type="color">` (picker nativo) + campo hex (#rrggbb)
 
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
