@@ -5,6 +5,17 @@ import { supabaseAdmin } from '@/lib/supabase'
 const ISSUER_ID = '3388000000023114743'
 const CLASS_ID = `${ISSUER_ID}.easyloyalty_loyalty_class`
 
+const CLASS_BODY = {
+  id: CLASS_ID,
+  issuerName: 'Easy Loyalty',
+  programName: 'Easy Loyalty',
+  programLogo: {
+    sourceUri: { uri: 'https://easyloyalty.io/icon.png' },
+    contentDescription: { defaultValue: { language: 'es', value: 'Easy Loyalty' } },
+  },
+  reviewStatus: 'UNDER_REVIEW',
+}
+
 async function ensureLoyaltyClass(token: string) {
   const getRes = await fetch(
     `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
@@ -16,25 +27,24 @@ async function ensureLoyaltyClass(token: string) {
       'https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass',
       {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: CLASS_ID,
-          issuerName: 'Easy Loyalty',
-          programName: 'Easy Loyalty',
-          programLogo: {
-            sourceUri: { uri: 'https://easyloyalty.io/icon.png' },
-            contentDescription: { defaultValue: { language: 'es', value: 'Easy Loyalty' } },
-          },
-          reviewStatus: 'UNDER_REVIEW',
-        }),
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(CLASS_BODY),
       }
     )
     if (!createRes.ok) {
-      const errBody = await createRes.text()
-      console.error('Google Wallet class create error:', createRes.status, errBody)
+      console.error('Google Wallet class create error:', createRes.status, await createRes.text())
+    }
+  } else if (getRes.ok) {
+    const existing = await getRes.json()
+    if (existing.reviewStatus === 'draft' || existing.reviewStatus === 'DRAFT') {
+      await fetch(
+        `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...CLASS_BODY, reviewStatus: 'UNDER_REVIEW' }),
+        }
+      )
     }
   }
 }
