@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleAuth } from 'google-auth-library'
 import { supabaseAdmin } from '@/lib/supabase'
 
-const ISSUER_ID = '3388000000023114743'
+const ISSUER_ID = '33880000000023114743'
 const CLASS_ID = `${ISSUER_ID}.easyloyalty_loyalty_class`
 
 async function ensureLoyaltyClass(token: string) {
@@ -25,7 +25,7 @@ async function ensureLoyaltyClass(token: string) {
           issuerName: 'Easy Loyalty',
           programName: 'Easy Loyalty',
           programLogo: {
-            sourceUri: { uri: 'https://app.easyloyalty.io/icon.png' },
+            sourceUri: { uri: 'https://easyloyalty.io/icon.png' },
             contentDescription: { defaultValue: { language: 'es', value: 'Easy Loyalty' } },
           },
           reviewStatus: 'UNDER_REVIEW',
