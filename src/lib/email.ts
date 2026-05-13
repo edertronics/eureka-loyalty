@@ -1,7 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = 'Easy Loyalty <noreply@easyloyalty.io>'
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://easyloyalty.io'
 
 export async function sendWelcomeEmail({
@@ -21,7 +24,7 @@ export async function sendWelcomeEmail({
 }) {
   const cardUrl = `${APP_URL}/${businessSlug}`
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `¡Bienvenido a ${businessName}! Tu tarjeta de lealtad está lista`,
@@ -96,7 +99,7 @@ export async function sendRewardEmail({
 }) {
   const cardUrl = `${APP_URL}/${businessSlug}`
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `¡Ganaste tu premio en ${businessName}! 🎉`,
