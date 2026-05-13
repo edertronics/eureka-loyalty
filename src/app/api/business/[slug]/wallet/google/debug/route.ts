@@ -29,9 +29,24 @@ export async function GET(req: NextRequest) {
     )
     const classData = await classRes.json()
 
+    // Intentar actualizar clase a UNDER_REVIEW si está en draft
+    let patchResult = null
+    if (classRes.ok && (classData.reviewStatus === 'draft' || classData.reviewStatus === 'DRAFT')) {
+      const patchRes = await fetch(
+        `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviewStatus: 'UNDER_REVIEW' }),
+        }
+      )
+      patchResult = { status: patchRes.status, body: await patchRes.text() }
+    }
+
     return NextResponse.json({
       issuer: { status: issuerRes.status, data: issuerData },
       class: { status: classRes.status, data: classData },
+      patch: patchResult,
       service_account_email: credentials.client_email,
     })
   } catch (error: unknown) {
