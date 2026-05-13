@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleAuth } from 'google-auth-library'
 
-const ISSUER_ID = '33880000000023114743'
+const ISSUER_ID = '3388000000023114743'
 const CLASS_ID = `${ISSUER_ID}.easyloyalty_loyalty_class`
 
 export async function GET(req: NextRequest) {
