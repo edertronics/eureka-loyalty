@@ -96,6 +96,8 @@ export default function RegistroPage() {
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const [hexPrimary, setHexPrimary] = useState('#6366f1')
+  const [hexAccent, setHexAccent] = useState('#f59e0b')
   const timerPassword = useRef<ReturnType<typeof setTimeout> | null>(null)
   const timerConfirm = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -123,6 +125,12 @@ export default function RegistroPage() {
     stamp_goal: '10', reward_description: '',
     admin_password: '', admin_password_confirm: '',
   })
+
+  function handleHex(field: 'primary_color' | 'accent_color', val: string, setHex: (v: string) => void) {
+    const v = val.startsWith('#') ? val : '#' + val
+    setHex(v)
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) set(field, v)
+  }
 
   function set(field: string, value: string) {
     setForm(prev => {
@@ -393,23 +401,41 @@ export default function RegistroPage() {
 
                 <div>
                   <label style={LABEL}>Color principal</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6, marginBottom: 8 }}>
                     {BRAND_COLORS.map(c => (
-                      <button key={c.value} type="button" onClick={() => set('primary_color', c.value)}
+                      <button key={c.value} type="button" onClick={() => { set('primary_color', c.value); setHexPrimary(c.value) }}
                         style={{ height: 30, borderRadius: 7, background: c.value, cursor: 'pointer', border: 'none', padding: 0, transition: 'all 0.2s', outline: form.primary_color === c.value ? `2.5px solid ${GREEN}` : '2px solid transparent', outlineOffset: '2px', transform: form.primary_color === c.value ? 'scale(1.18)' : 'scale(1)', boxShadow: c.value === '#1a1a1a' ? 'inset 0 0 0 1px rgba(255,255,255,0.15)' : 'none' }}
                         title={c.label} />
                     ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="color" value={form.primary_color}
+                      onChange={e => { set('primary_color', e.target.value); setHexPrimary(e.target.value) }}
+                      style={{ width: 38, height: 38, padding: 3, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+                    <input type="text" value={hexPrimary} maxLength={7} placeholder="#000000"
+                      onChange={e => handleHex('primary_color', e.target.value, setHexPrimary)}
+                      onBlur={e => { const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value; if (/^#[0-9a-fA-F]{6}$/.test(v)) { set('primary_color', v); setHexPrimary(v) } else setHexPrimary(form.primary_color) }}
+                      style={{ ...INPUT, fontFamily: 'monospace', fontSize: 14, letterSpacing: '0.05em' }} />
                   </div>
                 </div>
 
                 <div>
                   <label style={LABEL}>Color de acento <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}>botones y sellos</span></label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6, marginBottom: 8 }}>
                     {ACCENT_COLORS.map(c => (
-                      <button key={c.value} type="button" onClick={() => set('accent_color', c.value)}
+                      <button key={c.value} type="button" onClick={() => { set('accent_color', c.value); setHexAccent(c.value) }}
                         style={{ height: 30, borderRadius: 7, background: c.value, cursor: 'pointer', border: 'none', padding: 0, transition: 'all 0.2s', outline: form.accent_color === c.value ? `2.5px solid ${GREEN}` : '2px solid transparent', outlineOffset: '2px', transform: form.accent_color === c.value ? 'scale(1.18)' : 'scale(1)', boxShadow: c.value === '#f8fafc' ? 'inset 0 0 0 1px rgba(255,255,255,0.3)' : 'none' }}
                         title={c.label} />
                     ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="color" value={form.accent_color}
+                      onChange={e => { set('accent_color', e.target.value); setHexAccent(e.target.value) }}
+                      style={{ width: 38, height: 38, padding: 3, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+                    <input type="text" value={hexAccent} maxLength={7} placeholder="#000000"
+                      onChange={e => handleHex('accent_color', e.target.value, setHexAccent)}
+                      onBlur={e => { const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value; if (/^#[0-9a-fA-F]{6}$/.test(v)) { set('accent_color', v); setHexAccent(v) } else setHexAccent(form.accent_color) }}
+                      style={{ ...INPUT, fontFamily: 'monospace', fontSize: 14, letterSpacing: '0.05em' }} />
                   </div>
                 </div>
 
