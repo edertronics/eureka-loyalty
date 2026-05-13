@@ -76,6 +76,18 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - Certificados en Vercel como env vars: `APPLE_CERTIFICATE_PEM`, `APPLE_KEY_PEM`, `APPLE_WWDR_PEM`
 - Push updates via APNs al dar sello (`src/lib/apns.ts`)
 
+## Google Wallet (Android)
+- **API aprobada:** 2026-05-11 (correo de Google Wallet Support Team)
+- **Merchant ID (consola):** `BCR2DN5T435IRLLM`
+- **Issuer ID (API):** `3388000000023114743`
+- **Class ID:** `3388000000023114743.easyloyalty_loyalty_class` — estado: `approved`
+- **Service account:** `easy-loyalty-wallet@easy-loyalty-493322.iam.gserviceaccount.com`
+- **Proyecto GCP:** `easy-loyalty-493322`
+- Credenciales en Vercel como env var: `GOOGLE_SERVICE_ACCOUNT_JSON` (JSON completo en una línea)
+- Flujo: POST `/api/business/[slug]/wallet/google` → crea/actualiza objeto → retorna JWT URL
+- La clase se auto-actualiza a `UNDER_REVIEW`/`approved` si está en `draft` al primer uso
+- Debug endpoint: `/api/business/[slug]/wallet/google/debug`
+
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
 - Al completar la meta → `stamps` vuelve a 0, `rewards_redeemed` +1
