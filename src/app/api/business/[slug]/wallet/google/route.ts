@@ -116,7 +116,7 @@ export async function POST(
       if (!createRes.ok) {
         const errBody = await createRes.text()
         console.error('Google Wallet create error:', createRes.status, errBody)
-        return NextResponse.json({ error: 'Error creando objeto en Google Wallet' }, { status: 500 })
+        return NextResponse.json({ error: 'Error creando objeto en Google Wallet', details: errBody, status: createRes.status }, { status: 500 })
       }
     } else if (getRes.ok) {
       const updateRes = await fetch(
