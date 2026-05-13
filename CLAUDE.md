@@ -88,6 +88,16 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - La clase se auto-actualiza a `UNDER_REVIEW`/`approved` si está en `draft` al primer uso
 - Debug endpoint: `/api/business/[slug]/wallet/google/debug`
 
+## Email (Resend)
+- **Proveedor:** Resend (`resend` npm package)
+- **From:** `Easy Loyalty <noreply@easyloyalty.io>`
+- **API Key:** env var `RESEND_API_KEY` (en Vercel: eureka-loyalty + loyalty-app)
+- **Dominio verificado:** `easyloyalty.io` — DNS agregado en Namecheap 2026-05-12, verificación pendiente
+- **Módulo:** `src/lib/email.ts`
+- **Emails implementados:**
+  - Bienvenida al registrarse (si el cliente da email)
+  - Premio ganado al completar la tarjeta
+
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
 - Al completar la meta → `stamps` vuelve a 0, `rewards_redeemed` +1
