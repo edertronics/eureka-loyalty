@@ -89,10 +89,12 @@
       box-shadow:0 1px 0 rgba(0,0,0,.07);padding:16px 0;
     }
     .nav-in{display:flex;align-items:center;justify-content:space-between;}
-    .nav-logo img{height:52px;width:auto;mix-blend-mode:multiply;}
     /* Logo nav: oculto hasta que el hero logo se va de pantalla */
     .nav-logo{opacity:0;pointer-events:none;transition:opacity .5s cubic-bezier(.16,1,.3,1);}
     .nav-logo.show{opacity:1;pointer-events:auto;}
+    .nav-logo-text{font-family:var(--f);font-size:20px;line-height:1;color:var(--p);letter-spacing:-0.02em;}
+    .logo-easy{font-weight:400;}
+    .logo-loyalty{font-weight:800;}
     .nav-links{display:flex;align-items:center;gap:40px;list-style:none;}
     .nav-link{position:relative;font-size:14px;font-weight:500;color:var(--p);}
     .nav-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:var(--p);transition:width .3s ease;}
@@ -208,11 +210,8 @@
     }
     h1 em{font-style:normal;color:#fff;}
 
-    .hero-logo img{
-      width:min(540px,90%);height:auto;
-      mix-blend-mode:multiply;
-      margin-bottom:32px;
-    }
+    .hero-logo{margin-bottom:32px;}
+    .hero-wordmark{font-family:var(--f);font-size:clamp(52px,7.5vw,96px);line-height:1;color:var(--p);letter-spacing:-0.04em;}
     .hero-sub{
       font-size:clamp(16px,1.6vw,19px);font-weight:400;
       color:var(--p);opacity:.7;max-width:440px;margin-bottom:44px;line-height:1.65;
@@ -424,7 +423,7 @@
     /* ── FOOTER ── */
     footer{background:var(--p);padding:64px 0 40px;}
     .foot-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px;padding-bottom:52px;border-bottom:1px solid rgba(255,255,255,.1);}
-    .foot-logo img{height:60px;width:auto;filter:brightness(0) invert(1);margin-bottom:14px;mix-blend-mode:normal;}
+    .foot-logo-text{font-family:var(--f);font-size:26px;line-height:1;color:#fff;letter-spacing:-0.02em;display:block;margin-bottom:14px;}
     .foot-tag{font-size:13px;color:rgba(255,255,255,.32);line-height:1.65;max-width:240px;}
     .foot-col h4{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:18px;}
     .foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
@@ -470,7 +469,7 @@
   <div class="wrap">
     <div class="nav-in">
       <a href="#" class="nav-logo">
-        <img src="img/logo.png" alt="Easy Loyalty" />
+        <span class="nav-logo-text"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></span>
       </a>
       <ul class="nav-links">
         <li><a href="#como-funciona" class="nav-link">Cómo funciona</a></li>
@@ -509,7 +508,7 @@
       <div>
         <div class="hero-tag rv">Apple Wallet · Google Wallet · QR</div>
         <div class="hero-logo rv d1">
-          <img src="img/logo-dark.png" alt="Easy Loyalty — Haz que tus clientes vuelvan" />
+          <div class="hero-wordmark"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></div>
         </div>
         <p class="hero-sub rv d3">Lanza tu programa de lealtad digital hoy mismo. Sin apps. Sin fricción. <span class="hero-highlight">Con resultados reales.</span></p>
         <div class="hero-btns rv d4">
@@ -804,7 +803,7 @@
   <div class="wrap">
     <div class="foot-top">
       <div>
-        <div class="foot-logo"><img src="img/logo.png" alt="Easy Loyalty" /></div>
+        <div class="foot-logo"><span class="foot-logo-text"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></span></div>
         <p class="foot-tag">Haz que tus clientes vuelvan. Programas de lealtad digital para negocios en crecimiento.</p>
       </div>
       <div class="foot-col">
