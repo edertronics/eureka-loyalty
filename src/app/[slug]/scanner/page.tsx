@@ -30,6 +30,14 @@ export default function DynamicScannerPage() {
   const [notFound, setNotFound] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
 
+  // Auth
+  const [authState, setAuthState] = useState<'loading' | 'login' | 'ok'>('loading')
+  const [staffPin, setStaffPin] = useState('')
+  const [staffError, setStaffError] = useState('')
+  const [staffLoading, setStaffLoading] = useState(false)
+  const [showPin, setShowPin] = useState(false)
+  const pinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [qrInput, setQrInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<StampResult | null>(null)
@@ -40,15 +48,58 @@ export default function DynamicScannerPage() {
   const scannerRef = useRef<import('qr-scanner').default | null>(null)
 
   useEffect(() => {
-    fetch(`/api/business/${slug}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.business) setBusiness(data.business)
-        else setNotFound(true)
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setPageLoading(false))
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/business/${slug}`).then(r => r.json()),
+      fetch(`/api/business/${slug}/staff-check`),
+    ]).then(([bizData, authRes]) => {
+      if (bizData.business) setBusiness(bizData.business)
+      else setNotFound(true)
+      setAuthState(authRes.ok ? 'ok' : 'login')
+    }).catch(() => {
+      setNotFound(true)
+    }).finally(() => setPageLoading(false))
   }, [slug])
+
+  function togglePin() {
+    if (showPin) {
+      if (pinTimerRef.current) clearTimeout(pinTimerRef.current)
+      setShowPin(false)
+    } else {
+      setShowPin(true)
+      if (pinTimerRef.current) clearTimeout(pinTimerRef.current)
+      pinTimerRef.current = setTimeout(() => setShowPin(false), 2000)
+    }
+  }
+
+  async function handleStaffLogin(e: React.FormEvent) {
+    e.preventDefault()
+    if (!staffPin.trim()) return
+    setStaffLoading(true)
+    setStaffError('')
+    try {
+      const res = await fetch(`/api/business/${slug}/staff-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: staffPin.trim() }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error)
+      }
+      setAuthState('ok')
+      setStaffPin('')
+    } catch (err: unknown) {
+      setStaffError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setStaffLoading(false)
+    }
+  }
 
   async function handleStamp(qr: string) {
     if (!qr.trim()) return
@@ -114,7 +165,7 @@ export default function DynamicScannerPage() {
   const MUTED = 'rgba(0,56,96,0.45)'
   const BDR   = 'rgba(0,56,96,0.18)'
 
-  if (pageLoading) {
+  if (pageLoading || authState === 'loading') {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
         <p style={{ color: MUTED, fontSize: 14, fontFamily: FONT }}>Cargando...</p>
@@ -126,6 +177,92 @@ export default function DynamicScannerPage() {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', padding: 24 }}>
         <h1 style={{ color: NAVY, fontSize: 22, fontWeight: 700, fontFamily: FONT }}>Negocio no encontrado</h1>
+      </main>
+    )
+  }
+
+  // Pantalla de login para staff
+  if (authState === 'login') {
+    return (
+      <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', background: '#ffffff', boxSizing: 'border-box' }}>
+        <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+
+          {/* Logo o nombre */}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <p style={{ color: MUTED, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10, fontFamily: FONT }}>
+              Staff Scanner
+            </p>
+            {business.logo_url
+              ? <img src={business.logo_url} alt={business.name} style={{ height: 44, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+              : <h1 style={{ color: NAVY, fontSize: 20, fontWeight: 900, fontFamily: FONT, letterSpacing: '-0.02em', margin: 0 }}>{business.name}</h1>
+            }
+          </div>
+
+          {/* Card de login */}
+          <div style={{ width: '100%', borderRadius: 20, padding: 24, backgroundColor: 'rgba(0,56,96,0.04)', border: `1.5px solid ${BDR}`, boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(0,56,96,0.08)', margin: '0 auto 16px', border: `1px solid ${BDR}` }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h2 style={{ color: NAVY, fontSize: 17, fontWeight: 800, fontFamily: FONT, textAlign: 'center', margin: '0 0 4px 0' }}>
+              Acceso de Staff
+            </h2>
+            <p style={{ color: MUTED, fontSize: 13, fontFamily: FONT, textAlign: 'center', margin: '0 0 20px 0' }}>
+              Ingresa el PIN de empleado
+            </p>
+
+            <form onSubmit={handleStaffLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  value={staffPin}
+                  onChange={e => setStaffPin(e.target.value)}
+                  placeholder="PIN"
+                  autoFocus
+                  style={{
+                    width: '100%', padding: '13px 44px 13px 14px', fontSize: 18, color: NAVY,
+                    textAlign: 'center', letterSpacing: '0.2em',
+                    background: 'rgba(0,56,96,0.04)', border: `1.5px solid ${BDR}`,
+                    borderRadius: 12, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box',
+                  }}
+                />
+                <button type="button" onClick={togglePin}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: showPin ? NAVY : MUTED }}>
+                  {showPin ? (
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {staffError && (
+                <div style={{ borderRadius: 10, padding: '10px 14px', textAlign: 'center', fontSize: 13, backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', fontFamily: FONT }}>
+                  {staffError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={staffLoading || !staffPin.trim()}
+                style={{
+                  width: '100%', padding: 14, borderRadius: 12, fontWeight: 800,
+                  color: '#ffffff', background: NAVY, border: 'none',
+                  cursor: staffLoading || !staffPin.trim() ? 'not-allowed' : 'pointer',
+                  opacity: staffLoading || !staffPin.trim() ? 0.4 : 1, fontSize: 15, fontFamily: FONT,
+                }}
+              >
+                {staffLoading ? 'Verificando...' : 'Entrar'}
+              </button>
+            </form>
+          </div>
+        </div>
       </main>
     )
   }

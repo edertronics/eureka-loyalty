@@ -2,1368 +2,1078 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Easy Loyalty — Programa de lealtad digital para tu negocio</title>
-  <meta name="description" content="Lanza tu programa de lealtad digital en menos de 24 horas. Tarjetas en Apple Wallet y Google Wallet. Sin apps. Sin fricción. Con resultados reales." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Easy Loyalty — Haz que tus clientes vuelvan</title>
+  <meta name="description" content="Lanza tu programa de lealtad digital en menos de 24 horas. Tarjetas en Apple Wallet y Google Wallet. Sin apps. Sin fricción." />
   <style>
-    /* =====================
-       RESET & BASE
-    ===================== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --green: #00E065;
-      --green-dim: #00E06520;
-      --green-glow: 0 0 40px #00E06540;
-      --bg: #080808;
-      --bg-2: #0f0f0f;
-      --bg-card: rgba(255,255,255,0.03);
-      --border: rgba(255,255,255,0.08);
-      --border-hover: rgba(0,224,101,0.4);
-      --text: #ffffff;
-      --text-muted: #888;
-      --text-dim: #555;
-      --radius: 16px;
-      --radius-sm: 10px;
-    }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    a { text-decoration: none; color: inherit; }
-    img { max-width: 100%; display: block; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-Light.otf') format('opentype'); font-weight:300; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-Regular.otf') format('opentype'); font-weight:400; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-Medium.otf') format('opentype'); font-weight:500; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-SemiBold.otf') format('opentype'); font-weight:600; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-Bold.otf') format('opentype'); font-weight:700; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-ExtraBold.otf') format('opentype'); font-weight:800; font-display:swap; }
+    @font-face { font-family:'HKG'; src:url('fonts/HKGroteskWide-Black.otf') format('opentype'); font-weight:900; font-display:swap; }
 
-    /* =====================
-       UTILITY
-    ===================== */
-    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-    .text-green { color: var(--green); }
-    .text-muted { color: var(--text-muted); }
-    .tag {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--green); background: var(--green-dim);
-      border: 1px solid rgba(0,224,101,0.2);
-      padding: 6px 14px; border-radius: 100px;
-      margin-bottom: 20px;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --g:#00C896; --p:#063f3a; --m:#D9FFF3; --w:#F7F7F2; --c:#111111;
+      --f:'HKG',system-ui,sans-serif;
     }
-    .tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: block; }
-    .section-title {
-      font-size: clamp(32px, 5vw, 52px);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-    }
-    .section-sub {
-      font-size: 18px;
-      color: var(--text-muted);
-      max-width: 560px;
-      line-height: 1.6;
-    }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--green);
-      color: #000;
-      font-weight: 700;
-      font-size: 15px;
-      padding: 16px 28px;
-      border-radius: var(--radius-sm);
-      border: none; cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: -0.01em;
-    }
-    .btn-primary:hover { background: #00ff75; transform: translateY(-1px); box-shadow: var(--green-glow); }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: transparent;
-      color: var(--text);
-      font-weight: 600;
-      font-size: 15px;
-      padding: 15px 28px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-secondary:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); }
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--f);line-height:1.6;overflow-x:hidden;cursor:none;}
+    a{text-decoration:none;color:inherit;}
+    img{max-width:100%;display:block;}
+    .wrap{max-width:1160px;margin:0 auto;padding:0 40px;}
 
-    /* =====================
-       ANIMATED BACKGROUND
-    ===================== */
-    .bg-orbs {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    /* ── CUSTOM CURSOR ── */
+    #cur{
+      position:fixed;width:12px;height:12px;border-radius:50%;
+      background:var(--p);pointer-events:none;z-index:9999;
+      transform:translate(-50%,-50%);transition:transform .1s,width .3s,height .3s,background .3s;
     }
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.12;
-      animation: drift 20s ease-in-out infinite;
+    #cur2{
+      position:fixed;width:40px;height:40px;border-radius:50%;
+      border:1.5px solid var(--p);pointer-events:none;z-index:9998;
+      transform:translate(-50%,-50%);transition:transform .08s linear,width .3s,height .3s,border-color .3s;
     }
-    .orb-1 { width: 600px; height: 600px; background: var(--green); top: -200px; left: -200px; animation-delay: 0s; }
-    .orb-2 { width: 500px; height: 500px; background: #0055ff; bottom: -100px; right: -100px; animation-delay: -8s; }
-    .orb-3 { width: 400px; height: 400px; background: var(--green); bottom: 30%; left: 30%; animation-delay: -14s; opacity: 0.06; }
-    @keyframes drift {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(40px, -30px) scale(1.05); }
-      66% { transform: translate(-20px, 40px) scale(0.95); }
-    }
+    .cursor-on-dark #cur{ background:var(--g); }
+    .cursor-on-dark #cur2{ border-color:var(--g); }
 
-    /* =====================
-       NAV
-    ===================== */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      padding: 20px 0;
-      transition: all 0.3s;
+    /* ── REVEAL SYSTEM ── */
+    .rv{opacity:0;transform:translateY(36px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
+    .rv.in{opacity:1;transform:none;}
+    .rv-l{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
+    .rv-l.in{opacity:1;transform:none;}
+    .d1{transition-delay:.1s;} .d2{transition-delay:.2s;} .d3{transition-delay:.3s;}
+    .d4{transition-delay:.4s;} .d5{transition-delay:.5s;} .d6{transition-delay:.6s;}
+
+    /* Word reveal — clip from bottom */
+    .word-row{overflow:hidden;display:block;}
+    .word{display:inline-block;transform:translateY(110%);opacity:0;
+      transition:transform .75s cubic-bezier(.16,1,.3,1),opacity .75s cubic-bezier(.16,1,.3,1);}
+    .word.in{transform:translateY(0);opacity:1;}
+
+    /* ── WIPE from left (Enerblock style) ── */
+    /* .wl = line wrapper (clips), .wi = inner text that slides */
+    .wl{overflow:hidden;display:block;}
+    .wi{
+      display:block;
+      transform:translateX(-104%);
+      transition:transform 1.1s cubic-bezier(.16,1,.3,1);
     }
-    nav.scrolled {
-      background: rgba(8,8,8,0.9);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 0;
+    .wl.in .wi{transform:translateX(0);}
+    /* stagger between lines */
+    .wl:nth-child(2) .wi{transition-delay:.12s;}
+    .wl:nth-child(3) .wi{transition-delay:.24s;}
+    /* optional: eye label wipe (more rápido) */
+    .eye-wl{overflow:hidden;display:block;}
+    .eye-wl .wi{transition-duration:.8s;}
+
+    /* Variante: cae de ARRIBA hacia ABAJO */
+    .wl-down{overflow:hidden;display:block;}
+    .wi-down{
+      display:block;
+      transform:translateY(-108%);
+      transition:transform 1.1s cubic-bezier(.16,1,.3,1);
     }
-    .nav-inner {
-      display: flex; align-items: center; justify-content: space-between;
+    .wl-down.in .wi-down{transform:translateY(0);}
+    .wl-down:nth-child(2) .wi-down{transition-delay:.13s;}
+
+    /* ── NAV ── */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:100;padding:24px 0;
+      transition:background .4s,padding .4s,box-shadow .4s;
     }
-    .nav-logo {
-      font-size: 20px; font-weight: 800; letter-spacing: -0.03em;
+    nav.scrolled{
+      background:rgba(255,255,255,.97);backdrop-filter:blur(16px);
+      box-shadow:0 1px 0 rgba(0,0,0,.07);padding:16px 0;
     }
-    .nav-logo span { color: var(--green); }
-    .nav-links {
-      display: flex; align-items: center; gap: 32px;
-      list-style: none;
+    .nav-in{display:flex;align-items:center;justify-content:space-between;}
+    .nav-logo img{height:52px;width:auto;mix-blend-mode:multiply;}
+    /* Logo nav: oculto hasta que el hero logo se va de pantalla */
+    .nav-logo{opacity:0;pointer-events:none;transition:opacity .5s cubic-bezier(.16,1,.3,1);}
+    .nav-logo.show{opacity:1;pointer-events:auto;}
+    .nav-links{display:flex;align-items:center;gap:40px;list-style:none;}
+    .nav-link{position:relative;font-size:14px;font-weight:500;color:var(--p);}
+    .nav-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:var(--p);transition:width .3s ease;}
+    .nav-link:hover::after{width:100%;}
+    .nav-cta{
+      background:var(--p);color:#fff;
+      padding:10px 24px;border-radius:100px;font-size:14px;font-weight:700;
+      transition:background .25s,transform .25s;
     }
-    .nav-links a {
-      font-size: 14px; font-weight: 500; color: var(--text-muted);
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-    .nav-cta { display: flex; align-items: center; gap: 12px; }
-    .nav-login {
-      font-size: 14px; font-weight: 500; color: var(--text-muted);
-      transition: color 0.2s;
-    }
-    .nav-login:hover { color: var(--text); }
-    .nav-btn {
-      font-size: 13px; font-weight: 700; padding: 10px 20px;
-      background: var(--green); color: #000;
-      border-radius: 8px; letter-spacing: -0.01em;
-      transition: all 0.2s;
-    }
-    .nav-btn:hover { background: #00ff75; }
-    .nav-mobile-btn {
-      display: none; background: none; border: none; cursor: pointer; color: white;
+    .nav-cta:hover{background:var(--g);transform:translateY(-1px);}
+    @media(max-width:768px){.nav-links{display:none;}}
+
+    /* ── HERO ── */
+    .hero{
+      background:var(--g);min-height:100vh;
+      display:flex;align-items:center;padding:140px 0 80px;
+      position:relative;overflow:hidden;
     }
 
-    /* =====================
-       HERO
-    ===================== */
-    .hero {
-      position: relative; z-index: 1;
-      padding: 160px 0 100px;
-      min-height: 100vh;
-      display: flex; align-items: center;
+    /* Horizontal grid lines (Enerblock style) */
+    .hero-hlines{position:absolute;inset:0;pointer-events:none;}
+    .hhl{position:absolute;left:0;right:0;height:1px;background:rgba(6,63,58,.11);}
+    .hhl:nth-child(1){top:33.33%;}
+    .hhl:nth-child(2){top:66.66%;}
+    .hhl:nth-child(3){top:50%;opacity:.5;}
+
+    /* Animated vertical lines */
+    .vlines{position:absolute;inset:0;pointer-events:none;}
+    .vl{
+      position:absolute;top:0;bottom:0;width:1px;
+      background:linear-gradient(to bottom,transparent 0%,rgba(6,63,58,.14) 25%,rgba(6,63,58,.14) 75%,transparent 100%);
     }
-    .hero-inner {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    .vl:nth-child(1){left:14%;animation:vlPulse 5s ease-in-out infinite;}
+    .vl:nth-child(2){left:28%;animation:vlPulse 5s ease-in-out -1.25s infinite;}
+    .vl:nth-child(3){left:50%;animation:vlPulse 5s ease-in-out -2.5s infinite;}
+    .vl:nth-child(4){left:71%;animation:vlPulse 5s ease-in-out -3.75s infinite;}
+    .vl:nth-child(5){left:86%;animation:vlPulse 5s ease-in-out -1s infinite;}
+    @keyframes vlPulse{
+      0%,100%{opacity:.5;transform:scaleY(.6)translateY(20%);}
+      50%{opacity:1;transform:scaleY(1)translateY(0%);}
     }
-    .hero-eyebrow {
-      font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--green); margin-bottom: 20px;
+
+    /* Horizontal scan line */
+    .scan{
+      position:absolute;left:0;right:0;height:1px;
+      background:linear-gradient(to right,transparent,rgba(6,63,58,.2),transparent);
+      animation:scan 6s linear infinite;
     }
-    .hero-title {
-      font-size: clamp(40px, 6vw, 72px);
-      font-weight: 900;
-      line-height: 1.0;
-      letter-spacing: -0.03em;
-      margin-bottom: 24px;
+    @keyframes scan{
+      0%{top:-2px;opacity:0;}
+      10%{opacity:1;}
+      90%{opacity:1;}
+      100%{top:100%;opacity:0;}
     }
-    .hero-title .highlight {
-      background: linear-gradient(135deg, var(--green), #00b8ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+
+    /* Hero layout — Enerblock style: text left / isotipo right */
+    .hero-ener{display:grid;grid-template-columns:1fr 1.25fr;gap:40px;align-items:center;position:relative;z-index:1;}
+    .hero-right{display:flex;flex-direction:column;align-items:center;position:relative;}
+
+    /* Big isotipo */
+    .hero-mark-wrap{
+      position:relative;width:min(500px,100%);
+      cursor:none;
     }
-    .hero-sub {
-      font-size: 18px; color: var(--text-muted); line-height: 1.7;
-      margin-bottom: 40px; max-width: 480px;
+    .hero-mark-img{
+      width:100%;height:auto;
+      mix-blend-mode:multiply;
+      filter:url(#waveFilter);
+      transform-origin:center;
+      will-change:transform;
+      transition:transform 1s cubic-bezier(.16,1,.3,1);
     }
-    .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    .hero-social-proof {
-      margin-top: 48px;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    /* Radial glow that follows mouse */
+    .mark-glow{
+      position:absolute;width:160px;height:160px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(0,200,150,.18) 40%,transparent 72%);
+      pointer-events:none;transform:translate(-50%,-50%);
+      opacity:0;transition:opacity .35s ease;mix-blend-mode:overlay;
     }
-    .proof-avatars {
-      display: flex; align-items: center;
+    .hero-mark-wrap:hover .mark-glow{opacity:1;}
+    /* Small floating circle that tracks mouse inside mark */
+    .mark-dot{
+      position:absolute;width:40px;height:40px;border-radius:50%;
+      border:1.5px solid rgba(6,63,58,.35);
+      pointer-events:none;transform:translate(-50%,-50%);
+      transition:transform .15s ease;opacity:0;
     }
-    .proof-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      border: 2px solid var(--bg);
-      background: linear-gradient(135deg, #333, #555);
-      margin-left: -10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; color: #aaa;
+    .hero-mark-wrap:hover .mark-dot{opacity:1;}
+
+    /* Labels row above/below mark */
+    .hero-mark-meta{
+      width:100%;display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:16px;
     }
-    .proof-avatar:first-child { margin-left: 0; }
-    .proof-text { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-    .proof-text strong { color: var(--text); font-weight: 600; }
+    .hm-lbl{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--p);opacity:.28;}
+    .hero-est{
+      font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--p);opacity:.22;margin-top:20px;align-self:flex-end;
+    }
+
+    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;position:relative;z-index:1;}
+    .hero-tag{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--p);background:rgba(6,63,58,.1);padding:6px 16px;border-radius:100px;
+      margin-bottom:28px;
+    }
+    .hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--p);}
+
+    h1{
+      font-size:clamp(56px,7vw,100px);font-weight:900;line-height:.97;
+      color:var(--p);letter-spacing:-.04em;margin-bottom:28px;
+    }
+    h1 em{font-style:normal;color:#fff;}
+
+    .hero-logo img{
+      width:min(540px,90%);height:auto;
+      mix-blend-mode:multiply;
+      margin-bottom:32px;
+    }
+    .hero-sub{
+      font-size:clamp(16px,1.6vw,19px);font-weight:400;
+      color:var(--p);opacity:.7;max-width:440px;margin-bottom:44px;line-height:1.65;
+    }
+    .hero-btns{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .btn-dark{
+      background:var(--p);color:#fff;
+      padding:15px 32px;border-radius:100px;font-size:15px;font-weight:700;font-family:var(--f);
+      display:inline-flex;align-items:center;gap:8px;
+      transition:background .25s,transform .25s,box-shadow .25s;
+    }
+    .btn-dark:hover{background:var(--c);transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,63,58,.3);}
+    .btn-ghost{
+      color:var(--p);font-size:15px;font-weight:600;
+      display:inline-flex;align-items:center;gap:6px;
+      border-bottom:2px solid rgba(6,63,58,.35);padding-bottom:2px;
+      transition:border-color .25s,gap .25s;
+    }
+    .btn-ghost:hover{border-color:var(--p);gap:10px;}
+    .hero-highlight{display:block;font-size:1.25em;font-weight:800;opacity:1;color:var(--p);margin-top:6px;}
+    .hero-trust{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px;font-size:12px;font-weight:600;color:var(--p);opacity:.55;}
+    .hero-trust span{display:flex;align-items:center;gap:5px;}
+    .hero-trust span::before{content:'✓';}
 
     /* Phone mockup */
-    .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; }
-    .phone-wrap {
-      position: relative;
-      animation: float 6s ease-in-out infinite;
+    .phone{
+      width:270px;height:490px;border-radius:42px;background:var(--p);
+      box-shadow:0 48px 96px rgba(6,63,58,.4),0 0 0 1.5px rgba(6,63,58,.2);
+      padding:14px 12px;margin:0 auto;position:relative;
     }
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-16px); }
-    }
-    .phone {
-      width: 280px; height: 580px;
-      background: #111;
-      border-radius: 44px;
-      border: 1.5px solid rgba(255,255,255,0.12);
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04) inset;
-    }
-    .phone-notch {
-      width: 100px; height: 28px;
-      background: #111;
-      border-radius: 0 0 20px 20px;
-      margin: 0 auto;
-      position: relative; z-index: 10;
-      border: 1.5px solid rgba(255,255,255,0.08);
-      border-top: none;
-    }
-    .phone-screen {
-      background: #1a1a2e;
-      height: calc(100% - 28px);
-      display: flex; flex-direction: column;
-      align-items: center;
-      padding: 20px 16px;
-    }
-    .wallet-header {
-      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5);
-      letter-spacing: 0.05em; text-transform: uppercase;
-      margin-bottom: 16px; width: 100%;
-    }
-    .wallet-card {
-      width: 100%;
-      background: linear-gradient(135deg, #080880, #0505c8);
-      border-radius: 16px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    }
-    .wallet-card::before {
-      content: '';
-      position: absolute; top: -30px; right: -30px;
-      width: 120px; height: 120px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 50%;
-    }
-    .wallet-card::after {
-      content: '';
-      position: absolute; bottom: -20px; left: 20px;
-      width: 80px; height: 80px;
-      background: rgba(255,255,255,0.04);
-      border-radius: 50%;
-    }
-    .wc-brand { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
-    .wc-name { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px; letter-spacing: -0.02em; }
-    .wc-stamps {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px;
-    }
-    .wc-stamp {
-      width: 100%; aspect-ratio: 1;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
-    .wc-stamp.filled { background: rgba(255,255,255,0.2); }
-    .wc-stamp.empty { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
-    .wc-progress { font-size: 10px; color: rgba(255,255,255,0.5); }
-    .wc-progress strong { color: #fff; }
-    .wallet-pass-info {
-      width: 100%;
-      margin-top: 16px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .wpi-label { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; }
-    .wpi-value { font-size: 12px; color: #fff; font-weight: 700; margin-top: 2px; }
-    .wallet-apple-badge {
-      margin-top: 12px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .wab-icon {
-      width: 28px; height: 28px; background: #fff; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
-    .wab-text { font-size: 9px; color: rgba(255,255,255,0.4); }
-    .wab-text strong { display: block; font-size: 11px; color: rgba(255,255,255,0.8); }
+    .phone-notch{width:76px;height:26px;background:var(--p);border-radius:0 0 16px 16px;margin:0 auto 10px;}
+    .phone-screen{background:var(--w);border-radius:30px;height:calc(100% - 52px);overflow:hidden;display:flex;flex-direction:column;}
+    .ps-top{background:var(--g);padding:16px;flex:1;}
+    .ps-brand{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p);opacity:.5;margin-bottom:3px;}
+    .ps-name{font-size:20px;font-weight:900;color:var(--p);margin-bottom:14px;}
+    .ps-stamps{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+    .st{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    .st.f{background:var(--p);}
+    .st.e{background:rgba(6,63,58,.15);border:1.5px solid rgba(6,63,58,.25);}
+    .ps-prog{font-size:9px;font-weight:600;color:var(--p);opacity:.6;}
+    .ps-qr{background:#fff;padding:10px 12px;display:flex;align-items:center;gap:9px;}
+    .ps-qrbox{width:48px;height:48px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ps-qrlbl{font-size:9px;font-weight:700;color:var(--p);margin-bottom:2px;}
+    .ps-qrsub{font-size:8px;color:var(--p);opacity:.5;}
+    .ps-wallet{background:#000;color:#fff;margin:8px 10px;border-radius:8px;padding:7px 10px;font-size:8px;font-weight:600;display:flex;align-items:center;gap:5px;}
 
-    .phone-glow {
-      position: absolute;
-      width: 300px; height: 300px;
-      background: var(--green);
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.12;
-      bottom: -50px; left: 50%;
-      transform: translateX(-50%);
-      z-index: -1;
-    }
-    .phone-badge {
-      position: absolute;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-      border-radius: 12px;
-      padding: 12px 16px;
-      white-space: nowrap;
-    }
-    .phone-badge.badge-left {
-      left: -60px; top: 120px;
-    }
-    .phone-badge.badge-right {
-      right: -60px; bottom: 160px;
-    }
-    .badge-label { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
-    .badge-value { font-size: 18px; font-weight: 800; color: var(--green); line-height: 1; }
-    .badge-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    /* ── PROOF ── */
+    .proof{background:var(--w);padding:80px 0;overflow:hidden;}
+    .proof-lbl{text-align:center;font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--p);opacity:.35;margin-bottom:56px;}
+    .proof-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid rgba(6,63,58,.1);border-radius:20px;overflow:hidden;}
+    .stat{text-align:center;padding:40px 20px;border-right:1px solid rgba(6,63,58,.1);}
+    .stat:last-child{border-right:none;}
+    .stat-n{font-size:clamp(44px,5vw,68px);font-weight:900;color:var(--p);line-height:1;letter-spacing:-.04em;margin-bottom:8px;}
+    .stat-l{font-size:13px;color:var(--p);opacity:.45;font-weight:500;}
+    .proof-wallets{display:flex;align-items:center;justify-content:center;gap:24px;padding-top:48px;flex-wrap:wrap;}
+    .proof-wallets-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p);opacity:.35;}
+    .wbadge{display:flex;align-items:center;gap:8px;background:rgba(6,63,58,.06);border-radius:12px;padding:10px 20px;transition:background .2s;}
+    .wbadge:hover{background:rgba(6,63,58,.1);}
+    .wbadge span{font-size:13px;font-weight:600;color:var(--p);}
 
-    /* =====================
-       LOGOS BAR
-    ===================== */
-    .logos-bar {
-      position: relative; z-index: 1;
-      padding: 48px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .logos-label {
-      text-align: center;
-      font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 32px;
-    }
-    .logos-grid {
-      display: flex; align-items: center; justify-content: center;
-      gap: 48px; flex-wrap: wrap;
-    }
-    .logo-item {
-      font-size: 16px; font-weight: 800; color: var(--text-dim);
-      letter-spacing: -0.02em; transition: color 0.2s;
-      text-transform: uppercase;
-    }
-    .logo-item:hover { color: var(--text-muted); }
+    /* ── HOW ── */
+    .how{background:var(--p);padding:120px 0;position:relative;overflow:hidden;}
+    .how-lines{position:absolute;inset:0;pointer-events:none;}
+    .hl{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.06),transparent);}
+    .hl:nth-child(1){left:20%;}
+    .hl:nth-child(2){left:40%;}
+    .hl:nth-child(3){left:60%;}
+    .hl:nth-child(4){left:80%;}
+    .eye{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:18px;}
+    .how .eye{color:var(--g);}
+    .how h2{font-size:clamp(38px,5vw,64px);font-weight:800;color:#fff;letter-spacing:-.025em;line-height:1.08;max-width:540px;margin-bottom:80px;}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative;z-index:1;}
+    .step{padding:40px;border-right:1px solid rgba(255,255,255,.08);position:relative;transition:background .3s;}
+    .step:last-child{border-right:none;}
+    .step:hover{background:rgba(255,255,255,.03);}
+    .step-n{font-size:80px;font-weight:900;color:rgba(255,255,255,.07);line-height:1;margin-bottom:24px;letter-spacing:-.05em;}
+    .step-ico{width:48px;height:48px;border-radius:14px;background:rgba(0,200,150,.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+    .step-t{font-size:20px;font-weight:800;color:#fff;margin-bottom:12px;line-height:1.2;}
+    .step-d{font-size:14px;color:rgba(255,255,255,.48);line-height:1.7;}
 
-    /* =====================
-       PROBLEM SECTION
-    ===================== */
-    .section { position: relative; z-index: 1; padding: 100px 0; }
-    .problem-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 60px;
-    }
-    .problem-list { display: flex; flex-direction: column; gap: 16px; }
-    .problem-item {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 20px; border-radius: var(--radius);
-      background: rgba(255,60,60,0.04);
-      border: 1px solid rgba(255,60,60,0.1);
-    }
-    .problem-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-    .problem-text { font-size: 15px; line-height: 1.5; color: var(--text-muted); }
-    .problem-text strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 16px; }
-    .solution-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 40px;
-      position: relative;
-      overflow: hidden;
-    }
-    .solution-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--green), #00b8ff);
-    }
-    .solution-stat { margin-bottom: 24px; }
-    .solution-number {
-      font-size: 56px; font-weight: 900; line-height: 1;
-      color: var(--green); letter-spacing: -0.04em;
-    }
-    .solution-label { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
-    .solution-divider { height: 1px; background: var(--border); margin: 24px 0; }
+    /* Line that draws across bottom of step on hover */
+    .step::after{content:'';position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--g);transition:width .5s cubic-bezier(.16,1,.3,1);}
+    .step:hover::after{width:100%;}
 
-    /* =====================
-       HOW IT WORKS
-    ===================== */
-    .steps-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px;
+    /* ── FEATURES ── */
+    .feat{background:var(--w);padding:120px 0;}
+    .feat .eye{color:var(--p);opacity:.4;}
+    .feat h2{font-size:clamp(38px,5vw,64px);font-weight:800;color:var(--p);letter-spacing:-.025em;line-height:1.08;max-width:600px;margin-bottom:72px;}
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);}
+    .fc{
+      padding:40px 36px;border:1px solid rgba(6,63,58,.1);border-right:none;border-top:none;
+      position:relative;overflow:hidden;transition:background .3s;cursor:none;
     }
-    .step-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      position: relative;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .step-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
-    .step-number {
-      font-size: 48px; font-weight: 900; line-height: 1;
-      color: var(--green); opacity: 0.2; margin-bottom: 16px;
-      letter-spacing: -0.04em;
-    }
-    .step-icon { font-size: 32px; margin-bottom: 16px; }
-    .step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-    .step-text { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
-    .step-connector {
-      display: none;
-    }
+    .fc:nth-child(1),.fc:nth-child(2),.fc:nth-child(3){border-top:1px solid rgba(6,63,58,.1);}
+    .fc:nth-child(3),.fc:nth-child(6){border-right:1px solid rgba(6,63,58,.1);}
+    .fc:hover{background:#fff;}
+    /* Hover line draws from left */
+    .fc::after{content:'';position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--g);transition:width .45s cubic-bezier(.16,1,.3,1);}
+    .fc:hover::after{width:100%;}
+    /* Left accent bar on hover */
+    .fc::before{content:'';position:absolute;top:0;left:0;width:0;height:100%;background:rgba(0,200,150,.04);transition:width .4s ease;}
+    .fc:hover::before{width:100%;}
+    .fc-ico{width:46px;height:46px;border-radius:13px;background:rgba(0,200,150,.1);display:flex;align-items:center;justify-content:center;margin-bottom:20px;transition:background .3s;}
+    .fc:hover .fc-ico{background:rgba(0,200,150,.18);}
+    .fc-t{font-size:17px;font-weight:800;color:var(--p);margin-bottom:10px;}
+    .fc-d{font-size:13px;color:var(--p);opacity:.5;line-height:1.7;}
+    .fc-arrow{position:absolute;right:24px;bottom:24px;opacity:0;transform:translate(-4px,4px);transition:opacity .3s,transform .3s;}
+    .fc:hover .fc-arrow{opacity:1;transform:translate(0,0);}
 
-    /* =====================
-       FEATURES
-    ===================== */
-    .features-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      overflow: hidden;
-      margin-top: 60px;
+    /* ── CARD PREVIEW ── */
+    .cprev{background:var(--g);padding:120px 0;position:relative;overflow:hidden;}
+    .cprev .vlines .vl{background:linear-gradient(to bottom,transparent,rgba(6,63,58,.1),transparent);}
+    .cprev-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1;}
+    .cprev .eye{color:var(--p);opacity:.45;}
+    .cprev h2{font-size:clamp(36px,4.5vw,58px);font-weight:800;color:var(--p);letter-spacing:-.022em;line-height:1.1;margin-bottom:20px;}
+    .cprev p{font-size:16px;color:var(--p);opacity:.65;line-height:1.75;margin-bottom:34px;}
+    .ccard{
+      background:var(--p);border-radius:28px;padding:36px;color:#fff;
+      box-shadow:0 40px 80px rgba(6,63,58,.38);position:relative;overflow:hidden;
+      transition:transform .4s cubic-bezier(.16,1,.3,1);
     }
-    .feature-cell {
-      background: var(--bg);
-      padding: 36px 32px;
-      transition: background 0.2s;
-    }
-    .feature-cell:hover { background: var(--bg-2); }
-    .feature-emoji { font-size: 28px; margin-bottom: 16px; }
-    .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-    .feature-text { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .ccard:hover{transform:translateY(-6px);}
+    .ccard::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(0,200,150,.08);}
+    .ccard::after{content:'';position:absolute;bottom:-40px;left:-40px;width:140px;height:140px;border-radius:50%;background:rgba(0,200,150,.05);}
+    .cc-biz{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.4;margin-bottom:6px;}
+    .cc-name{font-size:28px;font-weight:900;margin-bottom:24px;}
+    .cc-stamps{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+    .cs{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    .cs.f{background:var(--g);}
+    .cs.e{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);}
+    .cc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid rgba(255,255,255,.1);}
+    .cc-prog{font-size:12px;opacity:.4;font-weight:600;}
+    .cc-reward{background:var(--g);color:var(--p);font-size:11px;font-weight:700;padding:6px 16px;border-radius:100px;}
 
-    /* =====================
-       WALLET SECTION
-    ===================== */
-    .wallet-section {
-      background: var(--bg-2);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .wallet-inner {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
-    }
-    .wallet-points { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
-    .wallet-point { display: flex; align-items: flex-start; gap: 16px; }
-    .wp-icon {
-      width: 40px; height: 40px; flex-shrink: 0;
-      background: var(--green-dim); border: 1px solid rgba(0,224,101,0.2);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-    .wp-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-    .wp-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-    .wallet-visual {
-      display: flex; justify-content: center; position: relative;
-    }
-    .wallet-phones {
-      display: flex; gap: -20px; position: relative;
-    }
-    .mini-phone {
-      width: 180px; height: 360px;
-      background: #111;
-      border-radius: 28px;
-      border: 1.5px solid rgba(255,255,255,0.1);
-      overflow: hidden;
-      position: relative;
-    }
-    .mini-phone-2 {
-      margin-left: -40px;
-      margin-top: 30px;
-      border-color: rgba(255,255,255,0.06);
-      filter: brightness(0.7);
-    }
-    .mini-screen {
-      background: #1c1c2e;
-      height: 100%;
-      padding: 12px 10px;
-    }
-    .ms-header { font-size: 7px; color: rgba(255,255,255,0.3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .ms-card {
-      background: linear-gradient(135deg, #0a0a80, #0606cc);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-    .ms-card-brand { font-size: 6px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-    .ms-card-name { font-size: 11px; font-weight: 800; color: #fff; margin-bottom: 10px; }
-    .ms-stamps { display: flex; gap: 3px; flex-wrap: wrap; }
-    .ms-stamp { width: 12px; height: 12px; border-radius: 4px; }
-    .ms-stamp.on { background: rgba(255,255,255,0.3); }
-    .ms-stamp.off { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); }
+    /* ── PRICING ── */
+    .pricing{background:var(--c);padding:120px 0;position:relative;overflow:hidden;}
+    .pricing-lines{position:absolute;inset:0;pointer-events:none;}
+    .prl{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.04),transparent);}
+    .prl:nth-child(1){left:25%;}
+    .prl:nth-child(2){left:50%;}
+    .prl:nth-child(3){left:75%;}
+    .pricing .eye{color:var(--g);margin-bottom:16px;}
+    .pricing h2{font-size:clamp(38px,5vw,64px);font-weight:800;color:#fff;letter-spacing:-.025em;line-height:1.08;margin-bottom:12px;}
+    .pricing-sub{font-size:14px;color:rgba(255,255,255,.35);margin-bottom:72px;}
+    .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,.06);border-radius:24px;overflow:hidden;}
+    .pc{background:var(--c);padding:40px 32px;position:relative;transition:background .3s;}
+    .pc:hover{background:#1a1a1a;}
+    .pc.hot{background:var(--g);}
+    .pc.hot:hover{background:#00dba6;}
+    .pc.hot .pname,.pc.hot .pamt,.pc.hot .pcur,.pc.hot .pper,.pc.hot .pdesc,.pc.hot .pli{color:var(--p)!important;opacity:1!important;}
+    .pc.hot .pli::before{background:var(--p)!important;}
+    .pc.hot .pcta{background:var(--p)!important;color:#fff!important;}
+    .hot-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--p);color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 16px;border-radius:100px;}
+    .pname{font-size:12px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+    .price-row{display:flex;align-items:flex-end;gap:3px;margin-bottom:6px;}
+    .pcur{font-size:24px;font-weight:700;color:#fff;line-height:1.5;}
+    .pamt{font-size:68px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.04em;}
+    .pper{font-size:13px;color:rgba(255,255,255,.3);margin-bottom:4px;}
+    .pdesc{font-size:13px;color:rgba(255,255,255,.3);margin-bottom:32px;}
+    .plist{list-style:none;margin-bottom:36px;display:flex;flex-direction:column;gap:12px;}
+    .pli{font-size:13px;font-weight:500;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:10px;}
+    .pli::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0;}
+    .pcta{display:block;width:100%;text-align:center;background:rgba(255,255,255,.09);color:#fff;padding:14px;border-radius:100px;font-size:14px;font-weight:700;font-family:var(--f);transition:background .25s,transform .2s;}
+    .pcta:hover{background:rgba(255,255,255,.16);transform:translateY(-1px);}
 
-    /* =====================
-       STATS BAR
-    ===================== */
-    .stats-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-    .stat-item {
-      padding: 40px 32px;
-      border-right: 1px solid var(--border);
-      text-align: center;
-    }
-    .stat-item:last-child { border-right: none; }
-    .stat-number { font-size: 44px; font-weight: 900; color: var(--green); letter-spacing: -0.04em; line-height: 1; }
-    .stat-label { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
+    /* ── TESTIMONIALS ── */
+    .testi{background:var(--m);padding:120px 0;}
+    .testi .eye{color:var(--p);opacity:.38;}
+    .testi h2{font-size:clamp(34px,4vw,54px);font-weight:800;color:var(--p);letter-spacing:-.022em;line-height:1.1;max-width:480px;margin-bottom:64px;}
+    .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+    .tc{background:#fff;border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(6,63,58,.06);position:relative;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s;}
+    .tc::after{content:'';position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--g);transition:width .45s cubic-bezier(.16,1,.3,1);}
+    .tc:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(6,63,58,.1);}
+    .tc:hover::after{width:100%;}
+    .tc-stars{color:var(--g);font-size:14px;letter-spacing:3px;margin-bottom:16px;}
+    .tc-text{font-size:14px;color:var(--p);opacity:.72;line-height:1.75;margin-bottom:24px;}
+    .tc-author{display:flex;align-items:center;gap:12px;}
+    .tc-av{width:38px;height:38px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:var(--p);flex-shrink:0;}
+    .tc-name{font-size:13px;font-weight:700;color:var(--p);}
+    .tc-biz{font-size:12px;color:var(--p);opacity:.42;}
 
-    /* =====================
-       PRICING
-    ===================== */
-    .pricing-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 60px;
-    }
-    .pricing-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px;
-      position: relative;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .pricing-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-4px); }
-    .pricing-card.featured {
-      border-color: var(--green);
-      background: rgba(0,224,101,0.03);
-    }
-    .pricing-card.featured::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--green), #00b8ff);
-      border-radius: 24px 24px 0 0;
-    }
-    .pricing-badge {
-      display: inline-block;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      background: var(--green); color: #000;
-      padding: 4px 12px; border-radius: 100px;
-      margin-bottom: 20px;
-    }
-    .pricing-plan { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-    .pricing-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
-    .pricing-amount { font-size: 48px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
-    .pricing-period { font-size: 14px; color: var(--text-muted); }
-    .pricing-mxn { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; }
-    .pricing-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
-    .pricing-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
-    .pricing-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-muted); }
-    .pricing-feature::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
-    .pricing-feature.disabled { opacity: 0.35; }
-    .pricing-feature.disabled::before { content: '✕'; color: var(--text-dim); }
-    .pricing-cta {
-      display: block; width: 100%;
-      padding: 14px; text-align: center;
-      border-radius: 10px;
-      font-weight: 700; font-size: 14px;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .pricing-cta.primary { background: var(--green); color: #000; }
-    .pricing-cta.primary:hover { background: #00ff75; }
-    .pricing-cta.outline {
-      background: transparent; color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .pricing-cta.outline:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+    /* ── CTA FINAL ── */
+    .cfinal{background:var(--g);padding:120px 0;text-align:center;position:relative;overflow:hidden;}
+    .cfinal .vlines .vl{animation:vlPulse 5s ease-in-out infinite;}
+    .cfinal h2{font-size:clamp(42px,7vw,90px);font-weight:800;color:var(--p);letter-spacing:-.03em;line-height:1.02;max-width:800px;margin:0 auto 24px;}
+    .cfinal h2 em{font-style:normal;color:#fff;}
+    .cfinal p{font-size:17px;color:var(--p);opacity:.58;margin-bottom:48px;}
+    .cta-note{margin-top:20px;font-size:12px;color:var(--p);opacity:.38;}
 
-    /* =====================
-       TESTIMONIALS
-    ===================== */
-    .testimonials-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 60px;
+    /* ── BIG NAME ── */
+    .bname{
+      background:#000;
+      border-top:1px solid rgba(255,255,255,.06);
+      overflow:hidden;
+      display:block;
     }
-    .testimonial-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
+    .bname-text{
+      display:inline-block;white-space:nowrap;
+      font-family:var(--f);font-weight:900;
+      color:var(--g);line-height:1;
+      letter-spacing:-.04em;
+      /* padding en em relativo al font-size GRANDE → da aire real */
+      padding:.18em 0 .32em;
+      opacity:0;transition:color .5s,opacity .5s;
     }
-    .testimonial-stars { color: var(--green); font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
-    .testimonial-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
-    .testimonial-author { display: flex; align-items: center; gap: 12px; }
-    .author-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #333, #555);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700; color: #999;
-      flex-shrink: 0;
-    }
-    .author-name { font-size: 14px; font-weight: 700; }
-    .author-biz { font-size: 12px; color: var(--text-dim); }
+    .bname-text.ready{opacity:1;}
+    .bname-text:hover{color:#fff;}
 
-    /* =====================
-       FAQ
-    ===================== */
-    .faq-list { max-width: 720px; margin: 60px auto 0; }
-    .faq-item {
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .faq-question {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 24px 0; cursor: pointer;
-      font-size: 16px; font-weight: 600;
-      transition: color 0.2s; gap: 16px;
-      background: none; border: none; color: var(--text); width: 100%; text-align: left;
-    }
-    .faq-question:hover { color: var(--green); }
-    .faq-icon { font-size: 20px; flex-shrink: 0; transition: transform 0.3s; color: var(--text-muted); }
-    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--green); }
-    .faq-answer {
-      font-size: 15px; color: var(--text-muted); line-height: 1.7;
-      max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s;
-      padding: 0;
-    }
-    .faq-item.open .faq-answer { max-height: 300px; padding-bottom: 24px; }
+    /* ── FOOTER ── */
+    footer{background:var(--p);padding:64px 0 40px;}
+    .foot-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px;padding-bottom:52px;border-bottom:1px solid rgba(255,255,255,.1);}
+    .foot-logo img{height:60px;width:auto;filter:brightness(0) invert(1);margin-bottom:14px;mix-blend-mode:normal;}
+    .foot-tag{font-size:13px;color:rgba(255,255,255,.32);line-height:1.65;max-width:240px;}
+    .foot-col h4{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:18px;}
+    .foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+    .foot-col a{font-size:13px;color:rgba(255,255,255,.55);transition:color .2s;}
+    .foot-col a:hover{color:#fff;}
+    .foot-bot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+    .foot-copy{font-size:12px;color:rgba(255,255,255,.22);}
+    .foot-copy a{color:var(--g);}
 
-    /* =====================
-       FINAL CTA
-    ===================== */
-    .final-cta {
-      position: relative; z-index: 1;
-      padding: 100px 0;
+    /* ── RESPONSIVE ── */
+    @media(max-width:920px){
+      .hero-ener,.hero-grid,.cprev-grid{grid-template-columns:1fr;}
+      .hero-right{order:-1;}
+      .hero-mark-wrap{width:min(320px,80%);}
+      .phone{order:-1;}
+      .proof-stats{grid-template-columns:repeat(2,1fr);}
+      .stat:nth-child(2){border-right:none;}
+      .stat:nth-child(3){border-top:1px solid rgba(6,63,58,.1);}
+      .stat:nth-child(4){border-top:1px solid rgba(6,63,58,.1);}
+      .steps{grid-template-columns:1fr;}
+      .step{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+      .feat-grid{grid-template-columns:repeat(2,1fr);}
+      .price-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto;}
+      .testi-grid{grid-template-columns:1fr;}
+      .foot-top{grid-template-columns:1fr 1fr;}
     }
-    .cta-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 80px 60px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .cta-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--green), transparent);
-    }
-    .cta-glow {
-      position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
-      width: 400px; height: 400px;
-      background: var(--green);
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.06;
-      pointer-events: none;
-    }
-    .cta-title {
-      font-size: clamp(36px, 5vw, 60px);
-      font-weight: 900; line-height: 1.05;
-      letter-spacing: -0.03em; margin-bottom: 20px;
-    }
-    .cta-sub { font-size: 18px; color: var(--text-muted); margin-bottom: 40px; }
-    .cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-    .cta-note { font-size: 13px; color: var(--text-dim); margin-top: 20px; }
-
-    /* =====================
-       FOOTER
-    ===================== */
-    footer {
-      position: relative; z-index: 1;
-      border-top: 1px solid var(--border);
-      padding: 48px 0;
-    }
-    .footer-inner {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
-    }
-    .footer-logo { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
-    .footer-logo span { color: var(--green); }
-    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: var(--text-dim); transition: color 0.2s; }
-    .footer-links a:hover { color: var(--text); }
-    .footer-copy { font-size: 13px; color: var(--text-dim); }
-
-    /* =====================
-       SECTION HEADERS (centered)
-    ===================== */
-    .section-header { text-align: center; max-width: 680px; margin: 0 auto; }
-    .section-header .section-sub { margin: 16px auto 0; }
-
-    /* =====================
-       RESPONSIVE
-    ===================== */
-    @media (max-width: 900px) {
-      .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 60px; }
-      .hero-sub { margin: 0 auto 40px; }
-      .hero-actions { justify-content: center; }
-      .hero-social-proof { justify-content: center; }
-      .hero-visual { order: -1; }
-      .phone-badge { display: none; }
-      .problem-grid { grid-template-columns: 1fr; }
-      .steps-grid { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: 1fr 1fr; }
-      .wallet-inner { grid-template-columns: 1fr; text-align: center; }
-      .wallet-visual { justify-content: center; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .stat-item:nth-child(2) { border-right: none; }
-      .stat-item:nth-child(3) { border-top: 1px solid var(--border); }
-      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 60px auto 0; }
-      .testimonials-grid { grid-template-columns: 1fr; max-width: 480px; margin: 60px auto 0; }
-      .nav-links { display: none; }
-      .nav-mobile-btn { display: block; }
-      .cta-card { padding: 48px 24px; }
-      .footer-inner { flex-direction: column; text-align: center; }
-      .footer-links { justify-content: center; }
-    }
-    @media (max-width: 600px) {
-      .features-grid { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .logos-grid { gap: 28px; }
+    @media(max-width:600px){
+      .wrap{padding:0 20px;}
+      .feat-grid{grid-template-columns:1fr;}
+      .foot-top{grid-template-columns:1fr;}
+      body{cursor:auto;}
+      #cur,#cur2{display:none;}
     }
   </style>
 </head>
 <body>
 
-<!-- BACKGROUND ORBS -->
-<div class="bg-orbs">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
+<div id="cur"></div>
+<div id="cur2"></div>
 
-<!-- NAV -->
+<!-- ══════════════ NAV ══════════════ -->
 <nav id="nav">
-  <div class="container">
-    <div class="nav-inner">
-      <a href="#" class="nav-logo">Easy<span>Loyalty</span></a>
+  <div class="wrap">
+    <div class="nav-in">
+      <a href="#" class="nav-logo">
+        <img src="img/logo.png" alt="Easy Loyalty" />
+      </a>
       <ul class="nav-links">
-        <li><a href="#como-funciona">Cómo funciona</a></li>
-        <li><a href="#caracteristicas">Características</a></li>
-        <li><a href="#precios">Precios</a></li>
-        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#como-funciona" class="nav-link">Cómo funciona</a></li>
+        <li><a href="#features" class="nav-link">Funciones</a></li>
+        <li><a href="#pricing" class="nav-link">Precios</a></li>
+        <li><a href="https://app.easyloyalty.io/registro" target="_blank" class="nav-cta">Empieza gratis</a></li>
       </ul>
-      <div class="nav-cta">
-        <a href="#precios" class="nav-login">Ver planes</a>
-        <a href="https://app.easyloyalty.io/registro" class="nav-btn">Solicitar demo</a>
-      </div>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-inner">
-      <div class="hero-content">
-        <p class="hero-eyebrow">Programa de lealtad digital</p>
-        <h1 class="hero-title">
-          Clientes que<br>
-          <span class="highlight">regresan siempre.</span>
-        </h1>
-        <p class="hero-sub">
-          Lanza tu programa de lealtad digital en menos de 24 horas. Tarjetas en Apple Wallet y Google Wallet. Sin apps que descargar. Con resultados reales.
-        </p>
-        <div class="hero-actions">
-          <a href="https://app.easyloyalty.io/registro" class="btn-primary">
-            Solicitar demo gratuita →
-          </a>
-          <a href="#como-funciona" class="btn-secondary">
-            Ver cómo funciona
-          </a>
-        </div>
-        <div class="hero-social-proof">
-          <div class="proof-avatars">
-            <div class="proof-avatar">R</div>
-            <div class="proof-avatar">M</div>
-            <div class="proof-avatar">A</div>
-            <div class="proof-avatar">+</div>
-          </div>
-          <p class="proof-text">
-            <strong>Negocios como el tuyo</strong> ya están<br>fidelizando a sus clientes con Easy Loyalty
-          </p>
-        </div>
-      </div>
+<!-- Hidden SVG filters -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="waveFilter" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feTurbulence id="turb" type="turbulence" baseFrequency="0 0" numOctaves="4" result="noise" seed="8"/>
+      <feDisplacementMap id="disp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
-      <div class="hero-visual">
-        <div class="phone-wrap">
-          <div class="phone">
-            <div class="phone-notch"></div>
-            <div class="phone-screen">
-              <p class="wallet-header">🏦 Wallet · Mis tarjetas</p>
-              <div class="wallet-card">
-                <p class="wc-brand">Club de Lealtad</p>
-                <p class="wc-name">Eureka Burgers</p>
-                <div class="wc-stamps">
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp filled">🍔</div>
-                  <div class="wc-stamp empty"></div>
-                  <div class="wc-stamp empty"></div>
-                </div>
-                <p class="wc-progress"><strong>7/9 sellos</strong> · 2 para tu burger gratis</p>
-              </div>
-              <div class="wallet-pass-info">
-                <div>
-                  <div class="wpi-label">Tu sello más reciente</div>
-                  <div class="wpi-value">Hace 2 días</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="wpi-label">Premios ganados</div>
-                  <div class="wpi-value">2 burgers 🎉</div>
-                </div>
-              </div>
-              <div class="wallet-apple-badge">
-                <div class="wab-icon">🍎</div>
-                <div class="wab-text">
-                  Guardado en
-                  <strong>Apple Wallet</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="phone-glow"></div>
-          <div class="phone-badge badge-left">
-            <div class="badge-label">Tasa de retorno</div>
-            <div class="badge-value">+68%</div>
-            <div class="badge-sub">vs. sin programa</div>
-          </div>
-          <div class="phone-badge badge-right">
-            <div class="badge-label">Nuevos miembros</div>
-            <div class="badge-value">↑ 312</div>
-            <div class="badge-sub">este mes</div>
-          </div>
-        </div>
-      </div>
-    </div>
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero" id="heroSection">
+  <div class="hero-hlines" aria-hidden="true">
+    <div class="hhl"></div><div class="hhl"></div><div class="hhl"></div>
   </div>
-</section>
-
-<!-- LOGOS BAR -->
-<div class="logos-bar">
-  <div class="container">
-    <p class="logos-label">Diseñado para todo tipo de negocio</p>
-    <div class="logos-grid">
-      <div class="logo-item">Cafeterías</div>
-      <div class="logo-item">Restaurantes</div>
-      <div class="logo-item">Hamburgueserías</div>
-      <div class="logo-item">Belleza & Spa</div>
-      <div class="logo-item">Retail</div>
-      <div class="logo-item">Franquicias</div>
-    </div>
+  <div class="vlines" aria-hidden="true">
+    <div class="vl"></div><div class="vl"></div><div class="vl"></div>
+    <div class="vl"></div><div class="vl"></div>
   </div>
-</div>
+  <div class="scan" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="hero-ener">
 
-<!-- PROBLEM / SOLUTION -->
-<section class="section">
-  <div class="container">
-    <div style="max-width:680px">
-      <div class="tag">El problema</div>
-      <h2 class="section-title">La lealtad tradicional<br>está rota.</h2>
-      <p class="section-sub" style="margin-top:16px">Las tarjetas de papel se pierden, se mojan y nadie las lleva. Los programas digitales complicados asustan a tus clientes. El resultado: inversión sin retorno.</p>
-    </div>
-    <div class="problem-grid">
-      <div class="problem-list">
-        <div class="problem-item">
-          <div class="problem-icon">🗑️</div>
-          <div class="problem-text">
-            <strong>Tarjetas de papel que nadie conserva</strong>
-            El 73% de las tarjetas físicas se pierden o se olvidan antes del tercer sello. Dinero tirado.
-          </div>
-        </div>
-        <div class="problem-item">
-          <div class="problem-icon">📱</div>
-          <div class="problem-text">
-            <strong>Apps que nadie quiere descargar</strong>
-            Pedirle a tu cliente que descargue una app es pedir demasiado. La tasa de adopción es mínima.
-          </div>
-        </div>
-        <div class="problem-item">
-          <div class="problem-icon">🔇</div>
-          <div class="problem-text">
-            <strong>Sin comunicación directa con tus clientes</strong>
-            No tienes forma de avisarles de promociones, nuevos productos o recordarles que regresen.
-          </div>
-        </div>
-        <div class="problem-item">
-          <div class="problem-icon">📊</div>
-          <div class="problem-text">
-            <strong>Cero datos sobre tus clientes</strong>
-            No sabes quiénes son tus mejores clientes, cuándo vienen ni qué los hace regresar.
-          </div>
-        </div>
-      </div>
-
-      <div class="solution-card">
-        <div class="tag" style="margin-bottom:28px">La solución</div>
-        <div class="solution-stat">
-          <div class="solution-number">+50%</div>
-          <div class="solution-label">de incremento en ventas en los primeros 8 meses — caso real</div>
-        </div>
-        <div class="solution-divider"></div>
-        <div class="solution-stat">
-          <div class="solution-number">70%</div>
-          <div class="solution-label">de tus nuevos miembros se convierten en clientes regulares</div>
-        </div>
-        <div class="solution-divider"></div>
-        <div class="solution-stat">
-          <div class="solution-number">24h</div>
-          <div class="solution-label">es todo lo que tardas en tener tu programa operando</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATS BAR -->
-<section class="section" style="padding-top:0">
-  <div class="container">
-    <div class="stats-bar">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-number">+300</div>
-          <div class="stat-label">marcas activas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">14</div>
-          <div class="stat-label">países</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">200k</div>
-          <div class="stat-label">tarjetas emitidas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">8M</div>
-          <div class="stat-label">notificaciones enviadas</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="section" id="como-funciona">
-  <div class="container">
-    <div class="section-header">
-      <div class="tag">Proceso</div>
-      <h2 class="section-title">Lanzar tu programa<br>es ridículamente simple.</h2>
-      <p class="section-sub">En tres pasos tienes tu programa de lealtad digital funcionando con clientes reales.</p>
-    </div>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-number">01</div>
-        <div class="step-icon">🎨</div>
-        <h3 class="step-title">Diseñamos tu tarjeta</h3>
-        <p class="step-text">Creamos tu tarjeta digital con los colores, logo y mecánica de tu negocio. Sellos, cashback, membresías VIP — tú decides. Lista en menos de 24 horas.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-number">02</div>
-        <div class="step-icon">📲</div>
-        <h3 class="step-title">Tus clientes la guardan</h3>
-        <p class="step-text">Escanean un QR y en segundos la tarjeta está en su Apple Wallet o Google Wallet. Sin descargar ninguna app. Sin crear ninguna cuenta.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-number">03</div>
-        <div class="step-icon">📈</div>
-        <h3 class="step-title">Tú ves los resultados</h3>
-        <p class="step-text">Desde tu dashboard en tiempo real: cuántos clientes tienes, cuántos regresan, cuántos premios se canjearon. Tú controlas todo.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="section" id="caracteristicas">
-  <div class="container">
-    <div class="section-header">
-      <div class="tag">Características</div>
-      <h2 class="section-title">Todo lo que necesitas<br>para fidelizar.</h2>
-      <p class="section-sub">Tecnología de nivel enterprise sin la complejidad ni el costo.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-cell">
-        <div class="feature-emoji">🍎</div>
-        <h3 class="feature-title">Apple & Google Wallet</h3>
-        <p class="feature-text">Tu tarjeta vive en el teléfono de tu cliente, no en una app separada. Acceso con un toque. Siempre visible.</p>
-      </div>
-      <div class="feature-cell">
-        <div class="feature-emoji">📷</div>
-        <h3 class="feature-title">Scanner web sin app</h3>
-        <p class="feature-text">Tu staff escanea el QR del cliente desde cualquier celular o tablet. Sin instalar nada. Un toque y el sello está dado.</p>
-      </div>
-      <div class="feature-cell">
-        <div class="feature-emoji">🔔</div>
-        <h3 class="feature-title">Notificaciones push</h3>
-        <p class="feature-text">Avisa a tus clientes de promociones, nuevos productos o recuérdales que les faltan sellos. Directo a su pantalla de bloqueo.</p>
-      </div>
-      <div class="feature-cell">
-        <div class="feature-emoji">📊</div>
-        <h3 class="feature-title">Analytics en tiempo real</h3>
-        <p class="feature-text">Dashboard con todos tus números: clientes activos, frecuencia de visita, sellos dados, premios canjeados. Información que vale.</p>
-      </div>
-      <div class="feature-cell">
-        <div class="feature-emoji">⚙️</div>
-        <h3 class="feature-title">8 mecánicas de lealtad</h3>
-        <p class="feature-text">Sellos, cashback, gift cards, membresías VIP, descuentos inteligentes, cupones y más. Personaliza según tu tipo de negocio.</p>
-      </div>
-      <div class="feature-cell">
-        <div class="feature-emoji">🔗</div>
-        <h3 class="feature-title">API e integraciones</h3>
-        <p class="feature-text">Conecta con tu POS, CRM o sistema de pedidos. Webhook y Zapier disponibles para automatizar cualquier flujo.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- WALLET SECTION -->
-<section class="section wallet-section" style="padding: 100px 0;">
-  <div class="container">
-    <div class="wallet-inner">
+      <!-- LEFT: texto -->
       <div>
-        <div class="tag">Tecnología Wallet</div>
-        <h2 class="section-title">Vive en el teléfono.<br>No en una app más.</h2>
-        <div class="wallet-points">
-          <div class="wallet-point">
-            <div class="wp-icon">🍎</div>
-            <div>
-              <p class="wp-title">Compatible con Apple Wallet</p>
-              <p class="wp-text">Tu tarjeta aparece automáticamente cuando el cliente está cerca de tu negocio, gracias a la geolocalización nativa de iOS.</p>
-            </div>
-          </div>
-          <div class="wallet-point">
-            <div class="wp-icon">🤖</div>
-            <div>
-              <p class="wp-title">Compatible con Google Wallet</p>
-              <p class="wp-text">Funciona en cualquier Android. El cliente guarda su tarjeta en segundos y la tiene siempre a la mano.</p>
-            </div>
-          </div>
-          <div class="wallet-point">
-            <div class="wp-icon">⚡</div>
-            <div>
-              <p class="wp-title">Actualización en tiempo real</p>
-              <p class="wp-text">Cuando el staff da un sello, la tarjeta en el Wallet del cliente se actualiza al instante. Sin recargar, sin hacer nada.</p>
-            </div>
-          </div>
+        <div class="hero-tag rv">Apple Wallet · Google Wallet · QR</div>
+        <div class="hero-logo rv d1">
+          <img src="img/logo-dark.png" alt="Easy Loyalty — Haz que tus clientes vuelvan" />
         </div>
-      </div>
-      <div class="wallet-visual">
-        <div class="wallet-phones">
-          <div class="mini-phone">
-            <div class="mini-screen">
-              <div class="ms-header">🍎 Apple Wallet</div>
-              <div class="ms-card">
-                <div class="ms-card-brand">Club de lealtad</div>
-                <div class="ms-card-name">Mi Negocio</div>
-                <div class="ms-stamps">
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp off"></div>
-                  <div class="ms-stamp off"></div>
-                  <div class="ms-stamp off"></div>
-                  <div class="ms-stamp off"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mini-phone mini-phone-2">
-            <div class="mini-screen">
-              <div class="ms-header">🤖 Google Wallet</div>
-              <div class="ms-card" style="background: linear-gradient(135deg,#1a1a1a,#333)">
-                <div class="ms-card-brand">Loyalty card</div>
-                <div class="ms-card-name">Mi Negocio</div>
-                <div class="ms-stamps">
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp on"></div>
-                  <div class="ms-stamp off"></div>
-                  <div class="ms-stamp off"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <p class="hero-sub rv d3">Lanza tu programa de lealtad digital en menos de 24 horas. Sin apps. Sin fricción. <span class="hero-highlight">Con resultados reales.</span></p>
+        <div class="hero-btns rv d4">
+          <a href="https://app.easyloyalty.io/registro" target="_blank" class="btn-dark">
+            Empieza gratis
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="#como-funciona" class="btn-ghost">
+            Ver cómo funciona
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section class="section">
-  <div class="container">
-    <div class="section-header">
-      <div class="tag">Casos de éxito</div>
-      <h2 class="section-title">Resultados reales<br>de negocios reales.</h2>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"En 8 meses pasamos de 0 a más de 11,000 miembros activos. Nuestras ventas crecieron 50% y ahora sabemos exactamente quiénes son nuestros clientes más leales."</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">SC</div>
-          <div>
-            <div class="author-name">Sede Café</div>
-            <div class="author-biz">Cadena de cafeterías · CDMX</div>
-          </div>
+        <div class="hero-trust rv d5">
+          <span>Sin tarjeta de crédito</span>
+          <span>Listo en 24 h</span>
+          <span>Cancela cuando quieras</span>
         </div>
-      </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"La implementación fue increíblemente rápida. En 24 horas ya teníamos la tarjeta lista y nuestros primeros 100 clientes registrados ese mismo fin de semana."</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">MC</div>
-          <div>
-            <div class="author-name">Marley Coffee</div>
-            <div class="author-biz">Cadena de cafeterías · Santiago, Chile</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"El primer mes tuvimos 1,500 miembros y las ventas subieron 25%. Lo mejor es que ahora podemos avisarles de promociones directamente a su teléfono."</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">IN</div>
-          <div>
-            <div class="author-name">Innamorato</div>
-            <div class="author-biz">Heladería · Mendoza, Argentina</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="section" id="precios">
-  <div class="container">
-    <div class="section-header">
-      <div class="tag">Precios</div>
-      <h2 class="section-title">Transparente.<br>Sin sorpresas.</h2>
-      <p class="section-sub">Elige el plan que se adapta a tu negocio. Cancela cuando quieras.</p>
-    </div>
-    <div class="pricing-grid">
-
-      <!-- Starter -->
-      <div class="pricing-card">
-        <p class="pricing-plan">Starter</p>
-        <div class="pricing-price">
-          <span class="pricing-amount">$49</span>
-          <span class="pricing-period">USD/mes</span>
-        </div>
-        <p class="pricing-mxn">~$990 MXN/mes</p>
-        <p class="pricing-desc">Para negocios pequeños que quieren empezar a fidelizar clientes hoy.</p>
-        <div class="pricing-features">
-          <div class="pricing-feature">1 sucursal</div>
-          <div class="pricing-feature">Hasta 500 clientes activos</div>
-          <div class="pricing-feature">1 mecánica de lealtad</div>
-          <div class="pricing-feature">Apple & Google Wallet</div>
-          <div class="pricing-feature">Scanner web</div>
-          <div class="pricing-feature">Dashboard básico</div>
-          <div class="pricing-feature disabled">Notificaciones push</div>
-          <div class="pricing-feature disabled">Soporte prioritario</div>
-        </div>
-        <a href="https://app.easyloyalty.io/registro" class="pricing-cta outline">Empezar →</a>
       </div>
 
-      <!-- Pro -->
-      <div class="pricing-card featured">
-        <div class="pricing-badge">Más popular</div>
-        <p class="pricing-plan">Pro</p>
-        <div class="pricing-price">
-          <span class="pricing-amount">$99</span>
-          <span class="pricing-period">USD/mes</span>
+      <!-- RIGHT: isotipo gigante -->
+      <div class="hero-right rv d2">
+        <div class="hero-mark-meta">
+          <span class="hm-lbl">Apple · Google Wallet</span>
         </div>
-        <p class="pricing-mxn">~$1,990 MXN/mes</p>
-        <p class="pricing-desc">Para negocios en crecimiento con varias sucursales que quieren más alcance.</p>
-        <div class="pricing-features">
-          <div class="pricing-feature">Hasta 5 sucursales</div>
-          <div class="pricing-feature">Hasta 3,000 clientes activos</div>
-          <div class="pricing-feature">3 mecánicas de lealtad</div>
-          <div class="pricing-feature">Apple & Google Wallet</div>
-          <div class="pricing-feature">Scanner web</div>
-          <div class="pricing-feature">Dashboard completo + analytics</div>
-          <div class="pricing-feature">Notificaciones push ilimitadas</div>
-          <div class="pricing-feature">Soporte prioritario</div>
+        <div class="hero-mark-wrap" id="markWrap">
+          <img src="img/logo-mark.png" alt="" class="hero-mark-img" id="heroMark" />
+          <div class="mark-glow" id="markGlow"></div>
+          <div class="mark-dot" id="markDot"></div>
         </div>
-        <a href="https://app.easyloyalty.io/registro" class="pricing-cta primary">Empezar →</a>
-      </div>
-
-      <!-- Business -->
-      <div class="pricing-card">
-        <p class="pricing-plan">Business</p>
-        <div class="pricing-price">
-          <span class="pricing-amount">$249</span>
-          <span class="pricing-period">USD/mes</span>
-        </div>
-        <p class="pricing-mxn">~$4,990 MXN/mes</p>
-        <p class="pricing-desc">Para cadenas y franquicias que necesitan escala, control total y soporte dedicado.</p>
-        <div class="pricing-features">
-          <div class="pricing-feature">Sucursales ilimitadas</div>
-          <div class="pricing-feature">Clientes ilimitados</div>
-          <div class="pricing-feature">8 mecánicas de lealtad</div>
-          <div class="pricing-feature">Apple & Google Wallet</div>
-          <div class="pricing-feature">Scanner web</div>
-          <div class="pricing-feature">Analytics avanzado + reportes</div>
-          <div class="pricing-feature">Notificaciones push + geolocalización</div>
-          <div class="pricing-feature">Gerente de cuenta dedicado</div>
-        </div>
-        <a href="https://app.easyloyalty.io/registro" class="pricing-cta outline">Contactar →</a>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- FAQ -->
-<section class="section" id="faq">
-  <div class="container">
-    <div class="section-header">
-      <div class="tag">Preguntas frecuentes</div>
-      <h2 class="section-title">Lo que todos preguntan.</h2>
+
+<!-- ══════════════ SOCIAL PROOF ══════════════ -->
+<section class="proof">
+  <div class="wrap">
+    <p class="proof-lbl rv">Resultados reales de negocios como el tuyo</p>
+    <div class="proof-stats">
+      <div class="stat rv"><div class="stat-n" data-count="+40%">0%</div><div class="stat-l">Retención de clientes</div></div>
+      <div class="stat rv d1"><div class="stat-n" data-count="24h">0h</div><div class="stat-l">Para lanzar tu programa</div></div>
+      <div class="stat rv d2"><div class="stat-n" data-count="0">0</div><div class="stat-l">Apps que instalar</div></div>
+      <div class="stat rv d3"><div class="stat-n" data-count="2×">0×</div><div class="stat-l">Más visitas por cliente</div></div>
     </div>
-    <div class="faq-list">
-      <div class="faq-item open">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Mis clientes necesitan descargar una app?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">No. Esa es precisamente nuestra mayor ventaja. Tus clientes escanean un QR y la tarjeta se guarda directamente en Apple Wallet o Google Wallet — el mismo lugar donde guardan sus tarjetas de crédito. Sin descargar nada, sin crear cuentas.</p>
+    <div class="proof-wallets rv">
+      <span class="proof-wallets-lbl">Compatible con</span>
+      <div class="wbadge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#063f3a"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <span>Apple Wallet</span>
       </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Cuánto tiempo tarda la implementación?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Menos de 24 horas desde que confirmas tu plan. Diseñamos tu tarjeta con tu marca, configuramos tu mecánica de lealtad y te entregamos el QR listo para empezar a usar. Tu staff solo necesita abrir un link desde su celular.</p>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Cómo da sellos mi staff?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Desde cualquier celular o tablet, abren el scanner de Easy Loyalty (es una página web, no una app) y escanean el QR del cliente. El sello se registra al instante y la tarjeta del cliente se actualiza automáticamente.</p>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Qué pasa si tengo varias sucursales?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Todos los sellos se acumulan en la misma tarjeta sin importar en qué sucursal los reciba el cliente. Los planes Pro y Business soportan múltiples ubicaciones con dashboards unificados.</p>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Puedo cambiar la mecánica de lealtad después?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Sí. Puedes ajustar el número de sellos, la recompensa y los parámetros de tu programa desde el dashboard en cualquier momento. Los cambios se reflejan en las tarjetas de tus clientes de forma automática.</p>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Qué datos tengo disponibles de mis clientes?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Nombre, teléfono, email (los datos que el cliente quiera compartir al registrarse), historial de visitas, sellos acumulados, premios canjeados y frecuencia de retorno. Toda la información queda en tu dashboard.</p>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          ¿Puedo cancelar en cualquier momento?
-          <span class="faq-icon">+</span>
-        </button>
-        <p class="faq-answer">Sí. No hay contratos de permanencia. Si cancelas, tus datos siguen disponibles por 30 días para que puedas exportarlos. Sin letras pequeñas, sin penalizaciones.</p>
+      <div class="wbadge">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        <span>Google Wallet</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FINAL CTA -->
-<section class="final-cta" id="demo">
-  <div class="container">
-    <div class="cta-card">
-      <div class="cta-glow"></div>
-      <div class="tag" style="margin:0 auto 24px">Demo gratuita</div>
-      <h2 class="cta-title">¿Listo para que tus<br>clientes regresen?</h2>
-      <p class="cta-sub">Agenda una demo de 30 minutos. Sin compromisos, sin presión.<br>Te mostramos cómo funciona con un ejemplo de tu negocio.</p>
-      <div class="cta-actions">
-        <a href="mailto:eder.estudillo@gmail.com" class="btn-primary" style="font-size:16px; padding:18px 32px">
-          Agendar demo gratuita →
-        </a>
-        <a href="https://wa.me/521XXXXXXXXXX" class="btn-secondary" style="font-size:16px; padding:17px 32px" target="_blank">
-          💬 WhatsApp
+<!-- ══════════════ CÓMO FUNCIONA ══════════════ -->
+<section class="how" id="como-funciona">
+  <div class="how-lines" aria-hidden="true">
+    <div class="hl"></div><div class="hl"></div><div class="hl"></div><div class="hl"></div>
+  </div>
+  <div class="wrap">
+    <span class="eye rv">Así de simple</span>
+    <h2><span class="wl"><span class="wi">Lanza tu programa</span></span><span class="wl"><span class="wi">en tres pasos</span></span></h2>
+    <div class="steps">
+      <div class="step rv">
+        <div class="step-n">01</div>
+        <div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div class="step-t">Crea tu programa</div>
+        <div class="step-d">Elige tu nombre, colores y logo. Define cuántos sellos necesita tu cliente. En minutos tienes tu tarjeta lista.</div>
+      </div>
+      <div class="step rv d1">
+        <div class="step-n">02</div>
+        <div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <div class="step-t">Tus clientes se registran</div>
+        <div class="step-d">Con un link o QR el cliente llena su nombre. En segundos tiene su tarjeta en Apple Wallet o Google Wallet.</div>
+      </div>
+      <div class="step rv d2">
+        <div class="step-n">03</div>
+        <div class="step-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="step-t">Sella y fideliza</div>
+        <div class="step-d">Tu staff escanea el QR del cliente. El sello se registra al instante y el iPhone se actualiza en tiempo real.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FEATURES ══════════════ -->
+<section class="feat" id="features">
+  <div class="wrap">
+    <span class="eye rv">Todo incluido</span>
+    <h2><span class="wl"><span class="wi">Todo lo que necesita</span></span><span class="wl"><span class="wi">tu negocio para crecer</span></span></h2>
+    <div class="feat-grid">
+      <div class="fc rv">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <div class="fc-t">Apple & Google Wallet</div>
+        <div class="fc-d">Tarjetas nativas en iPhone y Android. Sin apps. Se actualiza al instante con cada sello.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="fc rv d1">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="fc-t">Branding total</div>
+        <div class="fc-d">Tu logo, tus colores, tu nombre. Cada tarjeta refleja tu identidad, no la nuestra.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="fc rv d2">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="fc-t">Dashboard con métricas</div>
+        <div class="fc-d">Clientes activos, sellos, premios canjeados. Toda la info de tu programa en un solo lugar.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="fc rv d1">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+        <div class="fc-t">Scanner para tu staff</div>
+        <div class="fc-d">Tu equipo escanea desde cualquier celular. Sin hardware especial. Solo el link del scanner.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="fc rv d2">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="fc-t">Actualizaciones en tiempo real</div>
+        <div class="fc-d">Al sellar, el iPhone del cliente vibra y la tarjeta se actualiza. Sin que el cliente haga nada.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+      <div class="fc rv d3">
+        <div class="fc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="fc-t">Multi-programa</div>
+        <div class="fc-d">¿Tienes más de una sucursal? Crea programas distintos con branding y base de clientes independientes.</div>
+        <div class="fc-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CARD PREVIEW ══════════════ -->
+<section class="cprev">
+  <div class="vlines" aria-hidden="true">
+    <div class="vl"></div><div class="vl"></div><div class="vl"></div>
+    <div class="vl"></div><div class="vl"></div>
+  </div>
+  <div class="wrap">
+    <div class="cprev-grid">
+      <div class="rv">
+        <span class="eye" style="color:var(--p);opacity:.45;">Tu tarjeta, tu marca</span>
+        <h2><span class="wl"><span class="wi">Una tarjeta que tus</span></span><span class="wl"><span class="wi">clientes van a querer</span></span><span class="wl"><span class="wi">mostrar</span></span></h2>
+        <p>Diseñada para vivir en la cartera digital del iPhone. Con tus colores, logo y nombre. Funciona aunque no haya internet.</p>
+        <a href="https://app.easyloyalty.io/registro" target="_blank" class="btn-dark" style="background:var(--p);">
+          Crea la tuya gratis
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
       </div>
-      <p class="cta-note">Respuesta en menos de 2 horas en días hábiles</p>
+      <div class="rv d2">
+        <div class="ccard">
+          <div class="cc-biz">Easy Loyalty Program</div>
+          <div class="cc-name">Ana García</div>
+          <div class="cc-stamps">
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs f"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="cs e"></div><div class="cs e"></div><div class="cs e"></div>
+          </div>
+          <div class="cc-foot">
+            <div class="cc-prog">6 / 9 sellos acumulados</div>
+            <div class="cc-reward">Café gratis</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ══════════════ PRICING ══════════════ -->
+<section class="pricing" id="pricing">
+  <div class="pricing-lines" aria-hidden="true">
+    <div class="prl"></div><div class="prl"></div><div class="prl"></div>
+  </div>
+  <div class="wrap">
+    <span class="eye rv" style="color:var(--g);">Precios transparentes</span>
+    <h2 style="color:#fff;"><span class="wl"><span class="wi">Empieza hoy.</span></span><span class="wl"><span class="wi">Crece mañana.</span></span></h2>
+    <p class="pricing-sub rv d2">Sin contratos. Sin sorpresas. Cancela cuando quieras.</p>
+    <div class="price-grid">
+      <div class="pc rv">
+        <div class="pname">Starter</div>
+        <div class="price-row"><span class="pcur">$</span><span class="pamt">49</span></div>
+        <div class="pper">USD / mes</div>
+        <div class="pdesc">Para negocios que inician</div>
+        <ul class="plist">
+          <li class="pli">1 programa de lealtad</li>
+          <li class="pli">Hasta 500 clientes</li>
+          <li class="pli">Apple Wallet + Google Wallet</li>
+          <li class="pli">Dashboard básico</li>
+          <li class="pli">Scanner para staff</li>
+        </ul>
+        <a href="https://app.easyloyalty.io/registro" target="_blank" class="pcta">Empezar gratis</a>
+      </div>
+      <div class="pc hot rv d1">
+        <div class="hot-badge">Más popular</div>
+        <div class="pname">Growth</div>
+        <div class="price-row"><span class="pcur">$</span><span class="pamt">99</span></div>
+        <div class="pper">USD / mes</div>
+        <div class="pdesc">Para negocios en expansión</div>
+        <ul class="plist">
+          <li class="pli">Hasta 5 programas</li>
+          <li class="pli">Clientes ilimitados</li>
+          <li class="pli">Apple Wallet + Google Wallet</li>
+          <li class="pli">Dashboard con ROI</li>
+          <li class="pli">Push notifications</li>
+          <li class="pli">Export CSV de clientes</li>
+        </ul>
+        <a href="https://app.easyloyalty.io/registro" target="_blank" class="pcta">Empezar gratis</a>
+      </div>
+      <div class="pc rv d2">
+        <div class="pname">Pro</div>
+        <div class="price-row"><span class="pcur">$</span><span class="pamt">249</span></div>
+        <div class="pper">USD / mes</div>
+        <div class="pdesc">Para cadenas y franquicias</div>
+        <ul class="plist">
+          <li class="pli">Programas ilimitados</li>
+          <li class="pli">Múltiples sucursales</li>
+          <li class="pli">API pública</li>
+          <li class="pli">Automatizaciones con IA</li>
+          <li class="pli">Soporte prioritario</li>
+          <li class="pli">Account manager</li>
+        </ul>
+        <a href="https://app.easyloyalty.io/registro" target="_blank" class="pcta">Hablar con ventas</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TESTIMONIALS ══════════════ -->
+<section class="testi">
+  <div class="wrap">
+    <span class="eye rv" style="color:var(--p);opacity:.38;">Lo que dicen nuestros clientes</span>
+    <h2><span class="wl"><span class="wi">Negocios reales.</span></span><span class="wl"><span class="wi">Resultados reales.</span></span></h2>
+    <div class="testi-grid">
+      <div class="tc rv">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Antes regalaba café sin saber si el cliente regresaba. Ahora sé exactamente cuántas visitas tiene cada persona."</p>
+        <div class="tc-author"><div class="tc-av">M</div><div><div class="tc-name">María González</div><div class="tc-biz">María Bonita Cafecito</div></div></div>
+      </div>
+      <div class="tc rv d1">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Mis clientas me dicen que les encanta tener su tarjeta en el iPhone. Ya no cargan una tarjetita de papel que se pierde."</p>
+        <div class="tc-author"><div class="tc-av">A</div><div><div class="tc-name">Ana Rodríguez</div><div class="tc-biz">Salón de Uñas Luxe</div></div></div>
+      </div>
+      <div class="tc rv d2">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Cuando pongo el sello, la tarjeta en el iPhone del cliente se actualiza sola. Eso es tecnología que enamora."</p>
+        <div class="tc-author"><div class="tc-av">E</div><div><div class="tc-name">Eduardo Torres</div><div class="tc-biz">Eureka Burgers</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CTA FINAL ══════════════ -->
+<section class="cfinal">
+  <div class="vlines" aria-hidden="true">
+    <div class="vl"></div><div class="vl"></div><div class="vl"></div>
+    <div class="vl"></div><div class="vl"></div>
+  </div>
+  <div class="scan" aria-hidden="true"></div>
+  <div class="wrap" style="position:relative;z-index:1;">
+    <h2><span class="wl-down"><span class="wi-down">Tu programa de lealtad,</span></span><span class="wl-down"><span class="wi-down"><em>listo en 24 horas.</em></span></span></h2>
+    <p class="rv d1">Sin apps. Sin hardware. Sin complicaciones.</p>
+    <a href="https://app.easyloyalty.io/registro" target="_blank" class="btn-dark rv d2" style="display:inline-flex;font-size:17px;padding:18px 44px;">
+      Empezar gratis ahora
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <p class="cta-note rv d3">Sin tarjeta de crédito · Cancela cuando quieras · Soporte en español</p>
+  </div>
+</section>
+
+<!-- ══════════════ BIG NAME ══════════════ -->
+<section class="bname">
+  <span class="bname-text" id="bigName">Easy Loyalty</span>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
 <footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-logo">Easy<span>Loyalty</span></div>
-      <div class="footer-links">
-        <a href="#como-funciona">Cómo funciona</a>
-        <a href="#caracteristicas">Características</a>
-        <a href="#precios">Precios</a>
-        <a href="#faq">FAQ</a>
-        <a href="mailto:eder.estudillo@gmail.com">Contacto</a>
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <div class="foot-logo"><img src="img/logo.png" alt="Easy Loyalty" /></div>
+        <p class="foot-tag">Haz que tus clientes vuelvan. Programas de lealtad digital para negocios en crecimiento.</p>
       </div>
-      <p class="footer-copy">© 2026 Easy Loyalty. Todos los derechos reservados.</p>
+      <div class="foot-col">
+        <h4>Producto</h4>
+        <ul>
+          <li><a href="#como-funciona">Cómo funciona</a></li>
+          <li><a href="#features">Funciones</a></li>
+          <li><a href="#pricing">Precios</a></li>
+          <li><a href="https://app.easyloyalty.io/registro" target="_blank">Empezar gratis</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="#">Nosotros</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Casos de éxito</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Soporte</h4>
+        <ul>
+          <li><a href="#">Centro de ayuda</a></li>
+          <li><a href="https://wa.me/525512482786">WhatsApp</a></li>
+          <li><a href="mailto:hola@easyloyalty.io">hola@easyloyalty.io</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <p class="foot-copy">© 2025 Easy Loyalty · Hecho en México · <a href="#">Privacidad</a></p>
     </div>
   </div>
 </footer>
 
-<!-- JS -->
 <script>
-  // Nav scroll
-  const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 40);
-  });
+/* ── Custom cursor ── */
+const cur = document.getElementById('cur')
+const cur2 = document.getElementById('cur2')
+let mx = 0, my = 0, cx = 0, cy = 0
 
-  // FAQ accordion
-  function toggleFaq(btn) {
-    const item = btn.closest('.faq-item');
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px'
+})
+
+const animCursor = () => {
+  cx += (mx - cx) * 0.12
+  cy += (my - cy) * 0.12
+  cur2.style.left = cx + 'px'; cur2.style.top = cy + 'px'
+  requestAnimationFrame(animCursor)
+}
+animCursor()
+
+/* Cursor hover state */
+document.querySelectorAll('a,button,.fc,.step,.tc,.pc').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cur.style.width = '6px'; cur.style.height = '6px'
+    cur2.style.width = '60px'; cur2.style.height = '60px'
+  })
+  el.addEventListener('mouseleave', () => {
+    cur.style.width = '12px'; cur.style.height = '12px'
+    cur2.style.width = '40px'; cur2.style.height = '40px'
+  })
+})
+
+/* Cursor color on dark sections */
+const darkSections = document.querySelectorAll('.how,.pricing,.cfinal,footer')
+const checkDark = () => {
+  let onDark = false
+  darkSections.forEach(s => {
+    const r = s.getBoundingClientRect()
+    if (my >= r.top && my <= r.bottom) onDark = true
+  })
+  document.body.classList.toggle('cursor-on-dark', onDark)
+}
+document.addEventListener('mousemove', checkDark)
+
+/* ── Nav scroll ── */
+const nav = document.getElementById('nav')
+addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), {passive:true})
+
+/* ── IntersectionObserver for .rv ── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') })
+}, { threshold: 0.12 })
+document.querySelectorAll('.rv,.rv-l').forEach(el => obs.observe(el))
+
+/* ── Wipe-from-left: dispara todas las .wl de una sección al entrar ── */
+const wipeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return
+    /* activa todas las .wl dentro del h2 o de la sección */
+    const parent = e.target.closest('h2') || e.target.closest('section') || e.target
+    const lines = parent.tagName === 'H2'
+      ? parent.querySelectorAll('.wl')
+      : e.target.closest('section').querySelectorAll('h2 .wl')
+    lines.forEach(l => l.classList.add('in'))
+    wipeObs.unobserve(e.target)
+  })
+}, { threshold: 0.15 })
+document.querySelectorAll('h2 .wl:first-child').forEach(el => wipeObs.observe(el))
+
+/* Drop from top — CTA final */
+const dropObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return
+    const h2 = e.target.closest('h2')
+    if (h2) h2.querySelectorAll('.wl-down').forEach(l => l.classList.add('in'))
+    dropObs.unobserve(e.target)
+  })
+}, { threshold: 0.2 })
+document.querySelectorAll('h2 .wl-down:first-child').forEach(el => dropObs.observe(el))
+
+/* ── Word reveal for h1 ── */
+const wordObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return
+    const words = e.target.querySelectorAll('.word')
+    words.forEach((w, i) => {
+      setTimeout(() => w.classList.add('in'), 80 + i * 140)
+    })
+    wordObs.unobserve(e.target)
+  })
+}, { threshold: 0.2 })
+document.querySelectorAll('h1').forEach(h => wordObs.observe(h))
+
+/* Hero h1 fires immediately */
+setTimeout(() => {
+  document.querySelectorAll('.hero .word').forEach((w, i) => {
+    setTimeout(() => w.classList.add('in'), 200 + i * 160)
+  })
+  document.querySelectorAll('.hero .rv').forEach(el => el.classList.add('in'))
+}, 100)
+
+/* ── Counter animation ── */
+const counters = {'+40%': '+40%', '24h': '24h', '0': '0', '2×': '2×'}
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return
+    const el = e.target
+    const target = el.getAttribute('data-count')
+    if (!target) return
+    const num = parseInt(target)
+    if (isNaN(num)) {
+      setTimeout(() => { el.textContent = target }, 300)
+      return
+    }
+    let start = 0
+    const dur = 1200, step = 16
+    const inc = num / (dur / step)
+    const go = () => {
+      start = Math.min(start + inc, num)
+      el.textContent = Math.floor(start) + target.replace(/\d+/g,'').replace(/\+/,'')
+      if (start < num) setTimeout(go, step)
+    }
+    setTimeout(go, 200)
+    counterObs.unobserve(el)
+  })
+}, { threshold: 0.5 })
+document.querySelectorAll('[data-count]').forEach(el => counterObs.observe(el))
+
+/* ── Parallax on hero vertical lines ── */
+const heroLines = document.querySelectorAll('.hero .vl')
+window.addEventListener('mousemove', e => {
+  const x = (e.clientX / innerWidth - .5)
+  heroLines.forEach((l, i) => {
+    const factor = (i - 2) * 8
+    l.style.transform = `translateX(${x * factor}px)`
+  })
+}, {passive:true})
+
+/* ── Hero isotipo: efecto agua fluido + parallax ── */
+const heroMark    = document.getElementById('heroMark')
+const markWrap    = document.getElementById('markWrap')
+const markGlow    = document.getElementById('markGlow')
+const markDot     = document.getElementById('markDot')
+const turb        = document.getElementById('turb')
+const disp        = document.getElementById('disp')
+const heroSection = document.getElementById('heroSection')
+
+if (heroMark && turb && disp) {
+  let t = 0                          // tiempo que avanza siempre
+  let intensity    = 0               // 0 = sin efecto, 1 = efecto completo
+  let intTarget    = 0
+  let markRX = 0, markRY = 0        // parallax actual
+  let markRXT = 0, markRYT = 0      // parallax target
+
+  const loop = () => {
+    t += 0.018                       // avance temporal — controla la velocidad del agua
+
+    /* intensidad sube/baja suavemente */
+    intensity += (intTarget - intensity) * 0.045
+
+    /* ondas de agua: frecuencias oscilantes basadas en tiempo */
+    if (intensity > 0.001) {
+      const bfx = (0.011 + Math.sin(t * 1.2) * 0.006 + Math.cos(t * 0.4) * 0.003) * intensity
+      const bfy = (0.008 + Math.cos(t * 0.9) * 0.005 + Math.sin(t * 0.6) * 0.002) * intensity
+      turb.setAttribute('baseFrequency', `${bfx.toFixed(5)} ${bfy.toFixed(5)}`)
+      disp.setAttribute('scale', (38 * intensity).toFixed(1))
+    } else {
+      turb.setAttribute('baseFrequency', '0 0')
+      disp.setAttribute('scale', '0')
+    }
+
+    /* parallax suave */
+    markRX += (markRXT - markRX) * 0.05
+    markRY += (markRYT - markRY) * 0.05
+    heroMark.style.transform = `translate(${markRX.toFixed(2)}px,${markRY.toFixed(2)}px)`
+
+    requestAnimationFrame(loop)
   }
+  requestAnimationFrame(loop)
 
-  // Smooth reveal on scroll
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
+  /* Hover: activa el agua */
+  markWrap.addEventListener('mouseenter', () => { intTarget = 1 })
+  markWrap.addEventListener('mouseleave', () => {
+    intTarget = 0
+    if (markDot) markDot.style.opacity = '0'
+  })
 
-  document.querySelectorAll('.step-card, .feature-cell, .pricing-card, .testimonial-card, .wallet-point').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(24px)';
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    observer.observe(el);
-  });
+  /* Glow y dot siguen el cursor dentro del mark */
+  markWrap.addEventListener('mousemove', e => {
+    const r = markWrap.getBoundingClientRect()
+    const x = e.clientX - r.left
+    const y = e.clientY - r.top
+    if (markGlow) { markGlow.style.left = x + 'px'; markGlow.style.top = y + 'px' }
+    if (markDot)  { markDot.style.left  = x + 'px'; markDot.style.top  = y + 'px'; markDot.style.opacity = '1' }
+  })
+
+  /* Parallax: isotipo se mueve suavemente opuesto al cursor en el hero */
+  if (heroSection) {
+    heroSection.addEventListener('mousemove', e => {
+      const r = heroSection.getBoundingClientRect()
+      markRXT = ((e.clientX - r.left) / r.width  - 0.5) * -24
+      markRYT = ((e.clientY - r.top)  / r.height - 0.5) * -16
+    }, {passive:true})
+    heroSection.addEventListener('mouseleave', () => { markRXT = 0; markRYT = 0 })
+  }
+}
+
+/* ── Big name: inline-block + scrollWidth → llena 100% viewport ── */
+const bigName = document.getElementById('bigName')
+function fitBigName() {
+  if (!bigName) return
+  bigName.style.fontSize = '100px'
+  const sw = bigName.scrollWidth   // ancho REAL del texto (no del bloque)
+  if (sw < 10) { setTimeout(fitBigName, 200); return }
+  bigName.style.fontSize = (100 * window.innerWidth / sw) + 'px'
+  bigName.classList.add('ready')
+}
+/* Espera la fuente Black antes de medir */
+;(document.fonts && document.fonts.load
+  ? document.fonts.load('900 100px HKG')
+  : Promise.reject()
+).then(() => { fitBigName(); setTimeout(fitBigName, 120) })
+ .catch(()  => { setTimeout(fitBigName, 800) })
+window.addEventListener('resize', fitBigName)
+
+/* ── Nav logo: oculto hasta que el hero logo se va de pantalla ── */
+const navLogoEl  = document.querySelector('.nav-logo')
+const heroLogoEl = document.querySelector('.hero-logo')
+if (navLogoEl && heroLogoEl) {
+  const logoObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      navLogoEl.classList.toggle('show', !e.isIntersecting)
+    })
+  }, { threshold: 0.05 })
+  logoObs.observe(heroLogoEl)
+}
 </script>
 
 </body>

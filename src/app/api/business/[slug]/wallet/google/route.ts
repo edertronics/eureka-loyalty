@@ -5,6 +5,40 @@ import { supabaseAdmin } from '@/lib/supabase'
 const ISSUER_ID = '3388000000023114743'
 const CLASS_ID = `${ISSUER_ID}.easyloyalty_loyalty_class`
 
+async function ensureLoyaltyClass(token: string) {
+  const getRes = await fetch(
+    `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+
+  if (getRes.status === 404) {
+    const createRes = await fetch(
+      'https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: CLASS_ID,
+          issuerName: 'Easy Loyalty',
+          programName: 'Easy Loyalty',
+          programLogo: {
+            sourceUri: { uri: 'https://app.easyloyalty.io/icon.png' },
+            contentDescription: { defaultValue: { language: 'es', value: 'Easy Loyalty' } },
+          },
+          reviewStatus: 'UNDER_REVIEW',
+        }),
+      }
+    )
+    if (!createRes.ok) {
+      const errBody = await createRes.text()
+      console.error('Google Wallet class create error:', createRes.status, errBody)
+    }
+  }
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -13,7 +47,6 @@ export async function POST(
     const { slug } = await params
     const { customer_id, customer_name, stamps, stamp_goal } = await req.json()
 
-    // Obtener datos del negocio
     const { data: business } = await supabaseAdmin
       .from('businesses')
       .select('id, name, logo_url, primary_color')
@@ -24,7 +57,6 @@ export async function POST(
       return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
     }
 
-    // Configurar autenticación con Google
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
     const auth = new GoogleAuth({
       credentials,
@@ -32,91 +64,90 @@ export async function POST(
     })
 
     const client = await auth.getClient()
-    const token = await client.getAccessToken()
+    const tokenRes = await client.getAccessToken()
+    const token = tokenRes.token!
+
+    // Asegurar que la clase existe
+    await ensureLoyaltyClass(token)
 
     const objectId = `${ISSUER_ID}.${slug}-${customer_id}`
 
-    // Crear o actualizar el objeto del pase
-    const passObject = {
+    const passObject: Record<string, unknown> = {
       id: objectId,
       classId: CLASS_ID,
       state: 'ACTIVE',
       accountId: customer_id,
       accountName: customer_name,
       loyaltyPoints: {
-        label: 'Sellos',
-        balance: {
-          int: stamps,
-        },
-      },
-      secondaryLoyaltyPoints: {
-        label: 'Meta',
-        balance: {
-          int: stamp_goal,
-        },
+        label: `Sellos (meta: ${stamp_goal})`,
+        balance: { int: stamps },
       },
       barcode: {
         type: 'QR_CODE',
         value: customer_id,
-        alternateText: customer_id,
+        alternateText: 'Easy Loyalty Program',
       },
-      heroImage: business.logo_url ? {
-        sourceUri: { uri: business.logo_url },
-      } : undefined,
     }
 
-    // Intentar crear, si ya existe actualizar
-    let walletObjectRes = await fetch(
-      `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${objectId}`,
-      {
-        headers: { Authorization: `Bearer ${token.token}` },
+    if (business.logo_url) {
+      passObject.heroImage = {
+        sourceUri: { uri: business.logo_url },
+        contentDescription: { defaultValue: { language: 'es', value: business.name } },
       }
+    }
+
+    const getRes = await fetch(
+      `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${objectId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
     )
 
-    if (walletObjectRes.status === 404) {
-      // Crear nuevo objeto
-      await fetch(
+    if (getRes.status === 404) {
+      const createRes = await fetch(
         'https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject',
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token.token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(passObject),
         }
       )
-    } else {
-      // Actualizar existente
-      await fetch(
+      if (!createRes.ok) {
+        const errBody = await createRes.text()
+        console.error('Google Wallet create error:', createRes.status, errBody)
+        return NextResponse.json({ error: 'Error creando objeto en Google Wallet' }, { status: 500 })
+      }
+    } else if (getRes.ok) {
+      const updateRes = await fetch(
         `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${objectId}`,
         {
           method: 'PUT',
           headers: {
-            Authorization: `Bearer ${token.token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(passObject),
         }
       )
+      if (!updateRes.ok) {
+        const errBody = await updateRes.text()
+        console.error('Google Wallet update error:', updateRes.status, errBody)
+      }
     }
 
-    // Generar JWT para el botón "Agregar a Google Wallet"
     const claims = {
       iss: credentials.client_email,
       aud: 'google',
       typ: 'savetowallet',
       iat: Math.floor(Date.now() / 1000),
+      origins: ['https://app.easyloyalty.io', 'https://easyloyalty.io'],
       payload: {
         loyaltyObjects: [{ id: objectId }],
       },
     }
 
-    const jwtClient = await auth.getClient() as any
-    const signedJwt = await jwtClient.signJwt ?
-      await jwtClient.signJwt(claims) :
-      await generateJwt(credentials.private_key, credentials.client_email, claims)
-
+    const signedJwt = await generateJwt(credentials.private_key, credentials.client_email, claims)
     const saveUrl = `https://pay.google.com/gp/v/save/${signedJwt}`
 
     return NextResponse.json({ url: saveUrl })

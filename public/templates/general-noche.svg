@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 288" width="750" height="288">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05000f"/>
+      <stop offset="100%" stop-color="#0d0026"/>
+    </linearGradient>
+    <radialGradient id="nebula" cx="70%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#3300aa" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#05000f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="750" height="288" fill="url(#g)"/>
+  <rect width="750" height="288" fill="url(#nebula)"/>
+  <circle cx="580" cy="90" r="180" fill="#1a0044" opacity="0.5"/>
+  <circle cx="150" cy="230" r="110" fill="#0d0022" opacity="0.6"/>
+  <circle cx="400" cy="160" r="3" fill="white" opacity="0.6"/>
+  <circle cx="200" cy="80" r="2" fill="white" opacity="0.5"/>
+  <circle cx="650" cy="200" r="2" fill="white" opacity="0.4"/>
+  <circle cx="350" cy="40" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="500" cy="240" r="1.5" fill="white" opacity="0.4"/>
+  <circle cx="100" cy="150" r="1" fill="white" opacity="0.3"/>
+  <circle cx="700" cy="70" r="1" fill="white" opacity="0.3"/>
+</svg>

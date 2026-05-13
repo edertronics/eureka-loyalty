@@ -24,3 +24,75 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
   needed. Always curl https://ai-gateway.vercel.sh/v1/models first; never trust model IDs from memory
 - For durable agent loops or untrusted code: use Workflow (pause/resume/state) + Sandbox; use Vercel MCP for secure infra access
 <!-- VERCEL BEST PRACTICES END -->
+
+---
+
+## Proyecto: Easy Loyalty
+
+Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un slug propio y sus clientes acumulan sellos sin app.
+
+**Dominio producción:** `easyloyalty.io`
+**Vercel team:** `edertronics-projects` | **Project:** `loyalty-app`
+**Supabase:** `udcvtwjumcunbgcqnvpn.supabase.co`
+
+---
+
+## Rutas principales
+
+| Ruta | Descripción |
+|---|---|
+| `/` | Home — acceso admin por slug + CTA registro |
+| `/registro` | Onboarding 3 pasos para nuevos negocios |
+| `/[slug]` | Tarjeta del cliente (branded por negocio) |
+| `/[slug]/admin` | Dashboard del negocio (stats, clientes, config) |
+| `/[slug]/scanner` | Scanner QR para staff (requiere PIN) |
+| `/super-admin` | Panel maestro — todos los negocios |
+| `/pitch` | Presentación/pitch de Easy Loyalty |
+
+## Archivos públicos imprimibles
+
+| Archivo | Descripción |
+|---|---|
+| `public/eureka-qr.html` | Tarjeta imprimible Eureka Burgers con QR |
+| `public/eureka-manual.html` | Manual de uso para Eureka Burgers |
+| `public/mariabonita-qr.html` | Tarjeta imprimible María Bonita (2 programas) |
+| `public/landing-page.html` | Landing page de Easy Loyalty |
+
+---
+
+## Negocios activos en Supabase
+
+| Negocio | Slug | Sellos | Premio |
+|---|---|---|---|
+| **Eureka Burgers** | `eureka-burgers` | 9 | ¡Tu burger es gratis! |
+| María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis |
+| María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis |
+
+---
+
+## Apple Wallet
+- **Pass Type ID:** `pass.com.easyloyalty.loyalty`
+- **Team ID:** `YPD8C8783D`
+- Certificados en Vercel como env vars: `APPLE_CERTIFICATE_PEM`, `APPLE_KEY_PEM`, `APPLE_WWDR_PEM`
+- Push updates via APNs al dar sello (`src/lib/apns.ts`)
+
+## Lógica de sellos
+- Cooldown de **4 horas** por cliente (anti-fraude, automático)
+- Al completar la meta → `stamps` vuelve a 0, `rewards_redeemed` +1
+- Se loguea en `stamp_events` y `reward_events`
+
+## Auth
+- Admin del negocio: cookie `admin_auth_[slug]` (8h), contraseña en `businesses.admin_password`
+- Scanner/staff: cookie `staff_auth_[slug]` (24h), misma contraseña
+- Super admin: contraseña en env `SUPER_ADMIN_PASSWORD`
+- Negocios legacy (sin `admin_password`): usan env `ADMIN_PASSWORD` como fallback
+
+---
+
+## Comandos dev
+
+```bash
+npm run dev    # Desarrollo local (localhost:3000)
+npm run build  # Build de producción
+npm run lint   # ESLint
+```

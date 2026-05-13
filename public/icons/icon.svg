@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#00C896"/>
+
+  <!-- E: stub izquierdo -->
+  <rect x="54" y="112" width="74" height="84" rx="28" fill="#063f3a"/>
+  <!-- E: barra superior -->
+  <rect x="100" y="112" width="210" height="84" rx="28" fill="#063f3a"/>
+
+  <!-- E: círculo central -->
+  <circle cx="152" cy="272" r="56" fill="#063f3a"/>
+
+  <!-- Barra inferior compartida E+L -->
+  <rect x="54" y="340" width="418" height="84" rx="28" fill="#063f3a"/>
+
+  <!-- L: barra vertical derecha -->
+  <rect x="378" y="140" width="94" height="284" rx="28" fill="#063f3a"/>
+</svg>

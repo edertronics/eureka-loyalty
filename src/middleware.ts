@@ -46,6 +46,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/registro', request.url))
   }
 
+  // Archivos estáticos — nunca redirigir
+  if (/\.[a-zA-Z0-9]+$/.test(pathname)) {
+    return NextResponse.next()
+  }
+
   // Si alguien entra a /{slug} sin /admin ni /scanner en el subdominio app,
   // redirigir a /{slug}/admin (porque es el contexto de negocio)
   const slugOnly = /^\/[^/]+$/.test(pathname)
