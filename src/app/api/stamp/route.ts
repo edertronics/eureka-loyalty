@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendWalletPush } from '@/lib/apns'
+import { sendRewardEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Buscar cliente
     const { data: customer, error: custError } = await supabaseAdmin
       .from('customers')
-      .select('*, businesses(stamp_goal, reward_description, name)')
+      .select('*, businesses(stamp_goal, reward_description, name, slug)')
       .eq('qr_code', qr_code)
       .single()
 
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tarjeta no encontrada' }, { status: 404 })
     }
 
-    const business = customer.businesses as { stamp_goal: number; reward_description: string; name: string }
+    const business = customer.businesses as { stamp_goal: number; reward_description: string; name: string; slug: string }
 
     // Cooldown de 4 horas — previene fraude
     const COOLDOWN_HOURS = 4
@@ -76,6 +77,16 @@ export async function POST(req: NextRequest) {
         business_id: customer.business_id,
         staff_id: staff_id || null,
       })
+
+      if (customer.email) {
+        sendRewardEmail({
+          to: customer.email,
+          customerName: customer.name,
+          businessName: business.name,
+          businessSlug: business.slug,
+          rewardDescription: business.reward_description,
+        }).catch((err) => console.error('Reward email error:', err))
+      }
     }
 
     // Enviar push a Apple Wallet para que actualice la tarjeta del cliente

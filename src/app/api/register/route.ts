@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Obtener el negocio por slug
     const { data: business, error: bizError } = await supabaseAdmin
       .from('businesses')
-      .select('id, name, stamp_goal, reward_description')
+      .select('id, name, slug, stamp_goal, reward_description')
       .eq('slug', business_slug)
       .single()
 
@@ -57,6 +58,17 @@ export async function POST(req: NextRequest) {
     if (custError || !customer) {
       console.error('Error creating customer:', custError)
       return NextResponse.json({ error: 'Error al crear la tarjeta' }, { status: 500 })
+    }
+
+    if (email?.trim()) {
+      sendWelcomeEmail({
+        to: email.trim(),
+        customerName: customer.name,
+        businessName: business.name,
+        businessSlug: business_slug,
+        stampGoal: business.stamp_goal,
+        rewardDescription: business.reward_description,
+      }).catch((err) => console.error('Welcome email error:', err))
     }
 
     return NextResponse.json({ customer, business }, { status: 201 })
