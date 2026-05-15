@@ -279,6 +279,7 @@ export default function RegistroPage() {
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [hexPrimary, setHexPrimary] = useState('#6366f1')
   const [hexAccent, setHexAccent] = useState('#f59e0b')
+  const [hexTint, setHexTint] = useState('')
   const timerPassword = useRef<ReturnType<typeof setTimeout> | null>(null)
   const timerConfirm = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -622,10 +623,10 @@ export default function RegistroPage() {
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', fontFamily: FONT_STACK }}>Color del logo</span>
-                          {logoTint && <button type="button" onClick={() => setLogoTint('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.28)', fontSize: 11, cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: FONT_STACK }}>Quitar color</button>}
+                          {logoTint && <button type="button" onClick={() => { setLogoTint(''); setHexTint('') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.28)', fontSize: 11, cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: FONT_STACK }}>Quitar color</button>}
                         </div>
                         <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center' }}>
-                          <button type="button" onClick={() => setLogoTint('')} title="Sin tinte"
+                          <button type="button" onClick={() => { setLogoTint(''); setHexTint('') }} title="Sin tinte"
                             style={{ width: 34, height: 34, borderRadius: 9, cursor: 'pointer', background: 'white', position: 'relative', overflow: 'hidden', padding: 0, flexShrink: 0,
                               border: !logoTint ? '2.5px solid white' : '2px solid rgba(255,255,255,0.12)',
                               transform: !logoTint ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
@@ -644,7 +645,7 @@ export default function RegistroPage() {
                             { label: 'Azul',    value: '#3b82f6' },
                             { label: 'Morado',  value: '#8b5cf6' },
                           ] as { label: string; value: string }[]).map(c => (
-                            <button key={c.value} type="button" title={c.label} onClick={() => setLogoTint(c.value)}
+                            <button key={c.value} type="button" title={c.label} onClick={() => { setLogoTint(c.value); setHexTint(c.value) }}
                               style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: c.value, cursor: 'pointer', flexShrink: 0, padding: 0,
                                 border: logoTint === c.value ? '2.5px solid white' : '2px solid rgba(255,255,255,0.08)',
                                 transform: logoTint === c.value ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
@@ -652,6 +653,25 @@ export default function RegistroPage() {
                                 outline: c.value === '#ffffff' ? '1px solid rgba(255,255,255,0.2)' : 'none' }} />
                           ))}
                         </div>
+                        {logoTint && (
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
+                            <input type="color" value={logoTint} onChange={e => { setLogoTint(e.target.value); setHexTint(e.target.value) }}
+                              style={{ width: 38, height: 38, padding: 3, border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+                            <input type="text" value={hexTint} maxLength={7} placeholder="#ffffff"
+                              onChange={e => {
+                                const raw = e.target.value
+                                setHexTint(raw)
+                                const v = raw.startsWith('#') ? raw : '#' + raw
+                                if (/^#[0-9a-fA-F]{6}$/.test(v)) setLogoTint(v)
+                              }}
+                              onBlur={e => {
+                                const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value
+                                if (/^#[0-9a-fA-F]{6}$/.test(v)) { setLogoTint(v); setHexTint(v) }
+                                else setHexTint(logoTint)
+                              }}
+                              style={{ ...INPUT, fontFamily: 'monospace', fontSize: 14, letterSpacing: '0.05em' }} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
