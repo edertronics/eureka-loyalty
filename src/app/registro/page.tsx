@@ -69,65 +69,116 @@ function CardPreview({ name, primary, accent, goal, reward }: {
 function PhoneMockup({ name, primary, accent, goal, reward }: {
   name: string; primary: string; accent: string; goal: number; reward: string
 }) {
-  const filled = Math.floor(goal * 0.4)
-  const displayGoal = Math.min(goal, 10)
+  const isDark = isColorDark(primary)
+  const textColor = isDark ? '#ffffff' : '#1a1a1a'
+  const textMuted = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)'
+  const SYS = `system-ui, -apple-system, sans-serif`
+
   return (
-    <div style={{ position: 'relative', width: 230, height: 460, backgroundColor: '#0d0d0d', border: '3px solid rgba(255,255,255,0.12)', borderRadius: 38, overflow: 'hidden', boxShadow: `0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px ${primary}30`, flexShrink: 0, transition: 'box-shadow 0.4s ease' }}>
+    <div style={{ position: 'relative', width: 240, height: 500, backgroundColor: '#0d0d0d', border: '3px solid rgba(255,255,255,0.12)', borderRadius: 40, overflow: 'hidden', boxShadow: `0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)`, flexShrink: 0 }}>
       {/* Dynamic island */}
       <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', width: 72, height: 20, backgroundColor: '#0d0d0d', borderRadius: 14, zIndex: 10 }} />
       {/* Screen */}
-      <div style={{ width: '100%', height: '100%', borderRadius: 35, overflow: 'hidden', background: '#111' }}>
+      <div style={{ width: '100%', height: '100%', borderRadius: 37, overflow: 'hidden', background: '#1a1a1a' }}>
         {/* Status bar */}
-        <div style={{ height: 38, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 18px 5px' }}>
-          <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 10, fontWeight: 600, fontFamily: FONT_STACK }}>9:41</span>
+        <div style={{ height: 38, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '0 18px 5px', background: '#1a1a1a' }}>
+          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: 600, fontFamily: SYS }}>9:41</span>
           <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-            <svg width="13" height="10" viewBox="0 0 13 10"><rect x="0" y="4" width="2" height="6" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="3" y="2.5" width="2" height="7.5" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="rgba(255,255,255,0.7)"/></svg>
+            <svg width="13" height="10" viewBox="0 0 13 10"><rect x="0" y="4" width="2" height="6" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="3" y="2.5" width="2" height="7.5" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="rgba(255,255,255,0.8)"/></svg>
             <svg width="14" height="10" viewBox="0 0 14 10"><path d="M7 1.5C9.7 1.5 12.1 2.6 13.8 4.4L12.4 5.9C11.1 4.5 9.2 3.5 7 3.5S2.9 4.5 1.6 5.9L0.2 4.4C1.9 2.6 4.3 1.5 7 1.5Z" fill="rgba(255,255,255,0.5)"/><path d="M7 4.5C9 4.5 10.8 5.3 12.1 6.6L10.7 8.1C9.8 7.1 8.5 6.5 7 6.5S4.2 7.1 3.3 8.1L1.9 6.6C3.2 5.3 5 4.5 7 4.5Z" fill="rgba(255,255,255,0.7)"/><circle cx="7" cy="9.5" r="1" fill="white"/></svg>
-            <div style={{ width: 22, height: 11, border: '1.5px solid rgba(255,255,255,0.4)', borderRadius: 3, display: 'flex', alignItems: 'center', padding: '0 2px', gap: 1 }}>
+            <div style={{ width: 22, height: 11, border: '1.5px solid rgba(255,255,255,0.4)', borderRadius: 3, display: 'flex', alignItems: 'center', padding: '0 2px' }}>
               <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.8)', borderRadius: 1 }} />
-              <div style={{ width: 2, height: 4, background: 'rgba(255,255,255,0.3)', borderRadius: 1 }} />
             </div>
           </div>
         </div>
 
-        {/* Page content */}
-        <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10, height: 'calc(100% - 38px)', overflowY: 'hidden' }}>
-          {/* Business header */}
-          <div style={{ textAlign: 'center', paddingTop: 4 }}>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 8, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, margin: '0 0 2px', fontFamily: FONT_STACK }}>Easy Loyalty</p>
-            <p style={{ color: '#fff', fontSize: 15, fontWeight: 900, margin: 0, letterSpacing: '-0.02em', fontFamily: FONT_STACK }}>{name || 'Tu negocio'}</p>
-          </div>
+        {/* Wallet nav bar */}
+        <div style={{ background: '#1a1a1a', padding: '4px 14px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontFamily: SYS }}>‹ Cartera</span>
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: 600, fontFamily: SYS }}>Tarjeta de lealtad</span>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontFamily: SYS }}>···</span>
+        </div>
 
-          {/* Loyalty card */}
-          <div style={{ borderRadius: 14, overflow: 'hidden', background: primary, boxShadow: `0 8px 24px ${primary}60`, transition: 'all 0.4s ease', flexShrink: 0 }}>
-            <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, margin: '0 0 3px', fontFamily: FONT_STACK }}>Tu tarjeta de lealtad</p>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                {Array.from({ length: displayGoal }).map((_, i) => (
-                  <div key={i} style={{ width: i < filled ? 18 : 16, height: i < filled ? 18 : 16, borderRadius: '50%', background: i < filled ? accent : 'rgba(255,255,255,0.1)', border: `1.5px solid ${i < filled ? accent : 'rgba(255,255,255,0.18)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', boxShadow: i < filled ? `0 2px 6px ${accent}50` : 'none' }}>
-                    {i < filled && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={isColorDark(accent) ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.6)'} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
-                  </div>
-                ))}
-              </div>
+        {/* THE CARD — replica exacta del pase */}
+        <div style={{ margin: '0 10px', borderRadius: 14, overflow: 'hidden', background: primary, boxShadow: `0 8px 32px ${primary}80`, transition: 'all 0.4s ease' }}>
+
+          {/* Header: logo izq + sellos der */}
+          <div style={{ padding: '12px 14px 10px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ color: textMuted, fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 3px', fontFamily: SYS }}>Easy Loyalty</p>
+              <p style={{ color: textColor, fontSize: 13, fontWeight: 900, margin: 0, letterSpacing: '-0.01em', fontFamily: SYS, lineHeight: 1.1 }}>{name || 'Tu negocio'}</p>
             </div>
-            <div style={{ padding: '8px 14px 12px' }}>
-              <span style={{ color: accent, fontSize: 10, fontWeight: 800, fontFamily: FONT_STACK }}>{goal - filled} sellos más </span>
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: FONT_STACK }}>→ {reward || 'tu premio'}</span>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: textMuted, fontSize: 7, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 2px', fontFamily: SYS }}>Sellos</p>
+              <p style={{ color: textColor, fontSize: 18, fontWeight: 900, margin: 0, fontFamily: SYS, lineHeight: 1 }}>0<span style={{ fontSize: 11, opacity: 0.5 }}>/{goal}</span></p>
             </div>
           </div>
 
-          {/* QR placeholder */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <div style={{ width: 64, height: 64, background: 'rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"/></svg>
+          {/* Strip image — banner */}
+          <div style={{ height: 80, background: `linear-gradient(135deg, ${accent}40 0%, ${accent}18 50%, rgba(0,0,0,0.15) 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}` }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)', fontSize: 7, fontFamily: SYS }}>imagen del negocio</span>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 8, fontFamily: FONT_STACK, margin: 0, textAlign: 'center' }}>Tu QR único aparece aquí</p>
           </div>
 
-          {/* Add to Wallet */}
-          <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: FONT_STACK, fontWeight: 600 }}>Añadir a Apple / Google Wallet</span>
+          {/* Secundario: programa + premio */}
+          <div style={{ padding: '10px 14px', display: 'flex', gap: 12, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}` }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: textMuted, fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px', fontFamily: SYS }}>Programa</p>
+              <p style={{ color: textColor, fontSize: 9, fontWeight: 600, margin: 0, fontFamily: SYS }}>{name || 'Tu negocio'}</p>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: textMuted, fontSize: 7, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px', fontFamily: SYS }}>Premio</p>
+              <p style={{ color: textColor, fontSize: 9, fontWeight: 600, margin: 0, fontFamily: SYS }}>{reward || 'Completa tu tarjeta'}</p>
+            </div>
+          </div>
+
+          {/* QR area */}
+          <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: '#fff', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              {/* QR simulado con patrón */}
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <rect width="70" height="70" fill="white"/>
+                {/* esquinas */}
+                <rect x="4" y="4" width="22" height="22" rx="3" fill="none" stroke="#111" strokeWidth="4"/>
+                <rect x="9" y="9" width="12" height="12" rx="1" fill="#111"/>
+                <rect x="44" y="4" width="22" height="22" rx="3" fill="none" stroke="#111" strokeWidth="4"/>
+                <rect x="49" y="9" width="12" height="12" rx="1" fill="#111"/>
+                <rect x="4" y="44" width="22" height="22" rx="3" fill="none" stroke="#111" strokeWidth="4"/>
+                <rect x="9" y="49" width="12" height="12" rx="1" fill="#111"/>
+                {/* datos */}
+                <rect x="30" y="4" width="4" height="4" fill="#111"/><rect x="36" y="4" width="4" height="4" fill="#111"/>
+                <rect x="30" y="10" width="4" height="4" fill="#111"/><rect x="38" y="10" width="4" height="4" fill="#111"/>
+                <rect x="32" y="16" width="4" height="4" fill="#111"/><rect x="36" y="16" width="4" height="4" fill="#111"/>
+                <rect x="30" y="30" width="4" height="4" fill="#111"/><rect x="36" y="30" width="4" height="4" fill="#111"/>
+                <rect x="44" y="30" width="4" height="4" fill="#111"/><rect x="50" y="30" width="4" height="4" fill="#111"/>
+                <rect x="56" y="30" width="4" height="4" fill="#111"/><rect x="62" y="30" width="4" height="4" fill="#111"/>
+                <rect x="44" y="36" width="4" height="4" fill="#111"/><rect x="52" y="36" width="4" height="4" fill="#111"/>
+                <rect x="58" y="36" width="4" height="4" fill="#111"/><rect x="30" y="36" width="4" height="4" fill="#111"/>
+                <rect x="44" y="42" width="4" height="4" fill="#111"/><rect x="50" y="42" width="4" height="4" fill="#111"/>
+                <rect x="56" y="42" width="4" height="4" fill="#111"/><rect x="30" y="42" width="4" height="4" fill="#111"/>
+                <rect x="36" y="42" width="4" height="4" fill="#111"/><rect x="44" y="50" width="4" height="4" fill="#111"/>
+                <rect x="52" y="50" width="4" height="4" fill="#111"/><rect x="58" y="50" width="4" height="4" fill="#111"/>
+                <rect x="62" y="50" width="4" height="4" fill="#111"/><rect x="44" y="56" width="4" height="4" fill="#111"/>
+                <rect x="50" y="56" width="4" height="4" fill="#111"/><rect x="56" y="56" width="4" height="4" fill="#111"/>
+                <rect x="44" y="62" width="4" height="4" fill="#111"/><rect x="52" y="62" width="4" height="4" fill="#111"/>
+                <rect x="30" y="50" width="4" height="4" fill="#111"/><rect x="36" y="56" width="4" height="4" fill="#111"/>
+                <rect x="30" y="62" width="4" height="4" fill="#111"/><rect x="36" y="62" width="4" height="4" fill="#111"/>
+              </svg>
+              <p style={{ color: '#555', fontSize: 7, fontFamily: SYS, margin: 0, fontWeight: 600, letterSpacing: '0.05em' }}>Easy Loyalty Program</p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Wallet bottom bar */}
+        <div style={{ padding: '10px 14px 0', display: 'flex', justifyContent: 'center', gap: 8 }}>
+          <div style={{ flex: 1, height: 32, background: 'rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 8, fontFamily: SYS }}>Apple Wallet</span>
+          </div>
+          <div style={{ flex: 1, height: 32, background: 'rgba(255,255,255,0.06)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 8, fontFamily: SYS }}>Google Wallet</span>
           </div>
         </div>
       </div>
