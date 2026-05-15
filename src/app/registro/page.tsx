@@ -46,10 +46,10 @@ const ACCENT_COLORS = [
 ]
 
 /* ── Phone mockup — replica exacta del pase de Wallet ── */
-function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, stampGoal, rewardDescription, stripImage, stripFocalPoint, stripScale, logoSize }: {
+function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, stampGoal, rewardDescription, stripImage, stripFocalPoint, stripScale, logoSize, logoTint }: {
   primaryColor: string; accentColor: string; name: string
   logoPreview: string | null; stampGoal: number; rewardDescription: string
-  stripImage: string | null; stripFocalPoint: string; stripScale: number; logoSize: number
+  stripImage: string | null; stripFocalPoint: string; stripScale: number; logoSize: number; logoTint?: string
 }) {
   const FRAME_W = 300, FRAME_H = 620, BEZEL = 13
   const SCREEN_W = FRAME_W - BEZEL * 2
@@ -98,7 +98,9 @@ function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, sta
             {/* Header: logo + sellos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px 6px' }}>
               {logoPreview
-                ? <img src={logoPreview} alt="" style={{ height: Math.round(22 * logoSize), maxWidth: `${Math.min(44 * logoSize, 70)}%`, objectFit: 'contain', display: 'block', transition: 'height 0.15s' }} />
+                ? logoTint
+                  ? <div style={{ height: Math.round(22 * logoSize), width: Math.round(80 * logoSize), background: logoTint, WebkitMaskImage: `url(${logoPreview})`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'left center', maskImage: `url(${logoPreview})`, maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'left center', transition: 'height 0.15s', flexShrink: 0 }} />
+                  : <img src={logoPreview} alt="" style={{ height: Math.round(22 * logoSize), maxWidth: `${Math.min(44 * logoSize, 70)}%`, objectFit: 'contain', display: 'block', transition: 'height 0.15s' }} />
                 : <span style={{ color: 'white', fontWeight: 900, fontSize: 10, lineHeight: 1.2, fontFamily: SYS }}>{name || 'Tu negocio'}</span>
               }
               <div style={{ textAlign: 'right' }}>
@@ -288,6 +290,7 @@ export default function RegistroPage() {
   const [stripFocalPoint, setStripFocalPoint] = useState('50% 50%')
   const [stripScale, setStripScale] = useState(1)
   const [logoSize, setLogoSize] = useState(1)
+  const [logoTint, setLogoTint] = useState('')
 
   function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -406,6 +409,15 @@ export default function RegistroPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ strip_focal_point: stripFocalPoint, strip_scale: stripScale }),
+        }).catch(() => {})
+      }
+
+      // 5. Guardar logo_tint y logo_size si aplica
+      if (logoTint || logoSize !== 1) {
+        await fetch(`/api/business/${slug}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logo_tint: logoTint, logo_size: logoSize }),
         }).catch(() => {})
       }
 
@@ -573,27 +585,7 @@ export default function RegistroPage() {
           {step === 2 && (
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-              {/* Phone preview */}
-              <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                <p style={{ color: `${GREEN}70`, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0, fontFamily: FONT_STACK }}>Vista previa real</p>
-                <IPhoneWalletPreview
-                  primaryColor={form.primary_color}
-                  accentColor={form.accent_color}
-                  name={form.name}
-                  logoPreview={logoPreview}
-                  stampGoal={parseInt(form.stamp_goal)}
-                  rewardDescription={form.reward_description}
-                  stripImage={stripPreview}
-                  stripFocalPoint={stripFocalPoint}
-                  stripScale={stripScale}
-                  logoSize={logoSize}
-                />
-                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: FONT_STACK, textAlign: 'center', maxWidth: 280 }}>
-                  Así se verá en Apple Wallet. Cada cambio se refleja en tiempo real.
-                </p>
-              </div>
-
-              {/* Controls */}
+              {/* Controls — LEFT */}
               <div style={{ flex: '1 1 320px', minWidth: 300, display: 'flex', flexDirection: 'column', gap: 0 }}>
 
                 {/* Logo del negocio */}
@@ -601,7 +593,11 @@ export default function RegistroPage() {
                   <p style={{ ...LABEL, marginBottom: 14 }}>Logo del negocio</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ width: 64, height: 64, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {logoPreview ? <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+                      {logoPreview
+                        ? logoTint
+                          ? <div style={{ width: '80%', height: '80%', background: logoTint, WebkitMaskImage: `url(${logoPreview})`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskImage: `url(${logoPreview})`, maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }} />
+                          : <img src={logoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 600, marginBottom: 8, fontFamily: FONT_STACK }}>
@@ -611,16 +607,52 @@ export default function RegistroPage() {
                       </label>
                       <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 2px', lineHeight: 1.5, fontFamily: FONT_STACK }}>PNG sin fondo para mejor resultado</p>
                       <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', margin: 0, fontFamily: FONT_STACK }}>PNG, JPG, SVG · Máx 2MB</p>
-                      {logoPreview && <button type="button" onClick={() => { setLogoFile(null); if (logoPreview) URL.revokeObjectURL(logoPreview); setLogoPreview(null) }} style={{ marginTop: 6, background: 'none', border: 'none', color: 'rgba(239,68,68,0.6)', fontSize: 12, cursor: 'pointer', padding: 0, fontFamily: FONT_STACK }}>Quitar logo</button>}
+                      {logoPreview && <button type="button" onClick={() => { setLogoFile(null); if (logoPreview) URL.revokeObjectURL(logoPreview); setLogoPreview(null); setLogoTint('') }} style={{ marginTop: 6, background: 'none', border: 'none', color: 'rgba(239,68,68,0.6)', fontSize: 12, cursor: 'pointer', padding: 0, fontFamily: FONT_STACK }}>Quitar logo</button>}
                     </div>
                   </div>
                   {logoPreview && (
-                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', fontFamily: FONT_STACK }}>Tamaño del logo</span>
-                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{Math.round(logoSize * 100)}%</span>
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', fontFamily: FONT_STACK }}>Tamaño del logo</span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{Math.round(logoSize * 100)}%</span>
+                        </div>
+                        <input type="range" min={0.5} max={2.5} step={0.05} value={logoSize} onChange={e => setLogoSize(parseFloat(e.target.value))} style={{ width: '100%', accentColor: GREEN, cursor: 'pointer' }} />
                       </div>
-                      <input type="range" min={0.5} max={2.5} step={0.05} value={logoSize} onChange={e => setLogoSize(parseFloat(e.target.value))} style={{ width: '100%', accentColor: GREEN, cursor: 'pointer' }} />
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', fontFamily: FONT_STACK }}>Color del logo</span>
+                          {logoTint && <button type="button" onClick={() => setLogoTint('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.28)', fontSize: 11, cursor: 'pointer', padding: 0, textDecoration: 'underline', fontFamily: FONT_STACK }}>Quitar color</button>}
+                        </div>
+                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center' }}>
+                          <button type="button" onClick={() => setLogoTint('')} title="Sin tinte"
+                            style={{ width: 34, height: 34, borderRadius: 9, cursor: 'pointer', background: 'white', position: 'relative', overflow: 'hidden', padding: 0, flexShrink: 0,
+                              border: !logoTint ? '2.5px solid white' : '2px solid rgba(255,255,255,0.12)',
+                              transform: !logoTint ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
+                              boxShadow: !logoTint ? '0 0 0 3px rgba(255,255,255,0.18)' : 'none' }}>
+                            <svg style={{ position: 'absolute', inset: 0 }} width="34" height="34" viewBox="0 0 34 34">
+                              <line x1="4" y1="4" x2="30" y2="30" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+                            </svg>
+                          </button>
+                          {([
+                            { label: 'Blanco',  value: '#ffffff' },
+                            { label: 'Negro',   value: '#1a1a1a' },
+                            { label: 'Dorado',  value: '#f59e0b' },
+                            { label: 'Rosa',    value: '#ec4899' },
+                            { label: 'Rojo',    value: '#ef4444' },
+                            { label: 'Verde',   value: '#10b981' },
+                            { label: 'Azul',    value: '#3b82f6' },
+                            { label: 'Morado',  value: '#8b5cf6' },
+                          ] as { label: string; value: string }[]).map(c => (
+                            <button key={c.value} type="button" title={c.label} onClick={() => setLogoTint(c.value)}
+                              style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: c.value, cursor: 'pointer', flexShrink: 0, padding: 0,
+                                border: logoTint === c.value ? '2.5px solid white' : '2px solid rgba(255,255,255,0.08)',
+                                transform: logoTint === c.value ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
+                                boxShadow: logoTint === c.value ? '0 0 0 3px rgba(255,255,255,0.18)' : 'none',
+                                outline: c.value === '#ffffff' ? '1px solid rgba(255,255,255,0.2)' : 'none' }} />
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -695,6 +727,28 @@ export default function RegistroPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Phone preview — RIGHT */}
+              <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, position: 'sticky', top: 24 }}>
+                <p style={{ color: `${GREEN}70`, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0, fontFamily: FONT_STACK }}>Vista previa real</p>
+                <IPhoneWalletPreview
+                  primaryColor={form.primary_color}
+                  accentColor={form.accent_color}
+                  name={form.name}
+                  logoPreview={logoPreview}
+                  stampGoal={parseInt(form.stamp_goal)}
+                  rewardDescription={form.reward_description}
+                  stripImage={stripPreview}
+                  stripFocalPoint={stripFocalPoint}
+                  stripScale={stripScale}
+                  logoSize={logoSize}
+                  logoTint={logoTint}
+                />
+                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: FONT_STACK, textAlign: 'center', maxWidth: 280 }}>
+                  Así se verá en Apple Wallet. Cada cambio se refleja en tiempo real.
+                </p>
+              </div>
+
             </div>
           )}
         </form>
