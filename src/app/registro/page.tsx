@@ -180,12 +180,13 @@ function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, sta
             {/* QR */}
             <div style={{ background: primaryColor, padding: '10px 12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
               {stampDisplay === 'icons' && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 3, marginBottom: 2, maxWidth: '90%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', width: '100%', marginBottom: 4 }}>
                   {Array.from({ length: stampCount }, (_, i) => {
                     const ic = STAMP_ICONS.find(s => s.id === stampIcon) || STAMP_ICONS[0]
+                    const iconSize = stampCount <= 6 ? 18 : stampCount <= 8 ? 16 : 14
                     return (
-                      <svg key={i} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                        style={{ opacity: i === 0 ? 1 : 0.2, filter: i === 0 ? 'drop-shadow(0 0 2px white)' : undefined }}>
+                      <svg key={i} width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ opacity: i === 0 ? 1 : 0.22, filter: i === 0 ? 'drop-shadow(0 0 3px white)' : undefined, flexShrink: 0 }}>
                         <path d={ic.path} />
                       </svg>
                     )
