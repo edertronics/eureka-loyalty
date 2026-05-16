@@ -24,6 +24,25 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`
 }
 
+const STAMP_ICONS = [
+  { label: 'Estrella',    emoji: '⭐' },
+  { label: 'Hamburguesa', emoji: '🍔' },
+  { label: 'Café',        emoji: '☕' },
+  { label: 'Corazón',     emoji: '❤️' },
+  { label: 'Uña',         emoji: '💅' },
+  { label: 'Pizza',       emoji: '🍕' },
+  { label: 'Tijeras',     emoji: '✂️' },
+  { label: 'Patita',      emoji: '🐾' },
+  { label: 'Diamante',    emoji: '💎' },
+  { label: 'Taco',        emoji: '🌮' },
+  { label: 'Flor',        emoji: '🌸' },
+  { label: 'Corona',      emoji: '👑' },
+  { label: 'Helado',      emoji: '🍦' },
+  { label: 'Ramen',       emoji: '🍜' },
+  { label: 'Gym',         emoji: '💪' },
+  { label: 'Libro',       emoji: '📚' },
+]
+
 const BRAND_COLORS = [
   { label: 'Morado',  value: '#6366f1' },
   { label: 'Azul',    value: '#3b82f6' },
@@ -46,16 +65,19 @@ const ACCENT_COLORS = [
 ]
 
 /* ── Phone mockup — replica exacta del pase de Wallet ── */
-function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, stampGoal, rewardDescription, stripImage, stripFocalPoint, stripScale, logoSize, logoTint }: {
+function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, stampGoal, rewardDescription, stripImage, stripFocalPoint, stripScale, logoSize, logoTint, stampIcon, stampDisplay, bannerGradient, bannerGradientWidth }: {
   primaryColor: string; accentColor: string; name: string
   logoPreview: string | null; stampGoal: number; rewardDescription: string
   stripImage: string | null; stripFocalPoint: string; stripScale: number; logoSize: number; logoTint?: string
+  stampIcon?: string; stampDisplay?: string; bannerGradient?: string; bannerGradientWidth?: number
 }) {
   const FRAME_W = 300, FRAME_H = 620, BEZEL = 13
   const SCREEN_W = FRAME_W - BEZEL * 2
   const STRIP_H = Math.round((SCREEN_W - 24) * 144 / 375)
-  const qrDot = isColorDark(primaryColor) ? 'ffffff' : '000000'
+  const dark = isColorDark(primaryColor)
+  const qrDot = dark ? 'ffffff' : '000000'
   const qrBg = primaryColor.replace('#', '')
+  const stampCount = Math.min(stampGoal, 10)
 
   return (
     <div style={{ position: 'relative', width: FRAME_W, height: FRAME_H, flexShrink: 0 }}>
@@ -103,10 +125,12 @@ function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, sta
                   : <img src={logoPreview} alt="" style={{ height: Math.round(22 * logoSize), maxWidth: `${Math.min(44 * logoSize, 70)}%`, objectFit: 'contain', display: 'block', transition: 'height 0.15s' }} />
                 : <span style={{ color: 'white', fontWeight: 900, fontSize: 10, lineHeight: 1.2, fontFamily: SYS }}>{name || 'Tu negocio'}</span>
               }
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', fontFamily: SYS }}>SELLOS</div>
-                <div style={{ color: 'white', fontSize: 15, fontWeight: 900, lineHeight: 1, fontFamily: SYS }}>0/{stampGoal}</div>
-              </div>
+              {stampDisplay !== 'number' && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: `${accentColor}99`, fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', fontFamily: SYS }}>SELLOS</div>
+                  <div style={{ color: 'white', fontSize: 15, fontWeight: 900, lineHeight: 1, fontFamily: SYS }}>0/{stampGoal}</div>
+                </div>
+              )}
             </div>
             {/* Strip image */}
             <div style={{ position: 'relative', width: '100%', height: STRIP_H, overflow: 'hidden', background: hexToRgba(primaryColor, 0.6), flexShrink: 0 }}>
@@ -117,27 +141,43 @@ function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, sta
                     <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7, fontFamily: SYS }}>imagen del negocio</span>
                   </div>
               }
+              {bannerGradient && (
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${hexToRgba(bannerGradient, 1)} 0%, ${hexToRgba(bannerGradient, 0.55)} ${Math.round((bannerGradientWidth ?? 52) * 0.54)}%, transparent ${bannerGradientWidth ?? 52}%)`, pointerEvents: 'none' }} />
+              )}
               {/* Customer name overlay */}
               <div style={{ position: 'absolute', bottom: 8, left: 12 }}>
-                <div style={{ color: 'white', fontWeight: 900, fontSize: 17, lineHeight: 1, textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: SYS }}>Cliente</div>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 6, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginTop: 2, fontFamily: SYS }}>CLIENTE</div>
+                <div style={{ color: 'white', fontWeight: 900, fontSize: 17, lineHeight: 1, textShadow: bannerGradient ? 'none' : '0 1px 8px rgba(0,0,0,0.7)', fontFamily: SYS }}>Cliente</div>
+                <div style={{ color: `${accentColor}99`, fontSize: 6, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginTop: 2, fontFamily: SYS }}>CLIENTE</div>
               </div>
             </div>
             {/* Programa / Premio */}
             <div style={{ display: 'flex', gap: 12, padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 1, fontFamily: SYS }}>PROGRAMA</div>
+                <div style={{ color: `${accentColor}99`, fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 1, fontFamily: SYS }}>PROGRAMA</div>
                 <div style={{ color: 'white', fontSize: 8, fontWeight: 700, lineHeight: 1.3, fontFamily: SYS }}>{name || 'Tu programa'}</div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 1, fontFamily: SYS }}>PREMIO</div>
+                <div style={{ color: `${accentColor}99`, fontSize: 5.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 1, fontFamily: SYS }}>PREMIO</div>
                 <div style={{ color: accentColor, fontSize: 8, fontWeight: 700, lineHeight: 1.3, fontFamily: SYS }}>{rewardDescription || 'Premio especial'}</div>
               </div>
             </div>
             {/* QR */}
             <div style={{ background: primaryColor, padding: '10px 12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              {stampDisplay === 'icons' && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, marginBottom: 2, maxWidth: '90%' }}>
+                  {Array.from({ length: stampCount }, (_, i) => (
+                    <span key={i} style={{ fontSize: 11, opacity: i === 0 ? 1 : 0.2, filter: i === 0 ? 'drop-shadow(0 0 3px currentColor)' : undefined }}>{stampIcon || '⭐'}</span>
+                  ))}
+                </div>
+              )}
+              {stampDisplay === 'number' && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 2 }}>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: dark ? '#fff' : '#000', lineHeight: 1 }}>0</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)', lineHeight: 1 }}>/{stampGoal}</span>
+                </div>
+              )}
               <img src={`https://api.qrserver.com/v1/create-qr-code/?data=easyloyalty-preview&size=100x100&color=${qrDot}&bgcolor=${qrBg}&qzone=1`} alt="QR" style={{ width: 76, height: 76 }} />
-              <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase', fontFamily: SYS }}>Easy Loyalty Program</span>
+              <span style={{ fontSize: 7, color: `${accentColor}80`, fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase', fontFamily: SYS }}>Easy Loyalty Program</span>
             </div>
           </div>
           {/* iOS stacked card effect */}
@@ -292,6 +332,10 @@ export default function RegistroPage() {
   const [stripScale, setStripScale] = useState(1)
   const [logoSize, setLogoSize] = useState(1)
   const [logoTint, setLogoTint] = useState('')
+  const [stampIcon, setStampIcon] = useState('⭐')
+  const [stampDisplay, setStampDisplay] = useState('none')
+  const [bannerGradient, setBannerGradient] = useState('')
+  const [bannerGradientWidth, setBannerGradientWidth] = useState(52)
 
   function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -379,7 +423,7 @@ export default function RegistroPage() {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name, slug: form.slug, tagline: form.tagline, primary_color: form.primary_color, accent_color: form.accent_color, stamp_goal: form.stamp_goal, reward_description: form.reward_description, admin_password: form.admin_password }),
+        body: JSON.stringify({ name: form.name, slug: form.slug, tagline: form.tagline, primary_color: form.primary_color, accent_color: form.accent_color, stamp_goal: form.stamp_goal, reward_description: form.reward_description, admin_password: form.admin_password, stamp_icon: stampIcon, stamp_display: stampDisplay }),
       })
       const data = await res.json()
       if (res.status === 409) { setStep(1); setSlugError('Esa dirección ya la usa otro negocio'); setSlugSuggestions(generateSuggestions(form.slug)); return }
@@ -413,12 +457,12 @@ export default function RegistroPage() {
         }).catch(() => {})
       }
 
-      // 5. Guardar logo_tint y logo_size si aplica
-      if (logoTint || logoSize !== 1) {
+      // 5. Guardar logo_tint, logo_size, banner_gradient si aplica
+      if (logoTint || logoSize !== 1 || bannerGradient) {
         await fetch(`/api/business/${slug}/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ logo_tint: logoTint, logo_size: logoSize }),
+          body: JSON.stringify({ logo_tint: logoTint, logo_size: logoSize, banner_gradient: bannerGradient, banner_gradient_width: bannerGradientWidth }),
         }).catch(() => {})
       }
 
@@ -698,6 +742,66 @@ export default function RegistroPage() {
                       onRemove={() => { setStripFile(null); if (stripPreview) URL.revokeObjectURL(stripPreview); setStripPreview(null); setStripFocalPoint('50% 50%'); setStripScale(1) }}
                     />
                   )}
+                  {/* Degradado de contraste */}
+                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 3, fontFamily: FONT_STACK }}>Degradado de contraste</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', marginBottom: 10, lineHeight: 1.5, fontFamily: FONT_STACK }}>Mejora la legibilidad del nombre sobre la imagen</p>
+                    <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', alignItems: 'center', marginBottom: bannerGradient ? 10 : 0 }}>
+                      <button type="button" onClick={() => setBannerGradient('')} title="Sin degradado"
+                        style={{ width: 34, height: 34, borderRadius: 9, cursor: 'pointer', background: 'white', position: 'relative', overflow: 'hidden', padding: 0, flexShrink: 0,
+                          border: !bannerGradient ? '2.5px solid white' : '2px solid rgba(255,255,255,0.12)',
+                          transform: !bannerGradient ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
+                          boxShadow: !bannerGradient ? '0 0 0 3px rgba(255,255,255,0.18)' : 'none' }}>
+                        <svg style={{ position: 'absolute', inset: 0 }} width="34" height="34" viewBox="0 0 34 34">
+                          <line x1="4" y1="4" x2="30" y2="30" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      {([
+                        { label: 'Negro',    value: '#000000' },
+                        { label: 'Marino',   value: '#001840' },
+                        { label: 'Café',     value: '#1a0800' },
+                        { label: 'Morado',   value: '#1a0033' },
+                        { label: 'Verde',    value: '#001a0e' },
+                        { label: 'Rojo',     value: '#1a0000' },
+                        { label: 'Blanco',   value: '#ffffff' },
+                      ] as { label: string; value: string }[]).map(c => (
+                        <button key={c.label} type="button" title={c.label} onClick={() => setBannerGradient(c.value)}
+                          style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: c.value, cursor: 'pointer', flexShrink: 0, padding: 0,
+                            border: bannerGradient === c.value ? '2.5px solid white' : '2px solid rgba(255,255,255,0.1)',
+                            transform: bannerGradient === c.value ? 'scale(1.12)' : 'scale(1)', transition: 'transform 0.12s',
+                            boxShadow: bannerGradient === c.value ? '0 0 0 3px rgba(255,255,255,0.18)' : 'none',
+                            outline: c.value === '#ffffff' ? '1px solid rgba(255,255,255,0.3)' : 'none' }} />
+                      ))}
+                    </div>
+                    {bannerGradient && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ position: 'relative', width: 44, height: 44, borderRadius: 11, overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.2)', cursor: 'pointer', flexShrink: 0 }}>
+                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${bannerGradient}, transparent)` }} />
+                            <input type="color" value={bannerGradient} onChange={e => setBannerGradient(e.target.value)}
+                              style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                          </div>
+                          <input type="text" value={bannerGradient.replace('#', '')} maxLength={6} placeholder="000000"
+                            onChange={e => { const v = '#' + e.target.value.replace('#', ''); if (/^#[0-9a-fA-F]{6}$/.test(v)) setBannerGradient(v) }}
+                            style={{ ...INPUT, fontFamily: 'monospace', fontSize: 14, letterSpacing: '0.05em' }} />
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, fontFamily: FONT_STACK }}>Extensión</span>
+                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontFamily: 'monospace', fontWeight: 700 }}>{bannerGradientWidth}%</span>
+                          </div>
+                          <div style={{ position: 'relative', height: 36, display: 'flex', alignItems: 'center' }}>
+                            <div style={{ position: 'absolute', left: 0, right: 0, height: 6, borderRadius: 99, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+                              <div style={{ position: 'absolute', left: 0, width: `${bannerGradientWidth}%`, height: '100%', background: `linear-gradient(to right, ${bannerGradient}, transparent)` }} />
+                            </div>
+                            <input type="range" min={10} max={100} step={1} value={bannerGradientWidth}
+                              onChange={e => setBannerGradientWidth(parseInt(e.target.value))}
+                              style={{ position: 'relative', zIndex: 1, width: '100%', accentColor: bannerGradient || '#ffffff', cursor: 'pointer', background: 'transparent' }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Colores + programa */}
@@ -733,6 +837,44 @@ export default function RegistroPage() {
                   </div>
 
                   <div>
+                    <label style={LABEL}>Visualización de sellos</label>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', marginBottom: 10, lineHeight: 1.4, fontFamily: FONT_STACK }}>Cómo aparecen los sellos en la tarjeta</p>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {([
+                        { val: 'none',   label: 'Solo contador', desc: '0/10' },
+                        { val: 'icons',  label: 'Íconos',        desc: '⭐⭐⭐' },
+                        { val: 'number', label: 'Número grande',  desc: '#0' },
+                      ] as const).map(opt => (
+                        <button key={opt.val} type="button" onClick={() => setStampDisplay(opt.val)}
+                          style={{ flex: 1, padding: '10px 6px 8px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontFamily: FONT_STACK,
+                            background: stampDisplay === opt.val ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                            border: stampDisplay === opt.val ? '1.5px solid rgba(255,255,255,0.35)' : '1.5px solid rgba(255,255,255,0.08)',
+                            color: stampDisplay === opt.val ? 'white' : 'rgba(255,255,255,0.35)' }}>
+                          <span style={{ fontSize: 13, lineHeight: 1 }}>{opt.desc}</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {stampDisplay === 'icons' && (
+                      <div style={{ marginTop: 14 }}>
+                        <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 10, fontFamily: FONT_STACK }}>Ícono de sello</p>
+                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                          {STAMP_ICONS.map(icon => (
+                            <button key={icon.emoji} type="button" title={icon.label} onClick={() => setStampIcon(icon.emoji)}
+                              style={{ width: 42, height: 42, borderRadius: 10, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: stampIcon === icon.emoji ? '2px solid rgba(255,255,255,0.5)' : '1.5px solid rgba(255,255,255,0.1)',
+                                background: stampIcon === icon.emoji ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)',
+                                transform: stampIcon === icon.emoji ? 'scale(1.12)' : 'scale(1)', transition: 'all 0.12s',
+                                boxShadow: stampIcon === icon.emoji ? '0 0 0 3px rgba(255,255,255,0.12)' : 'none' }}>
+                              {icon.emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
                     <label style={LABEL}>¿Cuál es el premio? *</label>
                     <input type="text" value={form.reward_description} onChange={e => set('reward_description', e.target.value)} placeholder="Ej. 1 café gratis" required style={INPUT} />
                   </div>
@@ -763,6 +905,10 @@ export default function RegistroPage() {
                   stripScale={stripScale}
                   logoSize={logoSize}
                   logoTint={logoTint}
+                  stampIcon={stampIcon}
+                  stampDisplay={stampDisplay}
+                  bannerGradient={bannerGradient}
+                  bannerGradientWidth={bannerGradientWidth}
                 />
                 <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: FONT_STACK, textAlign: 'center', maxWidth: 280 }}>
                   Así se verá en Apple Wallet. Cada cambio se refleja en tiempo real.
