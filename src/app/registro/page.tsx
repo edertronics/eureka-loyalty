@@ -831,9 +831,38 @@ export default function RegistroPage() {
 
                   <div>
                     <label style={LABEL}>Sellos para el premio *</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                      {['5', '8', '10', '12'].map(n => <button key={n} type="button" onClick={() => set('stamp_goal', n)} style={{ padding: '11px 0', borderRadius: 10, fontSize: 16, fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s', fontFamily: FONT_STACK, border: 'none', background: form.stamp_goal === n ? GREEN : 'rgba(255,255,255,0.07)', color: form.stamp_goal === n ? TEAL : 'rgba(255,255,255,0.35)', transform: form.stamp_goal === n ? 'scale(1.06)' : 'scale(1)', boxShadow: form.stamp_goal === n ? `0 4px 16px ${GREEN}40` : 'none' }}>{n}</button>)}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                      {['5', '8', '10', '12'].map(n => (
+                        <button key={n} type="button" onClick={() => set('stamp_goal', n)}
+                          style={{ padding: '11px 0', borderRadius: 10, fontSize: 16, fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s', fontFamily: FONT_STACK, border: 'none',
+                            background: form.stamp_goal === n ? GREEN : 'rgba(255,255,255,0.07)',
+                            color: form.stamp_goal === n ? TEAL : 'rgba(255,255,255,0.35)',
+                            transform: form.stamp_goal === n ? 'scale(1.06)' : 'scale(1)',
+                            boxShadow: form.stamp_goal === n ? `0 4px 16px ${GREEN}40` : 'none' }}>{n}</button>
+                      ))}
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <input
+                          type="number" min={1} max={50}
+                          value={form.stamp_goal}
+                          onChange={e => {
+                            const v = e.target.value
+                            if (v === '') { set('stamp_goal', ''); return }
+                            const n = Math.max(1, Math.min(50, parseInt(v) || 1))
+                            set('stamp_goal', String(n))
+                          }}
+                          style={{ ...INPUT, fontFamily: 'monospace', fontSize: 20, fontWeight: 900, textAlign: 'center', paddingRight: 8 }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <button type="button" onClick={() => set('stamp_goal', String(Math.min(50, parseInt(form.stamp_goal || '1') + 1)))}
+                          style={{ width: 36, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>▲</button>
+                        <button type="button" onClick={() => set('stamp_goal', String(Math.max(1, parseInt(form.stamp_goal || '1') - 1)))}
+                          style={{ width: 36, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>▼</button>
+                      </div>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, marginTop: 6, fontFamily: FONT_STACK }}>Mínimo 1 · Máximo 50</p>
                   </div>
 
                   <div>
