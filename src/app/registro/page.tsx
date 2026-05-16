@@ -25,22 +25,38 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 const STAMP_ICONS = [
-  { label: 'Estrella',    emoji: '⭐' },
-  { label: 'Hamburguesa', emoji: '🍔' },
-  { label: 'Café',        emoji: '☕' },
-  { label: 'Corazón',     emoji: '❤️' },
-  { label: 'Uña',         emoji: '💅' },
-  { label: 'Pizza',       emoji: '🍕' },
-  { label: 'Tijeras',     emoji: '✂️' },
-  { label: 'Patita',      emoji: '🐾' },
-  { label: 'Diamante',    emoji: '💎' },
-  { label: 'Taco',        emoji: '🌮' },
-  { label: 'Flor',        emoji: '🌸' },
-  { label: 'Corona',      emoji: '👑' },
-  { label: 'Helado',      emoji: '🍦' },
-  { label: 'Ramen',       emoji: '🍜' },
-  { label: 'Gym',         emoji: '💪' },
-  { label: 'Libro',       emoji: '📚' },
+  { label: 'Estrella',    id: 'star',
+    path: 'M12 2 14.4 8.8 21.5 8.9 15.8 13.2 17.9 20.1 12 16 6.1 20.1 8.2 13.2 2.5 8.9 9.6 8.8Z' },
+  { label: 'Hamburguesa', id: 'burger',
+    path: 'M5 8c0-1.7 3.1-3 7-3s7 1.3 7 3H5M3 12h18M5 16c0 1.7 3.1 3 7 3s7-1.3 7-3H5' },
+  { label: 'Café',        id: 'coffee',
+    path: 'M7 7h10l-2 12H9L7 7zM17 8a3 3 0 010 6M5 20h14M10 4V2M14 4V2' },
+  { label: 'Corazón',     id: 'heart',
+    path: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z' },
+  { label: 'Uña',         id: 'nail',
+    path: 'M10 21V10l2-7 2 7v11h-4zM8 10h8' },
+  { label: 'Pizza',       id: 'pizza',
+    path: 'M12 2L3 21h18L12 2zm-2 12a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' },
+  { label: 'Tijeras',     id: 'scissors',
+    path: 'M6 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM20 4L8.5 12M8.5 12L20 20' },
+  { label: 'Patita',      id: 'paw',
+    path: 'M12 19c-3 0-5 2-5 3h10c0-1-2-3-5-3zM7.5 9a2 2 0 100-4 2 2 0 000 4zm9 0a2 2 0 100-4 2 2 0 000 4zm-4.5-3a2 2 0 100-4 2 2 0 000 4z' },
+  { label: 'Diamante',    id: 'diamond',
+    path: 'M12 2l10 9-10 11L2 11zM2 11h20' },
+  { label: 'Taco',        id: 'taco',
+    path: 'M4 20c0-5.5 3.6-10 8-10s8 4.5 8 10H4zm3-5c.8-1.2 2.3-2 5-2' },
+  { label: 'Flor',        id: 'flower',
+    path: 'M12 15a3 3 0 100-6 3 3 0 000 6zM12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12' },
+  { label: 'Corona',      id: 'crown',
+    path: 'M3 20h18M3 20V9l5 5L12 3l4 11 5-5v11' },
+  { label: 'Helado',      id: 'icecream',
+    path: 'M8.5 16l3.5 6 3.5-6H8.5zM7 13a5 5 0 0110 0v3H7v-3z' },
+  { label: 'Ramen',       id: 'ramen',
+    path: 'M3 13h18M21 18H3l1.5-5h13L21 18zM8 9c0-2 1-3 2-3M14 9c0-2-1-3-2-3' },
+  { label: 'Gym',         id: 'gym',
+    path: 'M6 12h12M6 9v6M4 10v4M18 9v6M20 10v4' },
+  { label: 'Libro',       id: 'book',
+    path: 'M4 4h7a1 1 0 011 1v14a1 1 0 00-1-1H4V4zm16 0h-7a1 1 0 00-1 1v14a1 1 0 011-1h7V4zM12 4v16' },
 ]
 
 const BRAND_COLORS = [
@@ -164,10 +180,16 @@ function IPhoneWalletPreview({ primaryColor, accentColor, name, logoPreview, sta
             {/* QR */}
             <div style={{ background: primaryColor, padding: '10px 12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
               {stampDisplay === 'icons' && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, marginBottom: 2, maxWidth: '90%' }}>
-                  {Array.from({ length: stampCount }, (_, i) => (
-                    <span key={i} style={{ fontSize: 11, opacity: i === 0 ? 1 : 0.2, filter: i === 0 ? 'drop-shadow(0 0 3px currentColor)' : undefined }}>{stampIcon || '⭐'}</span>
-                  ))}
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 3, marginBottom: 2, maxWidth: '90%' }}>
+                  {Array.from({ length: stampCount }, (_, i) => {
+                    const ic = STAMP_ICONS.find(s => s.id === stampIcon) || STAMP_ICONS[0]
+                    return (
+                      <svg key={i} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ opacity: i === 0 ? 1 : 0.2, filter: i === 0 ? 'drop-shadow(0 0 2px white)' : undefined }}>
+                        <path d={ic.path} />
+                      </svg>
+                    )
+                  })}
                 </div>
               )}
               {stampDisplay === 'number' && (
@@ -332,7 +354,7 @@ export default function RegistroPage() {
   const [stripScale, setStripScale] = useState(1)
   const [logoSize, setLogoSize] = useState(1)
   const [logoTint, setLogoTint] = useState('')
-  const [stampIcon, setStampIcon] = useState('⭐')
+  const [stampIcon, setStampIcon] = useState('star')
   const [stampDisplay, setStampDisplay] = useState('none')
   const [bannerGradient, setBannerGradient] = useState('')
   const [bannerGradientWidth, setBannerGradientWidth] = useState(52)
@@ -887,17 +909,23 @@ export default function RegistroPage() {
                     {stampDisplay === 'icons' && (
                       <div style={{ marginTop: 14 }}>
                         <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 10, fontFamily: FONT_STACK }}>Ícono de sello</p>
-                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                          {STAMP_ICONS.map(icon => (
-                            <button key={icon.emoji} type="button" title={icon.label} onClick={() => setStampIcon(icon.emoji)}
-                              style={{ width: 42, height: 42, borderRadius: 10, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: stampIcon === icon.emoji ? '2px solid rgba(255,255,255,0.5)' : '1.5px solid rgba(255,255,255,0.1)',
-                                background: stampIcon === icon.emoji ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)',
-                                transform: stampIcon === icon.emoji ? 'scale(1.12)' : 'scale(1)', transition: 'all 0.12s',
-                                boxShadow: stampIcon === icon.emoji ? '0 0 0 3px rgba(255,255,255,0.12)' : 'none' }}>
-                              {icon.emoji}
-                            </button>
-                          ))}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
+                          {STAMP_ICONS.map(icon => {
+                            const active = stampIcon === icon.id
+                            return (
+                              <button key={icon.id} type="button" title={icon.label} onClick={() => setStampIcon(icon.id)}
+                                style={{ aspectRatio: '1', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                                  border: active ? '2px solid rgba(255,255,255,0.6)' : '1.5px solid rgba(255,255,255,0.1)',
+                                  background: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                  transform: active ? 'scale(1.1)' : 'scale(1)', transition: 'all 0.12s',
+                                  boxShadow: active ? '0 0 0 3px rgba(255,255,255,0.15)' : 'none',
+                                  color: 'white' }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d={icon.path} />
+                                </svg>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     )}

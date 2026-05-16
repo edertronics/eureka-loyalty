@@ -3,6 +3,25 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 
+const SVG_STAMP_PATHS: Record<string, string> = {
+  star:     'M12 2 14.4 8.8 21.5 8.9 15.8 13.2 17.9 20.1 12 16 6.1 20.1 8.2 13.2 2.5 8.9 9.6 8.8Z',
+  burger:   'M5 8c0-1.7 3.1-3 7-3s7 1.3 7 3H5M3 12h18M5 16c0 1.7 3.1 3 7 3s7-1.3 7-3H5',
+  coffee:   'M7 7h10l-2 12H9L7 7zM17 8a3 3 0 010 6M5 20h14M10 4V2M14 4V2',
+  heart:    'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z',
+  nail:     'M10 21V10l2-7 2 7v11h-4zM8 10h8',
+  pizza:    'M12 2L3 21h18L12 2zm-2 12a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z',
+  scissors: 'M6 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM20 4L8.5 12M8.5 12L20 20',
+  paw:      'M12 19c-3 0-5 2-5 3h10c0-1-2-3-5-3zM7.5 9a2 2 0 100-4 2 2 0 000 4zm9 0a2 2 0 100-4 2 2 0 000 4zm-4.5-3a2 2 0 100-4 2 2 0 000 4z',
+  diamond:  'M12 2l10 9-10 11L2 11zM2 11h20',
+  taco:     'M4 20c0-5.5 3.6-10 8-10s8 4.5 8 10H4zm3-5c.8-1.2 2.3-2 5-2',
+  flower:   'M12 15a3 3 0 100-6 3 3 0 000 6zM12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12',
+  crown:    'M3 20h18M3 20V9l5 5L12 3l4 11 5-5v11',
+  icecream: 'M8.5 16l3.5 6 3.5-6H8.5zM7 13a5 5 0 0110 0v3H7v-3z',
+  ramen:    'M3 13h18M21 18H3l1.5-5h13L21 18zM8 9c0-2 1-3 2-3M14 9c0-2-1-3-2-3',
+  gym:      'M6 12h12M6 9v6M4 10v4M18 9v6M20 10v4',
+  book:     'M4 4h7a1 1 0 011 1v14a1 1 0 00-1-1H4V4zm16 0h-7a1 1 0 00-1 1v14a1 1 0 011-1h7V4zM12 4v16',
+}
+
 interface Business {
   id: string
   name: string
@@ -311,14 +330,10 @@ export default function BusinessRegisterPage() {
                 <div key={i} style={{ width: 30, height: 30, border: `2px solid ${isLast ? ACCENT : TEXT25}`, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isLast ? `${ACCENT}18` : 'transparent' }}>
                   {customStampUrl ? (
                     <img src={customStampUrl} alt="" width={16} height={16} style={{ objectFit: 'contain', opacity: isLast ? 1 : 0.2 }} />
-                  ) : STAMP_ICON === '☕' || STAMP_ICON === '⭐' ? (
-                    <svg width="15" height="15" viewBox="0 0 20 20" style={{ opacity: isLast ? 1 : 0.22 }}>
-                      <path d="M5 1.5 Q4.2 3 5 4.5" stroke={ACCENT} strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-                      <path d="M10 1.5 Q9.2 3 10 4.5" stroke={ACCENT} strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-                      <path d="M15 1.5 Q14.2 3 15 4.5" stroke={ACCENT} strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-                      <path d="M2 6h16l-1.8 9a2 2 0 01-2 1.5H5.8a2 2 0 01-2-1.5z" fill={ACCENT}/>
-                      <path d="M18 7.5a2.5 2.5 0 010 5" stroke={ACCENT} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                      <path d="M1 18.5h18" stroke={ACCENT} strokeWidth="1.4" strokeLinecap="round"/>
+                  ) : SVG_STAMP_PATHS[STAMP_ICON] ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ opacity: isLast ? 1 : 0.22 }}>
+                      <path d={SVG_STAMP_PATHS[STAMP_ICON]} />
                     </svg>
                   ) : (
                     <span style={{ fontSize: 14, lineHeight: 1, opacity: isLast ? 1 : 0.22 }}>{STAMP_ICON}</span>
