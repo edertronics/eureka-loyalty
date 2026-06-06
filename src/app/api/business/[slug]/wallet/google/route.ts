@@ -3,22 +3,45 @@ import { GoogleAuth } from 'google-auth-library'
 import { supabaseAdmin } from '@/lib/supabase'
 
 const ISSUER_ID = '3388000000023114743'
-const CLASS_ID = `${ISSUER_ID}.easyloyalty_loyalty_class`
 
-const CLASS_BODY = {
-  id: CLASS_ID,
-  issuerName: 'Easy Loyalty',
-  programName: 'Easy Loyalty',
-  programLogo: {
-    sourceUri: { uri: 'https://easyloyalty.io/icon.png' },
-    contentDescription: { defaultValue: { language: 'es', value: 'Easy Loyalty' } },
-  },
-  reviewStatus: 'UNDER_REVIEW',
+function classId(slug: string) {
+  return `${ISSUER_ID}.loyalty_${slug.replace(/-/g, '_')}`
 }
 
-async function ensureLoyaltyClass(token: string) {
+function buildClassBody(slug: string, business: {
+  name: string
+  logo_url: string | null
+  primary_color: string | null
+}) {
+  return {
+    id: classId(slug),
+    issuerName: 'Easy Loyalty',
+    programName: business.name,
+    programLogo: {
+      sourceUri: {
+        uri: business.logo_url || 'https://app.easyloyalty.io/img/logo-mark.png',
+      },
+      contentDescription: {
+        defaultValue: { language: 'es', value: business.name },
+      },
+    },
+    hexBackgroundColor: business.primary_color || '#1a1a2e',
+    reviewStatus: 'UNDER_REVIEW',
+    countryCode: 'MX',
+    multipleDevicesAndHoldersAllowedStatus: 'ONE_USER_ALL_DEVICES',
+  }
+}
+
+async function ensureClass(
+  token: string,
+  slug: string,
+  business: { name: string; logo_url: string | null; primary_color: string | null }
+) {
+  const id = classId(slug)
+  const body = buildClassBody(slug, business)
+
   const getRes = await fetch(
-    `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
+    `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${id}`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
 
@@ -28,7 +51,7 @@ async function ensureLoyaltyClass(token: string) {
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(CLASS_BODY),
+        body: JSON.stringify(body),
       }
     )
     if (!createRes.ok) {
@@ -38,15 +61,31 @@ async function ensureLoyaltyClass(token: string) {
     const existing = await getRes.json()
     if (existing.reviewStatus === 'draft' || existing.reviewStatus === 'DRAFT') {
       await fetch(
-        `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${CLASS_ID}`,
+        `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${id}`,
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...CLASS_BODY, reviewStatus: 'UNDER_REVIEW' }),
+          body: JSON.stringify({ ...body, reviewStatus: 'UNDER_REVIEW' }),
+        }
+      )
+    } else {
+      // Ya existe y está activa — actualizar nombre/logo/color si el negocio los cambió
+      await fetch(
+        `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${id}`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            programName: business.name,
+            programLogo: body.programLogo,
+            hexBackgroundColor: body.hexBackgroundColor,
+          }),
         }
       )
     }
   }
+
+  return id
 }
 
 export async function POST(
@@ -59,7 +98,7 @@ export async function POST(
 
     const { data: business } = await supabaseAdmin
       .from('businesses')
-      .select('id, name, logo_url, primary_color')
+      .select('id, name, logo_url, primary_color, accent_color, reward_description, strip_image_url')
       .eq('slug', slug)
       .single()
 
@@ -72,36 +111,46 @@ export async function POST(
       credentials,
       scopes: ['https://www.googleapis.com/auth/wallet_object.issuer'],
     })
-
     const client = await auth.getClient()
     const tokenRes = await client.getAccessToken()
     const token = tokenRes.token!
 
-    // Asegurar que la clase existe
-    await ensureLoyaltyClass(token)
-
+    const cid = await ensureClass(token, slug, business)
     const objectId = `${ISSUER_ID}.${slug}-${customer_id}`
+
+    const stripUrl = (business as Record<string, unknown>).strip_image_url as string | null
+    const rewardDescription = (business as Record<string, unknown>).reward_description as string | null
 
     const passObject: Record<string, unknown> = {
       id: objectId,
-      classId: CLASS_ID,
+      classId: cid,
       state: 'ACTIVE',
       accountId: customer_id,
       accountName: customer_name,
       loyaltyPoints: {
-        label: `Sellos (meta: ${stamp_goal})`,
-        balance: { int: stamps },
+        label: 'SELLOS',
+        balance: {
+          string: `${stamps} / ${stamp_goal}`,
+        },
       },
       barcode: {
         type: 'QR_CODE',
         value: customer_id,
-        alternateText: 'Easy Loyalty Program',
+        alternateText: customer_id,
       },
+      textModulesData: [
+        {
+          id: 'reward',
+          header: 'PREMIO',
+          body: rewardDescription || 'Premio especial al completar tu tarjeta',
+        },
+      ],
     }
 
-    if (business.logo_url) {
+    // Banner (strip image del negocio — foto de fondo ancha)
+    if (stripUrl) {
       passObject.heroImage = {
-        sourceUri: { uri: business.logo_url },
+        sourceUri: { uri: stripUrl },
         contentDescription: { defaultValue: { language: 'es', value: business.name } },
       }
     }
@@ -116,10 +165,7 @@ export async function POST(
         'https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject',
         {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(passObject),
         }
       )
@@ -133,16 +179,12 @@ export async function POST(
         `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${objectId}`,
         {
           method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(passObject),
         }
       )
       if (!updateRes.ok) {
-        const errBody = await updateRes.text()
-        console.error('Google Wallet update error:', updateRes.status, errBody)
+        console.error('Google Wallet update error:', updateRes.status, await updateRes.text())
       }
     }
 
@@ -169,18 +211,13 @@ export async function POST(
 
 async function generateJwt(privateKey: string, clientEmail: string, claims: object): Promise<string> {
   const header = { alg: 'RS256', typ: 'JWT' }
-
-  const encode = (obj: object) =>
-    Buffer.from(JSON.stringify(obj)).toString('base64url')
-
+  const encode = (obj: object) => Buffer.from(JSON.stringify(obj)).toString('base64url')
   const headerB64 = encode(header)
   const payloadB64 = encode(claims)
   const signingInput = `${headerB64}.${payloadB64}`
-
   const { createSign } = await import('crypto')
   const sign = createSign('RSA-SHA256')
   sign.update(signingInput)
   const signature = sign.sign(privateKey, 'base64url')
-
   return `${signingInput}.${signature}`
 }

@@ -24,7 +24,7 @@ export async function sendWelcomeEmail({
 }) {
   const cardUrl = `${APP_URL}/${businessSlug}`
 
-  await getResend().emails.send({
+  const { error: e1 } = await getResend().emails.send({
     from: FROM,
     to,
     subject: `¡Bienvenido a ${businessName}! Tu tarjeta de lealtad está lista`,
@@ -82,6 +82,100 @@ export async function sendWelcomeEmail({
 </body>
 </html>`,
   })
+  if (e1) throw new Error(`Resend error (welcome): ${e1.message}`)
+}
+
+export async function sendOnboardingEmail({
+  to,
+  businessName,
+  businessSlug,
+}: {
+  to: string
+  businessName: string
+  businessSlug: string
+}) {
+  const cardUrl    = `${APP_URL}/${businessSlug}`
+  const adminUrl   = `${APP_URL}/${businessSlug}/admin`
+  const scannerUrl = `${APP_URL}/${businessSlug}/scanner`
+
+  const { error: e2 } = await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `¡${businessName} ya tiene lealtad! Aquí están tus links`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#063f3a;padding:32px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:11px;color:#00C896;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Easy Loyalty</p>
+            <h1 style="margin:0;font-size:22px;color:#ffffff;font-weight:800;">¡${businessName} ya tiene lealtad!</h1>
+            <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.5);">Tu programa de lealtad está activo</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+              Guarda este correo — contiene todo lo que necesitas para operar tu programa de lealtad.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr><td style="padding-bottom:12px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;padding:16px;border-left:4px solid #00C896;">
+                  <tr><td>
+                    <p style="margin:0 0 4px;font-size:10px;color:#00C896;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Tarjeta para tus clientes</p>
+                    <p style="margin:0;font-size:14px;font-weight:700;color:#111827;font-family:monospace;">${cardUrl}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#9ca3af;">Comparte este link con tus clientes</p>
+                  </td></tr>
+                </table>
+              </td></tr>
+              <tr><td style="padding-bottom:12px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;padding:16px;border-left:4px solid #6366f1;">
+                  <tr><td>
+                    <p style="margin:0 0 4px;font-size:10px;color:#6366f1;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Tu panel de control</p>
+                    <p style="margin:0;font-size:14px;font-weight:700;color:#111827;font-family:monospace;">${adminUrl}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#9ca3af;">Estadísticas, clientes y configuración</p>
+                  </td></tr>
+                </table>
+              </td></tr>
+              <tr><td>
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;padding:16px;border-left:4px solid #f59e0b;">
+                  <tr><td>
+                    <p style="margin:0 0 4px;font-size:10px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Scanner de sellos</p>
+                    <p style="margin:0;font-size:14px;font-weight:700;color:#111827;font-family:monospace;">${scannerUrl}</p>
+                    <p style="margin:4px 0 0;font-size:11px;color:#9ca3af;">Para que tu personal escanee los QR</p>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center">
+                <a href="${adminUrl}" style="display:inline-block;background:#00C896;color:#063f3a;text-decoration:none;padding:14px 36px;border-radius:999px;font-size:15px;font-weight:800;">
+                  Ir a mi panel de control →
+                </a>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+              También puedes consultar estos links en cualquier momento regresando a<br/>
+              <strong style="color:#6b7280;">app.easyloyalty.io/registro</strong><br/>
+              El programa de lealtad más fácil de Latinoamérica.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  })
+  if (e2) throw new Error(`Resend error (onboarding): ${e2.message}`)
 }
 
 export async function sendRewardEmail({
@@ -99,7 +193,7 @@ export async function sendRewardEmail({
 }) {
   const cardUrl = `${APP_URL}/${businessSlug}`
 
-  await getResend().emails.send({
+  const { error: e3 } = await getResend().emails.send({
     from: FROM,
     to,
     subject: `¡Ganaste tu premio en ${businessName}! 🎉`,
@@ -154,4 +248,5 @@ export async function sendRewardEmail({
 </body>
 </html>`,
   })
+  if (e3) throw new Error(`Resend error (reward): ${e3.message}`)
 }

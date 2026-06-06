@@ -332,7 +332,10 @@ export default function RegistroPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [stepError, setStepError] = useState('')
-  const [done, setDone] = useState<{ name: string; slug: string } | null>(null)
+  const [done, setDone] = useState<{ name: string; slug: string; email?: string } | null>(null)
+  const [pendingDone, setPendingDone] = useState<{ name: string; slug: string; email?: string } | null>(null)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrSvg, setQrSvg] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [slugError, setSlugError] = useState('')
   const [slugSuggestions, setSlugSuggestions] = useState<string[]>([])
@@ -349,6 +352,7 @@ export default function RegistroPage() {
   // Media state
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
   const [stripFile, setStripFile] = useState<File | null>(null)
   const [stripPreview, setStripPreview] = useState<string | null>(null)
   const [stripFocalPoint, setStripFocalPoint] = useState('50% 50%')
@@ -366,6 +370,9 @@ export default function RegistroPage() {
     setLogoFile(file)
     if (logoPreview) URL.revokeObjectURL(logoPreview)
     setLogoPreview(URL.createObjectURL(file))
+    const reader = new FileReader()
+    reader.onload = ev => setLogoDataUrl((ev.target?.result as string) || null)
+    reader.readAsDataURL(file)
   }
   function handleStripSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -387,7 +394,7 @@ export default function RegistroPage() {
   }
 
   const [form, setForm] = useState({
-    name: '', slug: '', tagline: '',
+    name: '', slug: '', tagline: '', email: '',
     primary_color: '#6366f1', accent_color: '#f59e0b',
     stamp_goal: '10', reward_description: '',
     admin_password: '', admin_password_confirm: '',
@@ -425,6 +432,7 @@ export default function RegistroPage() {
     if (!form.name || !form.slug) return 'Completa el nombre y la dirección'
     if (slugStatus === 'taken') return 'Esa dirección ya está en uso'
     if (slugStatus === 'checking') return 'Verificando dirección...'
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Ingresa un correo electrónico válido'
     if (form.admin_password.length < 6) return 'La contraseña debe tener al menos 6 caracteres'
     if (form.admin_password !== form.admin_password_confirm) return 'Las contraseñas no coinciden'
     return ''
@@ -446,7 +454,7 @@ export default function RegistroPage() {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name, slug: form.slug, tagline: form.tagline, primary_color: form.primary_color, accent_color: form.accent_color, stamp_goal: form.stamp_goal, reward_description: form.reward_description, admin_password: form.admin_password, stamp_icon: stampIcon, stamp_display: stampDisplay }),
+        body: JSON.stringify({ name: form.name, slug: form.slug, tagline: form.tagline, primary_color: form.primary_color, accent_color: form.accent_color, stamp_goal: form.stamp_goal, reward_description: form.reward_description, admin_password: form.admin_password, stamp_icon: stampIcon, stamp_display: stampDisplay, email: form.email }),
       })
       const data = await res.json()
       if (res.status === 409) { setStep(1); setSlugError('Esa dirección ya la usa otro negocio'); setSlugSuggestions(generateSuggestions(form.slug)); return }
@@ -474,7 +482,7 @@ export default function RegistroPage() {
         await fetch(`/api/business/${slug}/upload-strip`, { method: 'POST', body: fd })
         // Guardar posición y escala del banner
         await fetch(`/api/business/${slug}/update`, {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ strip_focal_point: stripFocalPoint, strip_scale: stripScale }),
         }).catch(() => {})
@@ -483,13 +491,22 @@ export default function RegistroPage() {
       // 5. Guardar logo_tint, logo_size, banner_gradient si aplica
       if (logoTint || logoSize !== 1 || bannerGradient) {
         await fetch(`/api/business/${slug}/update`, {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ logo_tint: logoTint, logo_size: logoSize, banner_gradient: bannerGradient, banner_gradient_width: bannerGradientWidth }),
         }).catch(() => {})
       }
 
-      setDone({ name: data.business.name, slug })
+      const cardUrl = window.location.origin + '/' + slug
+      const qrmod = await import('qrcode')
+      const [qrPng, qrVector] = await Promise.all([
+        qrmod.toDataURL(cardUrl, { width: 1024, margin: 2 }),
+        qrmod.toString(cardUrl, { type: 'svg' as const, margin: 2 }),
+      ])
+      setQrDataUrl(qrPng)
+      setQrSvg(qrVector)
+      setPendingDone({ name: data.business.name, slug, email: form.email || undefined })
+      setStep(3)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
@@ -514,39 +531,388 @@ export default function RegistroPage() {
 
   // ── SUCCESS ──────────────────────────────────────────────────────
   if (done) {
+    const bizName = done.name
+    const bizSlug = done.slug
     const links = [
-      { label: 'Tarjeta para tus clientes', path: `/${done.slug}`,         key: 'card'    },
-      { label: 'Tu panel de control',        path: `/${done.slug}/admin`,   key: 'admin'   },
-      { label: 'Scanner de sellos',           path: `/${done.slug}/scanner`, key: 'scanner' },
+      { label: 'Tarjeta para tus clientes', path: '/' + bizSlug,           key: 'card',    color: GREEN,      desc: 'Comparte este link con tus clientes para que acumulen sellos' },
+      { label: 'Tu panel de control',        path: '/' + bizSlug + '/admin',   key: 'admin',   color: '#6366f1',  desc: 'Estadísticas, lista de clientes y configuración de tu tarjeta' },
+      { label: 'Scanner de sellos',           path: '/' + bizSlug + '/scanner', key: 'scanner', color: '#f59e0b',  desc: 'Para que tu personal escanee los QR de tus clientes' },
     ]
+
+    function handlePrint() {
+      const w = window.open('', '_blank', 'width=820,height=700')
+      if (!w) return
+      const today = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+      const logoTag = logoPreview
+        ? '<img src="' + logoPreview + '" alt="' + bizName + '" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin-bottom:10px;" />'
+        : ''
+      const cards = links.map(function(l) {
+        return '<div style="margin-bottom:14px;padding:16px 20px;border-radius:10px;background:#f8f8f8;border-left:4px solid ' + l.color + ';">' +
+          '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + l.color + ';margin-bottom:6px;">' + l.label + '</div>' +
+          '<div style="font-size:15px;font-weight:700;font-family:monospace;color:#111;">easyloyalty.io' + l.path + '</div>' +
+          '<div style="font-size:11px;color:#888;margin-top:3px;">' + l.desc + '</div></div>'
+      }).join('')
+      const html =
+        '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Easy Loyalty</title>' +
+        '<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;color:#111;background:white;padding:44px 52px;}@media print{@page{margin:14mm 18mm;}}</style>' +
+        '</head><body>' +
+        '<div style="border-bottom:5px solid ' + GREEN + ';padding-bottom:22px;margin-bottom:28px;">' +
+        logoTag +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:' + GREEN + ';margin-bottom:5px;">Easy Loyalty</div>' +
+        '<div style="font-size:24px;font-weight:800;color:#111;margin-bottom:4px;">¡' + bizName + ' ya tiene lealtad!</div>' +
+        '<div style="font-size:13px;color:#666;">Programa activo · ' + today + '</div></div>' +
+        '<p style="font-size:13px;color:#444;line-height:1.7;margin-bottom:22px;">Estos son tus tres links importantes. Comparte el primero con tus clientes; los otros dos son solo para ti y tu equipo.</p>' +
+        cards +
+        '<div style="margin-top:36px;padding-top:18px;border-top:1px solid #e5e5e5;font-size:11px;color:#888;line-height:1.8;">' +
+        'Puedes consultar estos links regresando a <strong style="color:#444;">app.easyloyalty.io/registro</strong>.<br>' +
+        'Tu contraseña de acceso es la que elegiste al registrarte.<br>' +
+        '<span style="color:' + GREEN + ';font-weight:700;">easyloyalty.io</span> — El programa de lealtad más fácil de Latinoamérica.</div>' +
+        '<scr' + 'ipt>window.onload=function(){window.print();}<\/scr' + 'ipt>' +
+        '</body></html>'
+      w.document.write(html)
+      w.document.close()
+    }
+
     return (
       <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', background: `linear-gradient(160deg,${TEAL} 0%,${CARBON} 60%)`, fontFamily: FONT_STACK }}>
-        <style>{`${FONT_FACES} @keyframes popIn{from{transform:scale(0.5) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}} @keyframes fadeUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
-        <div style={{ width: '100%', maxWidth: 360 }}>
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <style>{`
+          ${FONT_FACES}
+          @keyframes popIn{from{transform:scale(0.5) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+          @keyframes fadeUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+        `}</style>
+
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', animation: 'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: `0 0 40px ${GREEN}60` }}>
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.03em', animation: 'fadeUp 0.4s ease 0.2s both', fontFamily: FONT_STACK }}>¡{done.name} ya tiene lealtad!</h1>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0, animation: 'fadeUp 0.4s ease 0.3s both', fontFamily: FONT_STACK }}>Tu programa está activo. Comparte estas URLs.</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0, animation: 'fadeUp 0.4s ease 0.3s both', fontFamily: FONT_STACK }}>Tu programa está activo. Aquí están tus links.</p>
           </div>
-          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(0,200,150,0.2)`, marginBottom: 14, animation: 'fadeUp 0.4s ease 0.4s both' }}>
-            {links.map(({ label, path, key }, i) => (
-              <div key={key} onClick={() => copyUrl(path, key)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer', borderBottom: i < links.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none', background: copied === key ? 'rgba(0,200,150,0.06)' : 'transparent', transition: 'background 0.2s' }}>
+
+          {/* Links */}
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(0,200,150,0.2)`, marginBottom: 10, animation: 'fadeUp 0.4s ease 0.4s both' }}>
+            {links.map(({ label, path, key, color }, i) => (
+              <div key={key} onClick={() => copyUrl(path, key)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', cursor: 'pointer', borderBottom: i < links.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none', background: copied === key ? 'rgba(0,200,150,0.06)' : 'transparent', transition: 'background 0.2s' }}>
                 <div style={{ textAlign: 'left', minWidth: 0 }}>
-                  <p style={{ color: `${GREEN}80`, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 3px', fontFamily: FONT_STACK }}>{label}</p>
-                  <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>easyloyalty.io{path}</p>
+                  <p style={{ color: `${color}99`, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 3px', fontFamily: FONT_STACK }}>{label}</p>
+                  <p style={{ color: '#fff', fontSize: 12, fontWeight: 600, margin: 0, fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>easyloyalty.io{path}</p>
                 </div>
-                <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, marginLeft: 12, background: copied === key ? `${GREEN}20` : 'rgba(255,255,255,0.07)', border: `1px solid ${copied === key ? GREEN : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s' }}>
-                  {copied === key ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>}
+                <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, marginLeft: 12, background: copied === key ? `${GREEN}20` : 'rgba(255,255,255,0.07)', border: `1px solid ${copied === key ? GREEN : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s' }}>
+                  {copied === key ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>}
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8, animation: 'fadeUp 0.4s ease 0.5s both' }}>
+
+          {/* Email confirmación */}
+          {done.email && (
+            <div style={{ marginBottom: 10, padding: '11px 14px', borderRadius: 12, background: 'rgba(0,200,150,0.07)', border: '1px solid rgba(0,200,150,0.18)', display: 'flex', alignItems: 'center', gap: 10, animation: 'fadeUp 0.4s ease 0.45s both' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, margin: 0, fontFamily: FONT_STACK }}>Links enviados a <strong style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{done.email}</strong></p>
+            </div>
+          )}
+
+          {/* Mensaje tranquilizador */}
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center', margin: '0 0 14px', lineHeight: 1.5, fontFamily: FONT_STACK, animation: 'fadeUp 0.4s ease 0.5s both' }}>
+            También puedes consultar tus links regresando a esta página en cualquier momento.
+          </p>
+
+          {/* Botón PDF */}
+          <button onClick={handlePrint} style={{ width: '100%', marginBottom: 8, padding: '12px 0', borderRadius: 12, fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', fontFamily: FONT_STACK, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, animation: 'fadeUp 0.4s ease 0.55s both' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar mis links en PDF
+          </button>
+
+          {/* Botones principales */}
+          <div style={{ display: 'flex', gap: 8, animation: 'fadeUp 0.4s ease 0.6s both' }}>
             <button onClick={() => router.push(`/${done.slug}`)} style={{ flex: 1, padding: '14px 0', borderRadius: 14, fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontFamily: FONT_STACK }}>Ver tarjeta</button>
             <button onClick={() => router.push(`/${done.slug}/admin`)} style={{ flex: 2, padding: '14px 0', borderRadius: 14, fontWeight: 900, fontSize: 14, color: TEAL, background: GREEN, border: 'none', cursor: 'pointer', fontFamily: FONT_STACK, letterSpacing: '-0.01em' }}>Ir a mi panel →</button>
           </div>
+        </div>
+
+      </main>
+    )
+  }
+
+  // ── STEP 3: PÓSTERS & DESCARGA DE QR ────────────────────────────
+  if (pendingDone && step === 3) {
+    const biz = pendingDone
+    const pc = form.primary_color
+    const ac = form.accent_color
+    const pcDark = isColorDark(pc)
+    function downloadQrPng() {
+      if (!qrDataUrl) return
+      const a = document.createElement('a')
+      a.href = qrDataUrl
+      a.download = 'qr-' + biz.slug + '.png'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+
+    function downloadQrSvg() {
+      if (!qrSvg) return
+      const blob = new Blob([qrSvg], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'qr-' + biz.slug + '.svg'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+
+    function downloadPostersPDF() {
+      if (!qrDataUrl) return
+      const w = window.open('', '_blank', 'width=900,height=960')
+      if (!w) return
+
+      const textOnPc = pcDark ? '#ffffff' : '#111111'
+      const cardUrl = 'app.easyloyalty.io/' + biz.slug
+      const qr220 = '<img src="' + qrDataUrl + '" alt="QR" style="width:220px;height:220px;display:block;" />'
+      const qr160 = '<img src="' + qrDataUrl + '" alt="QR" style="width:160px;height:160px;display:block;" />'
+      const qr150 = '<img src="' + qrDataUrl + '" alt="QR" style="width:150px;height:150px;display:block;" />'
+      const logo80 = logoDataUrl ? '<img src="' + logoDataUrl + '" alt="" style="max-height:80px;max-width:240px;object-fit:contain;display:block;margin:0 auto 16px;" />' : ''
+      const logo56 = logoDataUrl ? '<img src="' + logoDataUrl + '" alt="" style="max-height:56px;max-width:180px;object-fit:contain;display:block;margin:0 auto 12px;" />' : ''
+      const logoSide = logoDataUrl ? '<img src="' + logoDataUrl + '" alt="" style="max-height:48px;max-width:180px;object-fit:contain;margin-bottom:12px;" />' : ''
+      const tl1 = form.tagline ? '<p style="font-size:16px;color:#888;text-align:center;margin:0 0 24px;font-family:Arial,sans-serif;">' + form.tagline + '</p>' : '<div style="margin-bottom:24px;"></div>'
+      const tl2 = form.tagline ? '<p style="font-size:13px;color:#888;text-align:center;margin:0 0 16px;font-family:Arial,sans-serif;">' + form.tagline + '</p>' : '<div style="margin-bottom:16px;"></div>'
+      const tl3 = form.tagline ? '<p style="font-size:12px;color:#888;margin:0 0 10px;font-family:Arial,sans-serif;">' + form.tagline + '</p>' : ''
+
+      // Página 1 — Carta completa (8.5" × 11")
+      const page1 =
+        '<div class="page">' +
+        '<div style="height:8px;background:' + ac + ';"></div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;padding:52px 80px 0;text-align:center;">' +
+        logo80 +
+        '<h1 style="font-size:44px;font-weight:900;color:#111;margin:0 0 10px;letter-spacing:-0.03em;font-family:Arial,sans-serif;">' + biz.name + '</h1>' +
+        tl1 +
+        '<div style="width:56px;height:3px;background:' + ac + ';border-radius:2px;margin:0 auto 36px;"></div>' +
+        '<div style="padding:24px;background:#fff;border-radius:20px;box-shadow:0 4px 32px rgba(0,0,0,0.1);border:1px solid #eee;margin-bottom:28px;">' +
+        qr220 +
+        '</div>' +
+        '<p style="font-size:18px;font-weight:700;color:#333;margin:0 0 8px;font-family:Arial,sans-serif;">Escanea con tu cámara para unirte</p>' +
+        '<p style="font-size:14px;color:' + pc + ';font-weight:700;font-family:Arial,sans-serif;margin:0 0 20px;">Acumula sellos · Gana premios</p>' +
+        '<p style="font-size:11px;font-family:monospace;color:#ccc;margin:0;">' + cardUrl + '</p>' +
+        '</div>' +
+        '<div style="position:absolute;bottom:0;left:0;right:0;height:52px;background:' + pc + ';display:flex;align-items:center;justify-content:center;">' +
+        '<span style="font-size:12px;font-weight:800;color:' + textOnPc + ';letter-spacing:0.18em;text-transform:uppercase;font-family:Arial,sans-serif;">Powered by Easy Loyalty</span>' +
+        '</div>' +
+        '</div>'
+
+      // Página 2 — Media carta vertical (5.5" × 8.5" centrada en hoja carta)
+      const page2 =
+        '<div class="page" style="display:flex;align-items:center;justify-content:center;">' +
+        '<div style="width:5.5in;height:8.5in;position:relative;overflow:hidden;outline:1px dashed #ddd;">' +
+        '<div style="height:6px;background:' + ac + ';"></div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;padding:36px 44px 0;text-align:center;">' +
+        logo56 +
+        '<h1 style="font-size:30px;font-weight:900;color:#111;margin:0 0 8px;letter-spacing:-0.03em;font-family:Arial,sans-serif;">' + biz.name + '</h1>' +
+        tl2 +
+        '<div style="width:44px;height:3px;background:' + ac + ';border-radius:2px;margin:0 auto 24px;"></div>' +
+        '<div style="padding:16px;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.1);border:1px solid #eee;margin-bottom:20px;">' +
+        qr160 +
+        '</div>' +
+        '<p style="font-size:14px;font-weight:700;color:#333;margin:0 0 6px;font-family:Arial,sans-serif;">Escanea con tu cámara</p>' +
+        '<p style="font-size:12px;color:' + pc + ';font-weight:700;font-family:Arial,sans-serif;margin:0 0 16px;">Acumula sellos · Gana premios</p>' +
+        '<p style="font-size:9px;font-family:monospace;color:#ccc;margin:0;">' + cardUrl + '</p>' +
+        '</div>' +
+        '<div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:' + pc + ';display:flex;align-items:center;justify-content:center;">' +
+        '<span style="font-size:10px;font-weight:800;color:' + textOnPc + ';letter-spacing:0.18em;text-transform:uppercase;font-family:Arial,sans-serif;">Powered by Easy Loyalty</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+
+      // Cara del tent card (reutilizada para frente y reverso)
+      function tentFace() {
+        return (
+          '<div style="width:8.5in;height:5.5in;position:relative;display:flex;align-items:stretch;overflow:hidden;">' +
+          '<div style="height:5px;background:' + ac + ';position:absolute;top:0;left:0;right:0;z-index:1;"></div>' +
+          '<div style="width:42%;display:flex;align-items:center;justify-content:center;padding:28px 16px;">' +
+          '<div style="padding:14px;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.12);border:1px solid #eee;">' +
+          qr150 +
+          '</div>' +
+          '</div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 36px 40px 0;">' +
+          logoSide +
+          '<h2 style="font-size:26px;font-weight:900;color:#111;margin:0 0 6px;letter-spacing:-0.02em;font-family:Arial,sans-serif;">' + biz.name + '</h2>' +
+          tl3 +
+          '<div style="width:36px;height:3px;background:' + ac + ';border-radius:2px;margin:0 0 12px;"></div>' +
+          '<p style="font-size:14px;font-weight:700;color:#333;margin:0 0 4px;font-family:Arial,sans-serif;">Escanea con tu cámara</p>' +
+          '<p style="font-size:11px;color:' + pc + ';font-weight:700;font-family:Arial,sans-serif;margin:0;">Acumula sellos · Gana premios</p>' +
+          '</div>' +
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:34px;background:' + pc + ';display:flex;align-items:center;justify-content:center;">' +
+          '<span style="font-size:9px;font-weight:800;color:' + textOnPc + ';letter-spacing:0.18em;text-transform:uppercase;font-family:Arial,sans-serif;">Powered by Easy Loyalty</span>' +
+          '</div>' +
+          '</div>'
+        )
+      }
+
+      // Página 3 — Tent card (hoja carta doblada horizontalmente)
+      const page3 =
+        '<div class="page">' +
+        '<div style="transform:rotate(180deg);transform-origin:center;">' +
+        tentFace() +
+        '</div>' +
+        '<div style="width:100%;height:1px;border-top:1px dashed #bbb;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;box-sizing:border-box;">' +
+        '<span style="font-size:8px;color:#bbb;font-family:Arial,sans-serif;background:#fff;padding:0 4px;">doblar aquí ✂</span>' +
+        '</div>' +
+        tentFace() +
+        '</div>'
+
+      const css =
+        '*{margin:0;padding:0;box-sizing:border-box;}' +
+        'body{margin:0;padding:0;}' +
+        '.page{width:8.5in;height:11in;position:relative;overflow:hidden;page-break-after:always;}' +
+        '.page:last-child{page-break-after:avoid;}' +
+        '.tip{position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px 20px;box-shadow:0 4px 20px rgba(0,0,0,0.15);font-family:Arial,sans-serif;font-size:13px;color:#333;z-index:999;line-height:1.5;}' +
+        '@page{size:letter;margin:0;}' +
+        '@media print{.tip{display:none!important;}}'
+
+      const html =
+        '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Material · ' + biz.name + '</title>' +
+        '<style>' + css + '</style>' +
+        '</head><body>' +
+        '<div class="tip">Imprimir sin márgenes · Escala 100% · Guardar como PDF</div>' +
+        page1 + page2 + page3 +
+        '<scr' + 'ipt>window.onload=function(){window.print();}<\/scr' + 'ipt>' +
+        '</body></html>'
+
+      w.document.write(html)
+      w.document.close()
+    }
+
+    return (
+      <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', background: `linear-gradient(160deg,${TEAL} 0%,${CARBON} 65%)`, fontFamily: FONT_STACK }}>
+        <style>{`
+          ${FONT_FACES}
+          @keyframes popIn{from{transform:scale(0.5) rotate(-8deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+          @keyframes fadeUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+        `}</style>
+
+        <div style={{ width: '100%', maxWidth: 580 }}>
+          {/* Logo */}
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <img src="/img/logo-dark.png" alt="Easy Loyalty" style={{ height: 44, width: 'auto', filter: 'invert(1)', opacity: 0.9, display: 'inline-block' }} />
+          </div>
+
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 28, animation: 'fadeUp 0.4s ease both' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 18, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: `0 0 32px ${GREEN}60`, animation: 'popIn 0.6s cubic-bezier(0.34,1.56,0.64,1)' }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 14v3h3"/></svg>
+            </div>
+            <h1 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.02em', fontFamily: FONT_STACK }}>Material de marketing</h1>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0, fontFamily: FONT_STACK }}>Imprime tu póster para que tus clientes puedan escanear el QR.</p>
+          </div>
+
+          {/* 3 Previews de formato */}
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'flex-end', marginBottom: 24, animation: 'fadeUp 0.4s ease 0.12s both' }}>
+
+            {/* Preview 1 — Carta completa (126×163) inner 510×660 scale=0.247 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 126, height: 163, overflow: 'hidden', borderRadius: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                <div style={{ transformOrigin: 'top left', transform: 'scale(0.247)', width: 510, height: 660, background: '#ffffff', position: 'relative' }}>
+                  <div style={{ height: 10, background: ac }} />
+                  <div style={{ padding: '14px 28px 0', textAlign: 'center' }}>
+                    {logoDataUrl && <img src={logoDataUrl} alt="" style={{ maxHeight: 36, maxWidth: 120, objectFit: 'contain', display: 'block', margin: '0 auto 8px' }} />}
+                    <div style={{ fontSize: 22, fontWeight: 900, color: '#111', marginBottom: 6, fontFamily: 'Arial,sans-serif', letterSpacing: '-0.02em' }}>{biz.name}</div>
+                    {form.tagline && <div style={{ fontSize: 11, color: '#888', marginBottom: 14, fontFamily: 'Arial,sans-serif' }}>{form.tagline}</div>}
+                    <div style={{ width: 32, height: 2, background: ac, margin: '0 auto 20px', borderRadius: 1 }} />
+                    <div style={{ display: 'inline-block', padding: 12, borderRadius: 14, background: '#fff', boxShadow: '0 2px 16px rgba(0,0,0,0.1)', border: '1px solid #eee', marginBottom: 14 }}>
+                      {qrDataUrl && <img src={qrDataUrl} alt="QR" style={{ width: 160, height: 160, display: 'block' }} />}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#333', fontWeight: 700, fontFamily: 'Arial,sans-serif', marginBottom: 4 }}>Escanea con tu cámara</div>
+                    <div style={{ fontSize: 10, color: pc, fontWeight: 700, fontFamily: 'Arial,sans-serif' }}>Acumula sellos · Gana premios</div>
+                  </div>
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 32, background: pc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 7, fontWeight: 800, color: pcDark ? '#fff' : '#111', letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'Arial,sans-serif' }}>Powered by Easy Loyalty</span>
+                  </div>
+                </div>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: FONT_STACK }}>Carta completa</span>
+            </div>
+
+            {/* Preview 2 — Media carta vertical (100×155) inner 320×495 scale=0.312 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 100, height: 155, overflow: 'hidden', borderRadius: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                <div style={{ transformOrigin: 'top left', transform: 'scale(0.312)', width: 320, height: 495, background: '#ffffff', position: 'relative' }}>
+                  <div style={{ height: 8, background: ac }} />
+                  <div style={{ padding: '12px 22px 0', textAlign: 'center' }}>
+                    {logoDataUrl && <img src={logoDataUrl} alt="" style={{ maxHeight: 28, maxWidth: 90, objectFit: 'contain', display: 'block', margin: '0 auto 6px' }} />}
+                    <div style={{ fontSize: 18, fontWeight: 900, color: '#111', marginBottom: 4, fontFamily: 'Arial,sans-serif' }}>{biz.name}</div>
+                    {form.tagline && <div style={{ fontSize: 9, color: '#888', marginBottom: 10, fontFamily: 'Arial,sans-serif' }}>{form.tagline}</div>}
+                    <div style={{ width: 24, height: 2, background: ac, margin: '0 auto 14px', borderRadius: 1 }} />
+                    <div style={{ display: 'inline-block', padding: 10, borderRadius: 10, background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.1)', border: '1px solid #eee', marginBottom: 10 }}>
+                      {qrDataUrl && <img src={qrDataUrl} alt="QR" style={{ width: 120, height: 120, display: 'block' }} />}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#333', fontWeight: 700, fontFamily: 'Arial,sans-serif', marginBottom: 3 }}>Escanea con tu cámara</div>
+                    <div style={{ fontSize: 8, color: pc, fontWeight: 700, fontFamily: 'Arial,sans-serif' }}>Acumula sellos · Gana premios</div>
+                  </div>
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 26, background: pc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 6, fontWeight: 800, color: pcDark ? '#fff' : '#111', letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'Arial,sans-serif' }}>Powered by Easy Loyalty</span>
+                  </div>
+                </div>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: FONT_STACK }}>Media carta</span>
+            </div>
+
+            {/* Preview 3 — Tent card frente (150×97) inner 510×330 scale=0.294 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 150, height: 97, overflow: 'hidden', borderRadius: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                <div style={{ transformOrigin: 'top left', transform: 'scale(0.294)', width: 510, height: 330, background: '#ffffff', position: 'relative', display: 'flex', alignItems: 'stretch' }}>
+                  <div style={{ height: 6, background: ac, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 }} />
+                  <div style={{ width: '42%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '28px 16px' }}>
+                    <div style={{ padding: 12, borderRadius: 12, background: '#fff', boxShadow: '0 2px 14px rgba(0,0,0,0.12)', border: '1px solid #eee' }}>
+                      {qrDataUrl && <img src={qrDataUrl} alt="QR" style={{ width: 110, height: 110, display: 'block' }} />}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '28px 28px 40px 0' }}>
+                    {logoDataUrl && <img src={logoDataUrl} alt="" style={{ maxHeight: 36, maxWidth: 140, objectFit: 'contain', marginBottom: 10 }} />}
+                    <div style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 4, fontFamily: 'Arial,sans-serif' }}>{biz.name}</div>
+                    <div style={{ width: 28, height: 2, background: ac, borderRadius: 1, marginBottom: 8 }} />
+                    <div style={{ fontSize: 11, color: '#333', fontWeight: 700, fontFamily: 'Arial,sans-serif', marginBottom: 3 }}>Escanea con tu cámara</div>
+                    <div style={{ fontSize: 9, color: pc, fontWeight: 700, fontFamily: 'Arial,sans-serif' }}>Acumula sellos · Gana premios</div>
+                  </div>
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 26, background: pc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 6, fontWeight: 800, color: pcDark ? '#fff' : '#111', letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'Arial,sans-serif' }}>Powered by Easy Loyalty</span>
+                  </div>
+                </div>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: FONT_STACK }}>Tent card</span>
+            </div>
+
+          </div>
+
+          {/* Download buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12, animation: 'fadeUp 0.4s ease 0.25s both' }}>
+            <button onClick={downloadPostersPDF} style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 900, fontSize: 14, color: TEAL, background: GREEN, border: 'none', cursor: 'pointer', fontFamily: FONT_STACK, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '-0.01em' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Descargar 3 pósters en PDF
+            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={downloadQrPng} style={{ flex: 1, padding: '12px 0', borderRadius: 12, fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', fontFamily: FONT_STACK, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                QR en PNG
+              </button>
+              <button onClick={downloadQrSvg} style={{ flex: 1, padding: '12px 0', borderRadius: 12, fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', fontFamily: FONT_STACK, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                QR en SVG (vectorial)
+              </button>
+            </div>
+          </div>
+
+          {/* Continue to success */}
+          <div style={{ animation: 'fadeUp 0.4s ease 0.35s both' }}>
+            <button onClick={() => setDone(biz)} style={{ width: '100%', padding: '14px 0', borderRadius: 14, fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontFamily: FONT_STACK }}>
+              Ver mis links →
+            </button>
+          </div>
+
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 11, marginTop: 20, letterSpacing: '0.04em', fontFamily: FONT_STACK }}>
+            Easy Loyalty · Plataforma de lealtad digital
+          </p>
         </div>
       </main>
     )
@@ -554,7 +920,8 @@ export default function RegistroPage() {
 
   // ── FORM ─────────────────────────────────────────────────────────
   const STEPS = [{ n: 1, label: 'Tu negocio' }, { n: 2, label: 'Tu tarjeta' }]
-  const step1Valid = !!(form.name && form.slug && slugStatus !== 'taken' && slugStatus !== 'checking' && form.admin_password.length >= 6 && form.admin_password === form.admin_password_confirm)
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+  const step1Valid = !!(form.name && form.slug && slugStatus !== 'taken' && slugStatus !== 'checking' && emailValid && form.admin_password.length >= 6 && form.admin_password === form.admin_password_confirm)
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: step === 2 ? 'flex-start' : 'center', padding: '32px 16px', background: `linear-gradient(160deg,${TEAL} 0%,${CARBON} 65%)`, fontFamily: FONT_STACK }}>
@@ -618,6 +985,14 @@ export default function RegistroPage() {
                 <label style={LABEL}>Slogan <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(opcional)</span></label>
                 <input type="text" value={form.tagline} onChange={e => set('tagline', e.target.value)} placeholder="Ej. El mejor café de la colonia" style={INPUT} />
               </div>
+              <div>
+                <label style={LABEL}>Correo electrónico *</label>
+                <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="tu@correo.com" required style={{ ...INPUT, borderColor: form.email && !emailValid ? 'rgba(239,68,68,0.5)' : undefined }} />
+                <p style={{ color: `${GREEN}70`, fontSize: 11, margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT_STACK }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+                  Te enviaremos tus links aquí para que los tengas siempre a la mano
+                </p>
+              </div>
               <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
               <div>
                 <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 14px', fontFamily: FONT_STACK }}>Contraseña de acceso</h3>
@@ -652,6 +1027,14 @@ export default function RegistroPage() {
           {/* ── PASO 2: Constructor visual ── */}
           {step === 2 && (
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
+              {/* Back button */}
+              <div style={{ width: '100%', marginBottom: -8 }}>
+                <button type="button" onClick={() => setStep(1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 600, fontFamily: FONT_STACK, padding: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Regresar al paso 1
+                </button>
+              </div>
 
               {/* Controls — LEFT */}
               <div style={{ flex: '1 1 320px', minWidth: 300, display: 'flex', flexDirection: 'column', gap: 0 }}>

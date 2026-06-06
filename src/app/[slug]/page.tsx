@@ -45,6 +45,7 @@ export default function BusinessRegisterPage() {
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState('')
   const [customer, setCustomer] = useState<{ name: string; qr_code: string } | null>(null)
+  const [alreadyExists, setAlreadyExists] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '' })
   const [googleWalletUrl, setGoogleWalletUrl] = useState<string | null>(null)
   const [appleWalletLoading, setAppleWalletLoading] = useState(false)
@@ -74,6 +75,7 @@ export default function BusinessRegisterPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al registrarse')
       setCustomer(data.customer)
+      setAlreadyExists(!!data.already_exists)
       setStep('success')
       // Generar Google Wallet pass
       fetch(`/api/business/${slug}/wallet/google`, {
@@ -219,12 +221,25 @@ export default function BusinessRegisterPage() {
             {!business.logo_url && (
               <h2 style={{ color: TEXT65, fontSize: 16, fontWeight: 700, marginBottom: 16, fontFamily: FONT, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{business.name}</h2>
             )}
-            <h2 style={{ color: TEXT, fontSize: 30, fontWeight: 900, marginBottom: 6, fontFamily: FONT, letterSpacing: '-0.02em' }}>
-              ¡Listo, {firstName}!
-            </h2>
-            <p style={{ color: TEXT65, fontSize: 14, marginBottom: 28, fontFamily: FONT }}>
-              Ya eres parte del club de lealtad
-            </p>
+            {alreadyExists ? (
+              <>
+                <h2 style={{ color: TEXT, fontSize: 28, fontWeight: 900, marginBottom: 6, fontFamily: FONT, letterSpacing: '-0.02em' }}>
+                  ¡Hola de nuevo, {firstName}!
+                </h2>
+                <p style={{ color: TEXT65, fontSize: 14, marginBottom: 28, fontFamily: FONT }}>
+                  Ya tienes tarjeta — aquí está tu QR
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 style={{ color: TEXT, fontSize: 30, fontWeight: 900, marginBottom: 6, fontFamily: FONT, letterSpacing: '-0.02em' }}>
+                  ¡Listo, {firstName}!
+                </h2>
+                <p style={{ color: TEXT65, fontSize: 14, marginBottom: 28, fontFamily: FONT }}>
+                  Ya eres parte del club de lealtad
+                </p>
+              </>
+            )}
           </div>
 
           {/* QR con efecto */}
@@ -347,8 +362,8 @@ export default function BusinessRegisterPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
               { label: 'Nombre', key: 'name', type: 'text', placeholder: '¿Cómo te llamas?', required: true },
-              { label: 'WhatsApp / Teléfono', key: 'phone', type: 'tel', placeholder: '55 1234 5678', required: true },
-              { label: 'Email', key: 'email', type: 'email', placeholder: 'tu@email.com', required: true },
+              { label: 'WhatsApp / Teléfono', key: 'phone', type: 'tel', placeholder: '55 1234 5678 (opcional)', required: false },
+              { label: 'Email', key: 'email', type: 'email', placeholder: 'tu@email.com (opcional)', required: false },
             ].map(field => (
               <div key={field.key}>
                 <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: TEXT50, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, fontFamily: FONT }}>
@@ -378,12 +393,12 @@ export default function BusinessRegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || !form.name || !form.phone || !form.email}
+              disabled={loading || !form.name}
               style={{
                 width: '100%', padding: '15px', fontSize: 16, fontWeight: 800,
                 color: BTN_TEXT, background: BTN_BG, border: 'none',
-                borderRadius: 10, cursor: loading || !form.name || !form.phone || !form.email ? 'not-allowed' : 'pointer',
-                opacity: loading || !form.name || !form.phone || !form.email ? 0.5 : 1,
+                borderRadius: 10, cursor: loading || !form.name ? 'not-allowed' : 'pointer',
+                opacity: loading || !form.name ? 0.5 : 1,
                 fontFamily: FONT, letterSpacing: '-0.01em',
                 transition: 'opacity 0.2s',
               }}

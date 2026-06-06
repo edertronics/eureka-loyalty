@@ -68,11 +68,13 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 ## Negocios activos en Supabase
 
-| Negocio | Slug | Sellos | Premio |
-|---|---|---|---|
-| **Eureka Burgers** | `eureka-burgers` | 9 | ¡Tu burger es gratis! |
-| María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis |
-| María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis |
+| Negocio | Slug | Sellos | Premio | Estado |
+|---|---|---|---|---|
+| ~~Eureka Burgers~~ | `eureka-burgers` | 9 | ¡Tu burger es gratis! | **Eliminado** — pendiente re-registrar |
+| María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis | Activo |
+| María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis | Activo |
+| cafe-ricolino | `cafe-ricolino` | — | — | Prueba (sin email) |
+| cafe-nuevo | `cafe-nuevo` | — | — | Prueba (sin email) |
 
 ---
 
@@ -86,34 +88,54 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - **API aprobada:** 2026-05-11 (correo de Google Wallet Support Team)
 - **Merchant ID (consola):** `BCR2DN5T435IRLLM`
 - **Issuer ID (API):** `3388000000023114743`
-- **Class ID:** `3388000000023114743.easyloyalty_loyalty_class` — estado: `approved`
+- **Clase por negocio:** `ISSUER_ID.loyalty_{slug_con_guiones_bajos}` — se crea automáticamente al primer uso de cada negocio
 - **Service account:** `easy-loyalty-wallet@easy-loyalty-493322.iam.gserviceaccount.com`
 - **Proyecto GCP:** `easy-loyalty-493322`
 - Credenciales en Vercel como env var: `GOOGLE_SERVICE_ACCOUNT_JSON` (JSON completo en una línea)
-- Flujo: POST `/api/business/[slug]/wallet/google` → crea/actualiza objeto → retorna JWT URL
-- La clase se auto-actualiza a `UNDER_REVIEW`/`approved` si está en `draft` al primer uso
-- Debug endpoint: `/api/business/[slug]/wallet/google/debug`
+- Flujo: POST `/api/business/[slug]/wallet/google` → crea/actualiza clase + objeto → retorna JWT URL
+- Clase lleva: `programName` (nombre negocio), `programLogo` (logo_url), `hexBackgroundColor` (primary_color), `heroImage` (strip_image_url)
+- Lifecycle: 404 → crear con UNDER_REVIEW; draft → PUT UNDER_REVIEW; activa → PATCH para sincronizar branding
+- **NUNCA usar la clase global legacy** `3388000000023114743.easyloyalty_loyalty_class` — ya no se usa
 
 ## Email (Resend)
 - **Proveedor:** Resend (`resend` npm package)
 - **From:** `Easy Loyalty <noreply@easyloyalty.io>`
-- **API Key:** env var `RESEND_API_KEY` (en Vercel: eureka-loyalty + loyalty-app)
-- **Dominio verificado:** `easyloyalty.io` — DNS agregado en Namecheap 2026-05-12, verificación pendiente
-- **Módulo:** `src/lib/email.ts`
+- **API Key:** env var `RESEND_API_KEY` (en Vercel: eureka-loyalty)
+- **🚨 Dominio NO verificado:** `easyloyalty.io` — pendiente verificar en resend.com/domains. Los emails NO llegan hasta completar esto.
+- **Módulo:** `src/lib/email.ts` — todas las funciones lanzan error si Resend rechaza (fix 2026-05-15)
 - **Emails implementados:**
-  - Bienvenida al registrarse (si el cliente da email)
-  - Premio ganado al completar la tarjeta
+  - `sendWelcomeEmail` — bienvenida al cliente al registrarse (si da email)
+  - `sendRewardEmail` — premio ganado al completar la tarjeta
+  - `sendOnboardingEmail` — links del programa al dueño del negocio tras registrarse
 
 ## Modelo de negocio (decisiones tomadas)
 - **Trial:** 3 meses gratis
 - **Cobro:** Stripe (pendiente) — pedir tarjeta DESPUÉS de personalizar la tarjeta, cobro automático al vencer
-- **Flujo onboarding ideal:** Registro → Personalización → Datos de pago → Dashboard
+- **Flujo onboarding ideal:** Registro → Visual Card Builder → Pósters/QR → Dashboard (después: Stripe)
 
-## Onboarding (registro/page.tsx)
-- Paso 1: Nombre del negocio + slug
-- Paso 2: Programa (colores con swatches + hex input + color picker nativo, sellos, premio, preview)
-- Paso 3: Contraseña de acceso
+## Onboarding (registro/page.tsx) — 3 pasos
+- **Paso 1:** Nombre + slug + slogan + **email** (requerido) + contraseña de admin
+- **Paso 2:** Personalización visual — colores (swatches + hex + picker), logo, banner, sellos, premio, preview en tiempo real
+- **Paso 3:** Material de marketing — 3 formatos de póster en un PDF (3 páginas tamaño carta, sin márgenes):
+  - **Carta completa** (8.5"×11"): barra accent top, logo, QR 220px centrado, barra primary bottom "Powered by Easy Loyalty"
+  - **Media carta** (5.5"×8.5" centrada en carta): guía de corte punteada, QR 160px
+  - **Tent card**: hoja carta doblada horizontalmente — frente y reverso con mismo diseño landscape (QR izquierda, info derecha), línea "doblar aquí ✂"
+  - También: QR PNG 1024px descargable, QR SVG vectorial descargable
+- **Pantalla de éxito:** Links copiables + confirmación de email + PDF de links
 - Los colores tienen: swatches rápidos + `<input type="color">` (picker nativo) + campo hex (#rrggbb)
+
+## Tarjeta del cliente ([slug]/page.tsx)
+- Solo **nombre** es obligatorio; email y teléfono son opcionales ("(opcional)" en placeholder)
+- Deduplicación por email: si ya existe → `already_exists: true` en respuesta
+- **UX returning customer**: cuando `already_exists=true` → "¡Hola de nuevo, {nombre}! Ya tienes tarjeta — aquí está tu QR" (distinto al flujo nuevo registro)
+- Botón de envío se habilita con solo nombre (`!form.name || loading`)
+
+## Páginas eliminadas (zombis legacy — hardcodeadas a Eureka Burgers)
+- ~~`src/app/register/page.tsx`~~ — hardcodeada a slug `eureka-burgers`
+- ~~`src/app/scanner/page.tsx`~~ — sin PIN de staff, colores hardcodeados Eureka
+- ~~`src/app/admin/page.tsx`~~ — usaba env `ADMIN_PASSWORD` global
+- ~~`src/app/api/admin/login/route.ts`~~ — creaba cookie global
+- ~~`src/app/api/admin/stats/route.ts`~~ — hardcodeada a `businessSlug = 'eureka-burgers'`
 
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
