@@ -101,7 +101,7 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - **Proveedor:** Resend (`resend` npm package)
 - **From:** `Easy Loyalty <noreply@easyloyalty.io>`
 - **API Key:** env var `RESEND_API_KEY` (en Vercel: eureka-loyalty)
-- **🚨 Dominio NO verificado:** `easyloyalty.io` — pendiente verificar en resend.com/domains. Los emails NO llegan hasta completar esto.
+- **Dominio verificado:** `easyloyalty.io` — verificado en Resend el 2026-06-06. Emails funcionan en producción.
 - **Módulo:** `src/lib/email.ts` — todas las funciones lanzan error si Resend rechaza (fix 2026-05-15)
 - **Emails implementados:**
   - `sendWelcomeEmail` — bienvenida al cliente al registrarse (si da email)
