@@ -11,6 +11,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nombre y negocio son requeridos' }, { status: 400 })
     }
 
+    if (!phone?.trim() || !email?.trim()) {
+      return NextResponse.json({ error: 'Teléfono y email son requeridos' }, { status: 400 })
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json({ error: 'Email inválido' }, { status: 400 })
+    }
+
     // Obtener el negocio por slug
     const { data: business, error: bizError } = await supabaseAdmin
       .from('businesses')

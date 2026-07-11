@@ -165,6 +165,8 @@ export default function BusinessRegisterPage() {
     const b = parseInt(c.slice(4,6), 16)
     return (0.299*r + 0.587*g + 0.114*b) / 255 < 0.55
   }
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
+  const canSubmit = !!form.name && !!form.phone && emailValid
   const isDark = isColorDark(PRIMARY)
   const TEXT       = isDark ? '#ffffff'                    : '#1a3a6e'
   const TEXT65     = isDark ? 'rgba(255,255,255,0.65)'     : 'rgba(26,58,110,0.75)'
@@ -362,8 +364,8 @@ export default function BusinessRegisterPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
               { label: 'Nombre', key: 'name', type: 'text', placeholder: '¿Cómo te llamas?', required: true },
-              { label: 'WhatsApp / Teléfono', key: 'phone', type: 'tel', placeholder: '55 1234 5678 (opcional)', required: false },
-              { label: 'Email', key: 'email', type: 'email', placeholder: 'tu@email.com (opcional)', required: false },
+              { label: 'WhatsApp / Teléfono', key: 'phone', type: 'tel', placeholder: '55 1234 5678', required: true },
+              { label: 'Email', key: 'email', type: 'email', placeholder: 'tu@email.com', required: true },
             ].map(field => (
               <div key={field.key}>
                 <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: TEXT50, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, fontFamily: FONT }}>
@@ -393,12 +395,12 @@ export default function BusinessRegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || !form.name}
+              disabled={loading || !canSubmit}
               style={{
                 width: '100%', padding: '15px', fontSize: 16, fontWeight: 800,
                 color: BTN_TEXT, background: BTN_BG, border: 'none',
-                borderRadius: 10, cursor: loading || !form.name ? 'not-allowed' : 'pointer',
-                opacity: loading || !form.name ? 0.5 : 1,
+                borderRadius: 10, cursor: loading || !canSubmit ? 'not-allowed' : 'pointer',
+                opacity: loading || !canSubmit ? 0.5 : 1,
                 fontFamily: FONT, letterSpacing: '-0.01em',
                 transition: 'opacity 0.2s',
               }}
