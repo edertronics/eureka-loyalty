@@ -320,7 +320,7 @@ export default function BusinessRegisterPage() {
       {/* Logo o nombre */}
       <div style={{ marginBottom: 32, textAlign: 'center' }}>
         {business.logo_url
-          ? <img src={business.logo_url} alt={business.name} style={{ height: 123, width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+          ? <img src={business.logo_url} alt={business.name} style={{ height: 246, width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
           : <h1 style={{ color: TEXT, fontSize: 28, fontWeight: 900, textAlign: 'center', fontFamily: FONT, letterSpacing: '-0.03em', margin: 0 }}>{business.name}</h1>
         }
         {business.tagline && (
