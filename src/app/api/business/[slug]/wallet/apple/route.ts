@@ -101,11 +101,8 @@ async function generatePass({ slug, customer_id, customer_name, stamps, stamp_go
       const b = parseInt(c.slice(4,6), 16)
       return (0.299*r + 0.587*g + 0.114*b) / 255 < 0.55
     }
-    // Fondo del pase de Apple Wallet, independiente de business.primary_color (que también
-    // pinta la página web de registro). Override puntual solo para eureka-burgers.
-    const walletBgHex = slug === 'eureka-burgers' ? '#DA5C2D' : (business.primary_color || '#FFE44D')
-    const primaryIsDark = walletColorDark(walletBgHex)
-    const bgColor = hexToRgb(walletBgHex)
+    const primaryIsDark = walletColorDark(business.primary_color || '#FFE44D')
+    const bgColor = hexToRgb(business.primary_color || '#FFE44D')
     const textColor = primaryIsDark ? 'rgb(255, 255, 255)' : hexToRgb(business.accent_color || '#003860')
 
     // Fetch logo (aparece arriba a la izquierda en la Wallet)
