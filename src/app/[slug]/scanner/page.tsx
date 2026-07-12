@@ -181,6 +181,12 @@ export default function DynamicScannerPage() {
     )
   }
 
+  // El logo normal de eureka-burgers es un badge azul sólido (pensado para fondos azules/oscuros);
+  // aquí el fondo es blanco, así que usamos la variante transparente solo en esta página.
+  const scannerLogoUrl = slug === 'eureka-burgers'
+    ? 'https://udcvtwjumcunbgcqnvpn.supabase.co/storage/v1/object/public/logos/eureka-burgers/logo-transparente.png'
+    : business.logo_url
+
   // Pantalla de login para staff
   if (authState === 'login') {
     return (
@@ -192,8 +198,8 @@ export default function DynamicScannerPage() {
             <p style={{ color: MUTED, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10, fontFamily: FONT }}>
               Staff Scanner
             </p>
-            {business.logo_url
-              ? <img src={business.logo_url} alt={business.name} style={{ height: 44, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+            {scannerLogoUrl
+              ? <img src={scannerLogoUrl} alt={business.name} style={{ height: 44, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
               : <h1 style={{ color: NAVY, fontSize: 20, fontWeight: 900, fontFamily: FONT, letterSpacing: '-0.02em', margin: 0 }}>{business.name}</h1>
             }
           </div>
@@ -275,8 +281,8 @@ export default function DynamicScannerPage() {
         <p style={{ color: MUTED, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontFamily: FONT }}>
           Staff Scanner
         </p>
-        {business.logo_url
-          ? <img src={business.logo_url} alt={business.name} style={{ height: 40, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+        {scannerLogoUrl
+          ? <img src={scannerLogoUrl} alt={business.name} style={{ height: 40, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
           : <h1 style={{ color: NAVY, fontSize: 18, fontWeight: 900, fontFamily: FONT, letterSpacing: '-0.02em', margin: 0 }}>{business.name}</h1>
         }
       </div>
