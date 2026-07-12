@@ -218,7 +218,7 @@ export default function BusinessRegisterPage() {
           {/* Saludo animado */}
           <div className="success-header">
             {business.logo_url && (
-              <img src={business.logo_url} alt={business.name} style={{ height: 83, width: 'auto', marginBottom: 16, objectFit: 'contain', display: 'block', margin: '0 auto 16px' }} />
+              <img src={business.logo_url} alt={business.name} style={{ height: 108, width: 'auto', marginBottom: 16, objectFit: 'contain', display: 'block', margin: '0 auto 16px' }} />
             )}
             {!business.logo_url && (
               <h2 style={{ color: TEXT65, fontSize: 16, fontWeight: 700, marginBottom: 16, fontFamily: FONT, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{business.name}</h2>
