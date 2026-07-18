@@ -30,10 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 })
     }
 
-    // TEMPORAL: dedup desactivado solo para eureka-burgers mientras Eder hace pruebas
-    // de registro repetido con el mismo email/teléfono. QUITAR esta condición antes
-    // de mandarle los links reales al cliente.
-    if (email && business_slug !== 'eureka-burgers') {
+    if (email) {
       const { data: existing } = await supabaseAdmin
         .from('customers')
         .select('id, name, qr_code')
