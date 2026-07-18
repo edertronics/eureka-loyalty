@@ -44,9 +44,14 @@ export async function POST(req: NextRequest) {
     const newStamps = customer.stamps + 1
     const reachedGoal = newStamps >= business.stamp_goal
 
-    // Si alcanzó la meta, reiniciar sellos y sumar canje
+    // eureka-burgers usa el sistema nuevo de "premios pendientes" con vigencia de 1 mes,
+    // acumulables en paralelo. El resto de negocios conserva el canje automático inmediato.
+    const usesPendingRewards = business.slug === 'eureka-burgers'
+
+    // Si alcanzó la meta, reiniciar sellos. El canje (rewards_redeemed) solo se suma
+    // de inmediato para negocios que NO usan premios pendientes.
     const updatedStamps = reachedGoal ? 0 : newStamps
-    const updatedRewards = reachedGoal ? customer.rewards_redeemed + 1 : customer.rewards_redeemed
+    const updatedRewards = reachedGoal && !usesPendingRewards ? customer.rewards_redeemed + 1 : customer.rewards_redeemed
 
     // Actualizar sellos del cliente
     const { error: updateError } = await supabaseAdmin
@@ -72,11 +77,21 @@ export async function POST(req: NextRequest) {
     })
 
     if (reachedGoal) {
-      await supabaseAdmin.from('reward_events').insert({
-        customer_id: customer.id,
-        business_id: customer.business_id,
-        staff_id: staff_id || null,
-      })
+      if (usesPendingRewards) {
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        await supabaseAdmin.from('pending_rewards').insert({
+          customer_id: customer.id,
+          business_id: customer.business_id,
+          status: 'available',
+          expires_at: expiresAt.toISOString(),
+        })
+      } else {
+        await supabaseAdmin.from('reward_events').insert({
+          customer_id: customer.id,
+          business_id: customer.business_id,
+          staff_id: staff_id || null,
+        })
+      }
 
       if (customer.email) {
         sendRewardEmail({

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/pending-rewards",
+      "schedule": "0 16 * * *"
+    }
+  ]
+}

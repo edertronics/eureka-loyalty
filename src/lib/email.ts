@@ -250,3 +250,137 @@ export async function sendRewardEmail({
   })
   if (e3) throw new Error(`Resend error (reward): ${e3.message}`)
 }
+
+export async function sendRewardReminderEmail({
+  to,
+  customerName,
+  businessName,
+  businessSlug,
+  rewardDescription,
+  daysLeft,
+}: {
+  to: string
+  customerName: string
+  businessName: string
+  businessSlug: string
+  rewardDescription: string
+  daysLeft: number
+}) {
+  const cardUrl = `${APP_URL}/${businessSlug}`
+
+  const { error } = await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Recordatorio: tienes un premio disponible en ${businessName}`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#16a34a;padding:32px;text-align:center;">
+            <p style="margin:0;font-size:40px;">🎁</p>
+            <h1 style="margin:8px 0 0;font-size:24px;color:#ffffff;">Todavía tienes un premio esperando</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 24px;font-size:16px;color:#374151;">
+              <strong>${customerName}</strong>, no olvides que tienes un premio disponible en <strong>${businessName}</strong>. Te quedan <strong>${daysLeft} días</strong> para canjearlo.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:20px;margin-bottom:24px;">
+              <tr><td align="center">
+                <p style="margin:0 0 4px;font-size:13px;color:#15803d;text-transform:uppercase;letter-spacing:0.5px;">Tu premio</p>
+                <p style="margin:0;font-size:22px;font-weight:bold;color:#14532d;">${rewardDescription}</p>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;text-align:center;">
+              Muestra tu tarjeta digital al personal de ${businessName} para canjearlo en tu próxima visita.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center">
+                <a href="${cardUrl}" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:999px;font-size:15px;font-weight:bold;">
+                  Ver mi tarjeta
+                </a>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(`Resend error (reward reminder): ${error.message}`)
+}
+
+export async function sendRewardExpiringEmail({
+  to,
+  customerName,
+  businessName,
+  businessSlug,
+  rewardDescription,
+  daysLeft,
+}: {
+  to: string
+  customerName: string
+  businessName: string
+  businessSlug: string
+  rewardDescription: string
+  daysLeft: number
+}) {
+  const cardUrl = `${APP_URL}/${businessSlug}`
+
+  const { error } = await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `⚠️ Tu premio en ${businessName} caduca en ${daysLeft} días`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#DA5C2D;padding:32px;text-align:center;">
+            <p style="margin:0;font-size:40px;">⏰</p>
+            <h1 style="margin:8px 0 0;font-size:24px;color:#ffffff;">¡Tu premio está por caducar!</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="margin:0 0 24px;font-size:16px;color:#374151;">
+              <strong>${customerName}</strong>, tu premio en <strong>${businessName}</strong> caduca en <strong>${daysLeft} días</strong>. Después de eso, se cancela y no se puede recuperar.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:2px solid #DA5C2D;border-radius:12px;padding:20px;margin-bottom:24px;">
+              <tr><td align="center">
+                <p style="margin:0 0 4px;font-size:13px;color:#c2410c;text-transform:uppercase;letter-spacing:0.5px;">Tu premio</p>
+                <p style="margin:0;font-size:22px;font-weight:bold;color:#7c2d12;">${rewardDescription}</p>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;text-align:center;">
+              Cánjalo antes de que caduque — muestra tu tarjeta digital al personal de ${businessName}.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center">
+                <a href="${cardUrl}" style="display:inline-block;background:#DA5C2D;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:999px;font-size:15px;font-weight:bold;">
+                  Canjea tu premio antes de que caduque
+                </a>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  })
+  if (error) throw new Error(`Resend error (reward expiring): ${error.message}`)
+}

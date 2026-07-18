@@ -49,7 +49,7 @@ async function generatePass({ slug, customer_id, customer_name, stamps, stamp_go
     let authToken: string | null = null
     const { data: customerRow } = await supabaseAdmin
       .from('customers')
-      .select('auth_token')
+      .select('id, auth_token')
       .eq('qr_code', customer_id)
       .single()
     if (customerRow?.auth_token) {
@@ -127,6 +127,32 @@ async function generatePass({ slug, customer_id, customer_name, stamps, stamp_go
 
     const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://app.easyloyalty.io').trim()
 
+    // Premios pendientes con vigencia — solo eureka-burgers por ahora. El campo "PREMIO"
+    // se vuelve dinámico y lleva changeMessage para que Wallet muestre un aviso visible
+    // en pantalla de bloqueo cada vez que el texto cambie (incluye cada sello normal).
+    let auxiliaryFields: Array<{ key: string; label: string; value: string; changeMessage?: string }> = [
+      { key: 'reward', label: 'PREMIO', value: 'Estás más cerca de tu premio' },
+    ]
+
+    if (slug === 'eureka-burgers' && customerRow?.id) {
+      const { count: availableCount } = await supabaseAdmin
+        .from('pending_rewards')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_id', customerRow.id)
+        .eq('status', 'available')
+        .gt('expires_at', new Date().toISOString())
+
+      const n = availableCount || 0
+      const remaining = Math.max(stamp_goal - stamps, 0)
+      const rewardText = n >= 1
+        ? `¡Tienes ${n} premio${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}! Cánjalo${n > 1 ? 's' : ''} en tu próxima visita`
+        : `Te faltan ${remaining} sello${remaining === 1 ? '' : 's'} para tu premio`
+
+      auxiliaryFields = [
+        { key: 'reward', label: 'PREMIO', value: rewardText, changeMessage: '%@' },
+      ]
+    }
+
     const passJson = {
       formatVersion: 1,
       passTypeIdentifier: PASS_TYPE_ID,
@@ -162,13 +188,7 @@ async function generatePass({ slug, customer_id, customer_name, stamps, stamp_go
             value: business.name,
           },
         ],
-        auxiliaryFields: [
-          {
-            key: 'reward',
-            label: 'PREMIO',
-            value: 'Estás más cerca de tu premio',
-          },
-        ],
+        auxiliaryFields,
         backFields: [
           {
             key: 'id',

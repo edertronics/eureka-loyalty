@@ -25,11 +25,14 @@ export async function GET(
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const now = new Date().toISOString()
+  const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
     customersRes, stampsRes, rewardsRes, recentRes,
     newCustomersRes, activeCustomersRes,
     stampsMonthRes, rewardsMonthRes, stamps7dRes,
+    availableRewardsRes, expiringSoonRes, expiredTotalRes, rewardsByCustomerRes,
   ] = await Promise.all([
     supabaseAdmin.from('customers').select('id', { count: 'exact', head: true }).eq('business_id', business.id),
     supabaseAdmin.from('stamp_events').select('id', { count: 'exact', head: true }).eq('business_id', business.id),
@@ -44,7 +47,28 @@ export async function GET(
     supabaseAdmin.from('stamp_events').select('id', { count: 'exact', head: true }).eq('business_id', business.id).gte('created_at', thirtyDaysAgo),
     supabaseAdmin.from('reward_events').select('id', { count: 'exact', head: true }).eq('business_id', business.id).gte('created_at', thirtyDaysAgo),
     supabaseAdmin.from('stamp_events').select('created_at').eq('business_id', business.id).gte('created_at', sevenDaysAgo),
+    supabaseAdmin.from('pending_rewards').select('id', { count: 'exact', head: true }).eq('business_id', business.id).eq('status', 'available').gt('expires_at', now),
+    supabaseAdmin.from('pending_rewards').select('id', { count: 'exact', head: true }).eq('business_id', business.id).eq('status', 'available').gt('expires_at', now).lte('expires_at', sevenDaysFromNow),
+    supabaseAdmin.from('pending_rewards').select('id', { count: 'exact', head: true }).eq('business_id', business.id).eq('status', 'expired'),
+    supabaseAdmin.from('pending_rewards')
+      .select('customer_id, expires_at, customers(name)')
+      .eq('business_id', business.id)
+      .eq('status', 'available')
+      .gt('expires_at', now)
+      .order('expires_at', { ascending: true }),
   ])
+
+  // Agrupar premios disponibles por cliente (cuántos tiene c/u y cuál vence primero)
+  const rewardsByCustomer = new Map<string, { customer_name: string; count: number; soonest_expires_at: string }>()
+  for (const row of rewardsByCustomerRes.data ?? []) {
+    const name = (row.customers as unknown as { name: string } | null)?.name ?? 'Cliente'
+    const existing = rewardsByCustomer.get(row.customer_id)
+    if (existing) {
+      existing.count++
+    } else {
+      rewardsByCustomer.set(row.customer_id, { customer_name: name, count: 1, soonest_expires_at: row.expires_at })
+    }
+  }
 
   return NextResponse.json({
     business,
@@ -57,5 +81,11 @@ export async function GET(
     stamps_this_month: stampsMonthRes.count ?? 0,
     rewards_this_month: rewardsMonthRes.count ?? 0,
     stamps_7d: stamps7dRes.data ?? [],
+    pending_rewards: {
+      available_total: availableRewardsRes.count ?? 0,
+      expiring_soon: expiringSoonRes.count ?? 0,
+      expired_total: expiredTotalRes.count ?? 0,
+      by_customer: Array.from(rewardsByCustomer.values()),
+    },
   })
 }

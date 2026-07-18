@@ -24,6 +24,13 @@ interface StampResult {
   reward_description: string
 }
 
+interface RedeemResult {
+  success: boolean
+  customer_name: string
+  reward_description: string
+  remaining_available: number
+}
+
 export default function DynamicScannerPage() {
   const { slug } = useParams<{ slug: string }>()
   const [business, setBusiness] = useState<Business | null>(null)
@@ -41,6 +48,8 @@ export default function DynamicScannerPage() {
   const [qrInput, setQrInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<StampResult | null>(null)
+  const [redeemResult, setRedeemResult] = useState<RedeemResult | null>(null)
+  const [mode, setMode] = useState<'stamp' | 'redeem'>('stamp')
   const [error, setError] = useState('')
   const [cameraActive, setCameraActive] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -106,6 +115,7 @@ export default function DynamicScannerPage() {
     setLoading(true)
     setError('')
     setResult(null)
+    setRedeemResult(null)
     try {
       const res = await fetch('/api/stamp', {
         method: 'POST',
@@ -124,9 +134,38 @@ export default function DynamicScannerPage() {
     }
   }
 
+  async function handleRedeem(qr: string) {
+    if (!qr.trim()) return
+    setLoading(true)
+    setError('')
+    setResult(null)
+    setRedeemResult(null)
+    try {
+      const res = await fetch(`/api/business/${slug}/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qr_code: qr.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setRedeemResult(data)
+      setQrInput('')
+      setTimeout(() => inputRef.current?.focus(), 100)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error inesperado')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleAction(qr: string) {
+    if (mode === 'redeem') return handleRedeem(qr)
+    return handleStamp(qr)
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    handleStamp(qrInput)
+    handleAction(qrInput)
   }
 
   useEffect(() => {
@@ -142,7 +181,7 @@ export default function DynamicScannerPage() {
           scanner.destroy()
           scannerRef.current = null
           setCameraActive(false)
-          handleStamp(result.data)
+          handleAction(result.data)
         },
         { highlightScanRegion: true, highlightCodeOutline: true, preferredCamera: 'environment' }
       )
@@ -289,6 +328,34 @@ export default function DynamicScannerPage() {
 
       <div style={{ width: '100%', maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
 
+        {/* Selector de modo: dar sello vs canjear premio */}
+        {slug === 'eureka-burgers' && (
+          <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 12, background: 'rgba(0,56,96,0.05)', border: `1px solid ${BDR}` }}>
+            <button
+              onClick={() => { setMode('stamp'); setError(''); setResult(null); setRedeemResult(null) }}
+              style={{
+                flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
+                border: 'none', cursor: 'pointer',
+                color: mode === 'stamp' ? '#fff' : NAVY,
+                background: mode === 'stamp' ? NAVY : 'transparent',
+              }}
+            >
+              Dar sello
+            </button>
+            <button
+              onClick={() => { setMode('redeem'); setError(''); setResult(null); setRedeemResult(null) }}
+              style={{
+                flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
+                border: 'none', cursor: 'pointer',
+                color: mode === 'redeem' ? '#fff' : NAVY,
+                background: mode === 'redeem' ? '#DA5C2D' : 'transparent',
+              }}
+            >
+              Canjear premio
+            </button>
+          </div>
+        )}
+
         {/* Cámara */}
         {cameraActive ? (
           <div style={{ borderRadius: 14, overflow: 'hidden', border: `2px solid ${BDR}` }}>
@@ -302,7 +369,7 @@ export default function DynamicScannerPage() {
           </div>
         ) : (
           <button
-            onClick={() => { setCameraActive(true); setError(''); setResult(null) }}
+            onClick={() => { setCameraActive(true); setError(''); setResult(null); setRedeemResult(null) }}
             style={{ width: '100%', padding: 14, borderRadius: 14, fontWeight: 800, color: NAVY, background: 'rgba(0,56,96,0.06)', border: `2px solid ${BDR}`, cursor: 'pointer', fontSize: 15, fontFamily: FONT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -339,12 +406,12 @@ export default function DynamicScannerPage() {
             disabled={loading || !qrInput.trim()}
             style={{
               width: '100%', padding: 14, borderRadius: 10, fontWeight: 800,
-              color: '#ffffff', background: NAVY, border: 'none',
+              color: '#ffffff', background: mode === 'redeem' ? '#DA5C2D' : NAVY, border: 'none',
               cursor: loading || !qrInput.trim() ? 'not-allowed' : 'pointer',
               opacity: loading || !qrInput.trim() ? 0.4 : 1, fontSize: 15, fontFamily: FONT,
             }}
           >
-            {loading ? 'Procesando...' : 'Dar sello'}
+            {loading ? 'Procesando...' : mode === 'redeem' ? 'Canjear premio' : 'Dar sello'}
           </button>
         </form>
 
@@ -396,6 +463,24 @@ export default function DynamicScannerPage() {
                 </p>
               </>
             )}
+          </div>
+        )}
+
+        {/* Resultado de canje */}
+        {redeemResult && (
+          <div style={{
+            borderRadius: 16, padding: 24, textAlign: 'center',
+            background: 'rgba(218,92,45,0.08)', border: '1.5px solid #DA5C2D',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+            <p style={{ fontWeight: 900, fontSize: 20, color: NAVY, marginBottom: 6, fontFamily: FONT }}>¡Premio canjeado!</p>
+            <p style={{ color: NAVY, fontWeight: 700, marginBottom: 6, fontFamily: FONT }}>{redeemResult.customer_name}</p>
+            <p style={{ fontSize: 14, color: MUTED, marginBottom: 10, fontFamily: FONT }}>{redeemResult.reward_description}</p>
+            <p style={{ fontSize: 12, color: MUTED, fontFamily: FONT }}>
+              {redeemResult.remaining_available > 0
+                ? `Todavía le queda${redeemResult.remaining_available > 1 ? 'n' : ''} ${redeemResult.remaining_available} premio${redeemResult.remaining_available > 1 ? 's' : ''} disponible${redeemResult.remaining_available > 1 ? 's' : ''}.`
+                : 'Ya no tiene más premios disponibles por ahora.'}
+            </p>
           </div>
         )}
       </div>

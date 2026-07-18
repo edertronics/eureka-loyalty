@@ -46,6 +46,12 @@ interface Stats {
   stamps_this_month: number
   rewards_this_month: number
   stamps_7d: { created_at: string }[]
+  pending_rewards?: {
+    available_total: number
+    expiring_soon: number
+    expired_total: number
+    by_customer: { customer_name: string; count: number; soonest_expires_at: string }[]
+  }
 }
 
 const BRAND_COLORS = [
@@ -520,6 +526,42 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
             })}
           </div>
         </div>
+
+        {/* Notificaciones de premios pendientes — solo eureka-burgers por ahora */}
+        {slug === 'eureka-burgers' && stats?.pending_rewards && (
+          <div style={{ borderRadius: 16, padding: '16px 18px', marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 14px 0' }}>Notificaciones — premios pendientes</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: stats.pending_rewards.by_customer.length > 0 ? 14 : 0 }}>
+              <div style={{ borderRadius: 12, padding: '10px 8px', textAlign: 'center', backgroundColor: 'rgba(218,92,45,0.12)', border: '1px solid rgba(218,92,45,0.3)' }}>
+                <p style={{ fontSize: 20, fontWeight: 900, color: '#DA5C2D', margin: '0 0 2px' }}>{stats.pending_rewards.expiring_soon}</p>
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.3 }}>Por caducar<br/>(7 días)</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: '10px 8px', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                <p style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: '0 0 2px' }}>{stats.pending_rewards.available_total}</p>
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.3 }}>Disponibles<br/>sin canjear</p>
+              </div>
+              <div style={{ borderRadius: 12, padding: '10px 8px', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                <p style={{ fontSize: 20, fontWeight: 900, color: 'rgba(255,255,255,0.6)', margin: '0 0 2px' }}>{stats.pending_rewards.expired_total}</p>
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.3 }}>Caducados<br/>histórico</p>
+              </div>
+            </div>
+            {stats.pending_rewards.by_customer.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {stats.pending_rewards.by_customer.map((r, i) => {
+                  const daysLeft = Math.max(0, Math.ceil((new Date(r.soonest_expires_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.04)' }}>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{r.customer_name}</span>
+                      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                        {r.count} premio{r.count > 1 ? 's' : ''} · vence en {daysLeft}d
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Totales históricos */}
         <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>Total histórico</p>
