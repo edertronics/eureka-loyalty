@@ -70,7 +70,7 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 | Negocio | Slug | Sellos | Premio | Estado |
 |---|---|---|---|---|
-| ~~Eureka Burgers~~ | `eureka-burgers` | 9 | ¡Tu burger es gratis! | **Eliminado** — pendiente re-registrar |
+| Eureka Burgers | `eureka-burgers` | 10 | Hamburguesa sencilla o malteada (a elegir) | **Activo** — único negocio con sistema de premios pendientes (ver abajo) |
 | María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis | Activo |
 | María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis | Activo |
 | cafe-ricolino | `cafe-ricolino` | — | — | Prueba (sin email) |
@@ -107,6 +107,8 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
   - `sendWelcomeEmail` — bienvenida al cliente al registrarse (si da email)
   - `sendRewardEmail` — premio ganado al completar la tarjeta
   - `sendOnboardingEmail` — links del programa al dueño del negocio tras registrarse
+  - `sendRewardReminderEmail` — recordatorio a los 14 días de ganar un premio pendiente (solo eureka-burgers, vía cron)
+  - `sendRewardExpiringEmail` — aviso urgente en la última semana antes de que caduque un premio pendiente (solo eureka-burgers, vía cron)
 
 ## Modelo de negocio (decisiones tomadas)
 - **Trial:** 3 meses gratis
@@ -125,10 +127,10 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - Los colores tienen: swatches rápidos + `<input type="color">` (picker nativo) + campo hex (#rrggbb)
 
 ## Tarjeta del cliente ([slug]/page.tsx)
-- Solo **nombre** es obligatorio; email y teléfono son opcionales ("(opcional)" en placeholder)
+- **Nombre, WhatsApp y correo son obligatorios los 3** (cambió el 2026-07-14 — antes solo nombre era obligatorio)
 - Deduplicación por email: si ya existe → `already_exists: true` en respuesta
 - **UX returning customer**: cuando `already_exists=true` → "¡Hola de nuevo, {nombre}! Ya tienes tarjeta — aquí está tu QR" (distinto al flujo nuevo registro)
-- Botón de envío se habilita con solo nombre (`!form.name || loading`)
+- Botón de envío requiere los 3 campos + email con formato válido (`canSubmit`)
 
 ## Páginas eliminadas (zombis legacy — hardcodeadas a Eureka Burgers)
 - ~~`src/app/register/page.tsx`~~ — hardcodeada a slug `eureka-burgers`
@@ -139,8 +141,20 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
-- Al completar la meta → `stamps` vuelve a 0, `rewards_redeemed` +1
-- Se loguea en `stamp_events` y `reward_events`
+- Al completar la meta → `stamps` vuelve a 0 (siempre, todos los negocios)
+- **Para todos los negocios EXCEPTO eureka-burgers**: `rewards_redeemed` +1 de inmediato (canje automático) y se loguea en `reward_events`
+- **Para eureka-burgers**: NO se incrementa `rewards_redeemed` de inmediato — ver "Premios pendientes" abajo
+
+## Premios pendientes con vigencia (SOLO eureka-burgers, 2026-07-18)
+Cambio de mecánica pedido por el cliente: el premio ganado no se canjea automático, se guarda como "disponible" hasta 1 mes, y pueden acumularse varios en paralelo.
+- **Tabla:** `pending_rewards` (RLS habilitado, solo accesible con `SUPABASE_SERVICE_ROLE_KEY`) — columnas: `customer_id`, `business_id`, `status` (`available`/`redeemed`/`expired`), `earned_at`, `expires_at` (+30 días de `earned_at`), `redeemed_at`, `staff_id`, `reminder_14d_sent_at`, `reminder_final_sent_at`
+- **Ganar premio:** `src/app/api/stamp/route.ts` — si `business.slug === 'eureka-burgers'`, inserta fila en `pending_rewards` en vez de incrementar `rewards_redeemed`
+- **Canjear:** `POST /api/business/[slug]/redeem` (nuevo) — busca el disponible más próximo a vencer (FIFO), lo marca `redeemed`, ahí sí incrementa `rewards_redeemed` y loguea en `reward_events`
+- **Scanner:** selector "Dar sello" / "Canjear premio" (el segundo solo aparece si el slug es `eureka-burgers`)
+- **Pase de Apple Wallet:** campo `auxiliaryFields` "PREMIO" dinámico + `changeMessage: '%@'` — muestra cuántos premios disponibles tiene el cliente, dispara aviso visible en pantalla de bloqueo cada vez que cambia (incluye cada sello normal, es intencional)
+- **Cron diario** (`vercel.json`, `0 16 * * *` UTC) → `GET /api/cron/pending-rewards`: caduca los vencidos, manda `sendRewardReminderEmail` a los 14 días de ganado, manda `sendRewardExpiringEmail` en la última semana antes de caducar
+- **Dashboard:** sección "Notificaciones — premios pendientes" (solo visible si slug es `eureka-burgers`) con por-caducar-en-7-días, disponibles sin canjear, caducados histórico, y desglose por cliente
+- **Pendiente:** habilitar lo mismo para María Bonita cuando el usuario lo pida — hoy el scoping es literal `slug === 'eureka-burgers'` en cada archivo tocado (stamp, redeem, wallet/apple, admin page)
 
 ## Auth
 - Admin del negocio: cookie `admin_auth_[slug]` (8h), contraseña en `businesses.admin_password`
