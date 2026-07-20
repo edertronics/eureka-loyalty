@@ -21,7 +21,7 @@ export async function GET(
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const [customerRes, stampsRes, rewardsRes] = await Promise.all([
+  const [customerRes, stampsRes, rewardsRes, pendingRes] = await Promise.all([
     supabaseAdmin
       .from('customers')
       .select('id, name, email, phone, stamps, total_stamps, rewards_redeemed, created_at, last_stamp_at')
@@ -42,6 +42,15 @@ export async function GET(
       .eq('business_id', business.id)
       .order('created_at', { ascending: false })
       .limit(50),
+    // Premios disponibles (sin canjear y sin caducar), del más próximo a vencer al más lejano
+    supabaseAdmin
+      .from('pending_rewards')
+      .select('id, earned_at, expires_at')
+      .eq('customer_id', customerId)
+      .eq('business_id', business.id)
+      .eq('status', 'available')
+      .gt('expires_at', new Date().toISOString())
+      .order('expires_at', { ascending: true }),
   ])
 
   if (!customerRes.data) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
@@ -50,5 +59,6 @@ export async function GET(
     customer: customerRes.data,
     stamps: stampsRes.data ?? [],
     rewards: rewardsRes.data ?? [],
+    available_rewards: pendingRes.data ?? [],
   })
 }

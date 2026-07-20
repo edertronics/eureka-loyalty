@@ -44,7 +44,7 @@ export default function BusinessRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState('')
-  const [customer, setCustomer] = useState<{ name: string; qr_code: string } | null>(null)
+  const [customer, setCustomer] = useState<{ name: string; qr_code: string; stamps?: number } | null>(null)
   const [alreadyExists, setAlreadyExists] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '' })
   const [googleWalletUrl, setGoogleWalletUrl] = useState<string | null>(null)
@@ -84,7 +84,7 @@ export default function BusinessRegisterPage() {
         body: JSON.stringify({
           customer_id: data.customer.qr_code,
           customer_name: data.customer.name,
-          stamps: 0,
+          stamps: data.customer.stamps ?? 0,
           stamp_goal: business?.stamp_goal ?? 9,
         }),
       })
@@ -108,8 +108,8 @@ export default function BusinessRegisterPage() {
         body: JSON.stringify({
           customer_id: customer.qr_code,
           customer_name: customer.name,
-          stamps: 0,
-          stamp_goal: business.stamp_goal ?? 9,
+          stamps: customer.stamps ?? 0,
+          stamp_goal: business.stamp_goal ?? 10,
         }),
       })
       if (!res.ok) throw new Error('Error')
@@ -271,7 +271,7 @@ export default function BusinessRegisterPage() {
             {/* Botones Wallet */}
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <a
-                href={`/api/business/${slug}/wallet/apple?customer_id=${encodeURIComponent(customer.qr_code)}&customer_name=${encodeURIComponent(customer.name)}&stamps=0&stamp_goal=${business.stamp_goal ?? 9}`}
+                href={`/api/business/${slug}/wallet/apple?customer_id=${encodeURIComponent(customer.qr_code)}&customer_name=${encodeURIComponent(customer.name)}&stamps=${customer.stamps ?? 0}&stamp_goal=${business.stamp_goal ?? 10}`}
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   background: '#000', color: '#fff', padding: '10px 18px',

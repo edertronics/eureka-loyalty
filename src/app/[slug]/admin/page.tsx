@@ -27,12 +27,14 @@ interface Customer {
   rewards_redeemed: number
   created_at: string
   last_stamp_at: string | null
+  available_rewards?: number
 }
 
 interface CustomerDetail {
   customer: Customer
   stamps: { created_at: string; stamps_given: number }[]
   rewards: { created_at: string }[]
+  available_rewards?: { id: string; earned_at: string; expires_at: string }[]
 }
 
 interface Stats {
@@ -190,6 +192,12 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [customerDetail, setCustomerDetail] = useState<CustomerDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  // Lista de clientes paginada (búsqueda del lado del servidor, escala a miles)
+  const [customerList, setCustomerList] = useState<Customer[]>([])
+  const [customerTotal, setCustomerTotal] = useState(0)
+  const [customerPage, setCustomerPage] = useState(0)
+  const [customerTotalPages, setCustomerTotalPages] = useState(0)
+  const [listLoading, setListLoading] = useState(false)
 
   function toggleNewPassword() {
     if (showNewPassword) {
@@ -224,18 +232,22 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
     }
   }
 
+  function initFormFromBusiness(b: Business) {
+    setPForm({ name: b.name ?? '', tagline: b.tagline ?? '', primary_color: b.primary_color ?? '#6366f1', accent_color: b.accent_color ?? '#f59e0b', stamp_goal: b.stamp_goal ?? 10, reward_description: b.reward_description ?? '', new_password: '', new_staff_password: '', logo_url: b.logo_url ?? '', stamp_icon: b.stamp_icon ?? '⭐', strip_image_url: b.strip_image_url ?? '', strip_focal_point: (b as {strip_focal_point?: string}).strip_focal_point ?? '50% 50%', strip_scale: (b as {strip_scale?: number}).strip_scale ?? 1, logo_size: (b as {logo_size?: number}).logo_size ?? 1, qr_bg_color: (b as {qr_bg_color?: string}).qr_bg_color ?? '', stamp_display: (b as {stamp_display?: string}).stamp_display ?? 'none', logo_tint: (b as {logo_tint?: string}).logo_tint ?? '', banner_gradient: (b as {banner_gradient?: string}).banner_gradient ?? '', banner_gradient_width: (b as {banner_gradient_width?: number}).banner_gradient_width ?? 52 })
+  }
+
   useEffect(() => {
     fetch(`/api/business/${slug}/stats`)
       .then(r => {
         if (r.ok) r.json().then(data => {
           setStats(data)
           setAuthed(true)
-          const b = data.business
-          setPForm({ name: b.name ?? '', tagline: b.tagline ?? '', primary_color: b.primary_color ?? '#6366f1', accent_color: b.accent_color ?? '#f59e0b', stamp_goal: b.stamp_goal ?? 10, reward_description: b.reward_description ?? '', new_password: '', new_staff_password: '', logo_url: b.logo_url ?? '', stamp_icon: b.stamp_icon ?? '⭐', strip_image_url: b.strip_image_url ?? '', strip_focal_point: (b as {strip_focal_point?: string}).strip_focal_point ?? '50% 50%', strip_scale: (b as {strip_scale?: number}).strip_scale ?? 1, logo_size: (b as {logo_size?: number}).logo_size ?? 1, qr_bg_color: (b as {qr_bg_color?: string}).qr_bg_color ?? '', stamp_display: (b as {stamp_display?: string}).stamp_display ?? 'none', logo_tint: (b as {logo_tint?: string}).logo_tint ?? '', banner_gradient: (b as {banner_gradient?: string}).banner_gradient ?? '', banner_gradient_width: (b as {banner_gradient_width?: number}).banner_gradient_width ?? 52 })
+          initFormFromBusiness(data.business)
         })
         setChecking(false)
       })
       .catch(() => setChecking(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -330,7 +342,7 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
       setAuthed(true)
       fetch(`/api/business/${slug}/stats`)
         .then(r => r.json())
-        .then(data => { setStats(data); setStatsLoading(false) })
+        .then(data => { setStats(data); initFormFromBusiness(data.business); setStatsLoading(false) })
     } catch (err: unknown) {
       setLoginError(err instanceof Error ? err.message : 'Error inesperado')
     } finally {
@@ -354,6 +366,33 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
     setSelectedCustomer(null)
     setCustomerDetail(null)
   }
+
+  // Al cambiar búsqueda u orden, regresar a la primera página
+  useEffect(() => {
+    setCustomerPage(0)
+  }, [search, sortMode])
+
+  // Cargar la lista de clientes desde el servidor (búsqueda + paginación).
+  // Debounce de 350ms para no disparar una petición por cada tecla.
+  useEffect(() => {
+    if (!authed) return
+    setListLoading(true)
+    const t = setTimeout(() => {
+      const qs = new URLSearchParams({ search, sort: sortMode, page: String(customerPage) })
+      fetch(`/api/business/${slug}/customers?${qs}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) {
+            setCustomerList(data.customers ?? [])
+            setCustomerTotal(data.total ?? 0)
+            setCustomerTotalPages(data.total_pages ?? 0)
+          }
+          setListLoading(false)
+        })
+        .catch(() => setListLoading(false))
+    }, 350)
+    return () => clearTimeout(t)
+  }, [slug, authed, search, sortMode, customerPage])
 
   const primary = stats?.business?.primary_color ?? '#1a1a2e'
   const secondary = stats?.business?.secondary_color ?? '#e94560'
@@ -424,14 +463,6 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
   }
 
   const business = stats?.business
-  const filteredCustomers = (stats?.recent_customers ?? [])
-    .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search) || c.email?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (sortMode === 'registered') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      const aT = a.last_stamp_at ? new Date(a.last_stamp_at).getTime() : new Date(a.created_at).getTime()
-      const bT = b.last_stamp_at ? new Date(b.last_stamp_at).getTime() : new Date(b.created_at).getTime()
-      return bT - aT
-    })
 
   const retentionRate = stats && stats.total_customers > 0
     ? Math.round((stats.active_customers / stats.total_customers) * 100)
@@ -457,11 +488,6 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
             )}
             <span className="text-white/40 text-sm">· Dashboard</span>
           </div>
-          <a href={`/${slug}`} target="_blank"
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/70 hover:text-white transition-colors"
-            style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-            Ver tarjeta
-          </a>
         </div>
 
         {/* Últimos 30 días */}
@@ -596,28 +622,33 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
             style={{ backgroundColor: primary }}>
             Abrir scanner
           </a>
-          <a href={`/${slug}`} target="_blank"
+          <a href={`https://easyloyalty.io/${slug}`} target="_blank" rel="noopener noreferrer"
             className="py-3 rounded-xl font-semibold text-sm text-center transition-all active:scale-95"
             style={{ backgroundColor: 'rgba(255,255,255,0.12)', color: 'white', border: '1px solid rgba(255,255,255,0.25)' }}>
             + Registrar cliente
           </a>
         </div>
 
-        {/* Personalizar */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowPersonalizar(true)}
-            className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
-            style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: 'white' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-            </svg>
-            Personalizar mi programa
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
+        {/* Personalizar — oculto para eureka-burgers durante el piloto para que el staff
+            no altere por accidente la meta de sellos, el premio o el branding de las
+            tarjetas reales. Reactivar quitando la condición de slug cuando exista el
+            autoservicio de edición. */}
+        {slug !== 'eureka-burgers' && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowPersonalizar(true)}
+              className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+              style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: 'white' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              </svg>
+              Personalizar mi programa
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Modal Personalizar — full screen */}
         {showPersonalizar && (
@@ -1249,42 +1280,71 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
 
           {statsLoading ? (
             <div className="px-4 py-8 text-center text-white/40 text-sm">Cargando...</div>
-          ) : !stats?.recent_customers?.length ? (
+          ) : (stats?.total_customers ?? 0) === 0 ? (
             <div className="px-4 py-10 text-center">
               <p className="text-white/30 text-sm">Aún no hay clientes registrados</p>
               <p className="text-white/20 text-xs mt-1">Comparte el link de registro con tus clientes</p>
             </div>
-          ) : filteredCustomers.length === 0 ? (
-            <div className="px-4 py-8 text-center text-white/30 text-sm">Sin resultados para "{search}"</div>
+          ) : listLoading && customerList.length === 0 ? (
+            <div className="px-4 py-8 text-center text-white/40 text-sm">Cargando...</div>
+          ) : customerList.length === 0 ? (
+            <div className="px-4 py-8 text-center text-white/30 text-sm">Sin resultados{search ? ` para "${search}"` : ''}</div>
           ) : (
-            <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              {filteredCustomers.map(c => (
-                <button key={c.id} onClick={() => openCustomer(c)}
-                  className="w-full text-left px-4 py-3 flex items-center justify-between transition-colors hover:bg-white/5 active:bg-white/10"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <div>
-                    <p className="text-white text-sm font-semibold">{c.name}</p>
-                    <p className="text-white/40 text-xs">
-                      {sortMode === 'registered'
-                        ? `Registrado ${new Date(c.created_at).toLocaleDateString('es-MX')}`
-                        : c.last_stamp_at
-                          ? `Último sello ${new Date(c.last_stamp_at).toLocaleDateString('es-MX')}`
-                          : `Registrado ${new Date(c.created_at).toLocaleDateString('es-MX')}`
-                      }
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div className="text-right">
-                      <p className="text-sm font-bold" style={{ color: secondary }}>{c.stamps}/{business?.stamp_goal ?? 9}</p>
-                      {c.rewards_redeemed > 0 && <p className="text-xs" style={{ color: accent }}>{c.rewards_redeemed} premios</p>}
+            <>
+              <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)', opacity: listLoading ? 0.5 : 1, transition: 'opacity 0.15s' }}>
+                {customerList.map(c => (
+                  <button key={c.id} onClick={() => openCustomer(c)}
+                    className="w-full text-left px-4 py-3 flex items-center justify-between transition-colors hover:bg-white/5 active:bg-white/10"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p className="text-white text-sm font-semibold">{c.name}</p>
+                      <p className="text-white/40 text-xs">
+                        {sortMode === 'registered'
+                          ? `Registrado ${new Date(c.created_at).toLocaleDateString('es-MX')}`
+                          : c.last_stamp_at
+                            ? `Último sello ${new Date(c.last_stamp_at).toLocaleDateString('es-MX')}`
+                            : `Registrado ${new Date(c.created_at).toLocaleDateString('es-MX')}`
+                        }
+                      </p>
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </div>
-                </button>
-              ))}
-            </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="text-right">
+                        <p className="text-sm font-bold" style={{ color: secondary }}>{c.stamps}/{business?.stamp_goal ?? 10}</p>
+                        {(c.available_rewards ?? 0) > 0 ? (
+                          <p className="text-xs font-bold" style={{ color: '#DA5C2D' }}>🎁 {c.available_rewards} por canjear</p>
+                        ) : c.rewards_redeemed > 0 ? (
+                          <p className="text-xs" style={{ color: accent }}>{c.rewards_redeemed} premios</p>
+                        ) : null}
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {customerTotalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button
+                    onClick={() => setCustomerPage(p => Math.max(0, p - 1))}
+                    disabled={customerPage === 0}
+                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: customerPage === 0 ? 'rgba(255,255,255,0.25)' : 'white', cursor: customerPage === 0 ? 'default' : 'pointer' }}>
+                    ← Anterior
+                  </button>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                    Página {customerPage + 1} de {customerTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setCustomerPage(p => Math.min(customerTotalPages - 1, p + 1))}
+                    disabled={customerPage >= customerTotalPages - 1}
+                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: customerPage >= customerTotalPages - 1 ? 'rgba(255,255,255,0.25)' : 'white', cursor: customerPage >= customerTotalPages - 1 ? 'default' : 'pointer' }}>
+                    Siguiente →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -1362,14 +1422,40 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
                 </div>
               </div>
 
+              {/* Premios disponibles sin canjear */}
+              {customerDetail?.available_rewards && customerDetail.available_rewards.length > 0 && (
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p style={{ color: '#DA5C2D', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 10px 0' }}>
+                    🎁 {customerDetail.available_rewards.length} premio{customerDetail.available_rewards.length > 1 ? 's' : ''} por canjear
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {customerDetail.available_rewards.map((r, i) => {
+                      const daysLeft = Math.max(0, Math.ceil((new Date(r.expires_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                      const urgent = daysLeft <= 7
+                      return (
+                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, backgroundColor: 'rgba(218,92,45,0.1)', border: '1px solid rgba(218,92,45,0.25)' }}>
+                          <span style={{ fontSize: 13, color: 'white', fontWeight: 600 }}>Premio #{i + 1}</span>
+                          <span style={{ fontSize: 12, color: urgent ? '#DA5C2D' : 'rgba(255,255,255,0.6)', fontWeight: urgent ? 700 : 500 }}>
+                            {daysLeft === 0 ? 'Vence hoy' : `Vence en ${daysLeft} día${daysLeft > 1 ? 's' : ''}`}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, margin: '8px 0 0 0' }}>
+                    Para canjear, usa el botón &quot;Canjear premio&quot; del scanner.
+                  </p>
+                </div>
+              )}
+
               {/* Barra de progreso actual */}
               <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: 0 }}>Progreso actual</p>
-                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: 0 }}>{selectedCustomer.stamps} / {business?.stamp_goal ?? 9} sellos</p>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, margin: 0 }}>{selectedCustomer.stamps} / {business?.stamp_goal ?? 10} sellos</p>
                 </div>
                 <div style={{ height: 6, borderRadius: 99, backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                  <div style={{ height: '100%', borderRadius: 99, backgroundColor: primary, width: `${Math.min(100, (selectedCustomer.stamps / (business?.stamp_goal ?? 9)) * 100)}%`, transition: 'width 0.6s ease' }} />
+                  <div style={{ height: '100%', borderRadius: 99, backgroundColor: primary, width: `${Math.min(100, (selectedCustomer.stamps / (business?.stamp_goal ?? 10)) * 100)}%`, transition: 'width 0.6s ease' }} />
                 </div>
               </div>
 

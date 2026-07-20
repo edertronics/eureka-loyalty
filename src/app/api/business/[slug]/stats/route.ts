@@ -9,7 +9,7 @@ export async function GET(
 
   const { data: business } = await supabaseAdmin
     .from('businesses')
-    .select('id, name, slug, logo_url, primary_color, secondary_color, accent_color, stamp_goal, reward_description, tagline, admin_password, stamp_icon, strip_image_url')
+    .select('id, name, slug, logo_url, primary_color, secondary_color, accent_color, stamp_goal, reward_description, tagline, admin_password, stamp_icon, strip_image_url, strip_focal_point, strip_scale, logo_size, qr_bg_color, stamp_display, logo_tint, banner_gradient, banner_gradient_width')
     .eq('slug', slug)
     .single()
 
@@ -70,8 +70,12 @@ export async function GET(
     }
   }
 
+  // Nunca exponer la contraseña en la respuesta
+  const { admin_password: _omit, ...businessSafe } = business
+  void _omit
+
   return NextResponse.json({
-    business,
+    business: businessSafe,
     total_customers: customersRes.count ?? 0,
     total_stamps: stampsRes.count ?? 0,
     total_rewards: rewardsRes.count ?? 0,

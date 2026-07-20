@@ -7,7 +7,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
   const cookieStore = await cookies()
   const authCookie = cookieStore.get(`admin_auth_${slug}`)
 
-  if (!authCookie?.value) {
+  const { data: authBiz } = await supabaseAdmin
+    .from('businesses')
+    .select('admin_password')
+    .eq('slug', slug)
+    .single()
+  const correctPassword = authBiz?.admin_password || process.env.ADMIN_PASSWORD
+  if (!authCookie?.value || authCookie.value !== correctPassword) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

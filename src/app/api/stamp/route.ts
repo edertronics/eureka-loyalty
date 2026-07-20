@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendWalletPush } from '@/lib/apns'
+import { updateGoogleWalletPass } from '@/lib/googleWallet'
 import { sendRewardEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
@@ -115,6 +116,16 @@ export async function POST(req: NextRequest) {
         devices.map((d) => sendWalletPush(d.push_token))
       )
     }
+
+    // Actualizar pase de Google Wallet (si el cliente lo guardó en Android)
+    await updateGoogleWalletPass({
+      slug: business.slug,
+      qrCode: customer.qr_code,
+      customerId: customer.id,
+      stamps: updatedStamps,
+      stampGoal: business.stamp_goal,
+      rewardDescription: business.reward_description,
+    })
 
     return NextResponse.json({
       success: true,

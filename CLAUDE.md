@@ -101,6 +101,10 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - Clase lleva: `programName` (nombre negocio), `programLogo` (logo_url), `hexBackgroundColor` (primary_color), `heroImage` (strip_image_url)
 - Lifecycle: 404 → crear con UNDER_REVIEW; draft → PUT UNDER_REVIEW; activa → PATCH para sincronizar branding
 - **NUNCA usar la clase global legacy** `3388000000023114743.easyloyalty_loyalty_class` — ya no se usa
+- **PROBADO en Android físico el 2026-07-19** — funciona, sin letrero de "Solo pruebas". El QR del objeto lleva el `qr_code` del cliente, así que el scanner lo lee igual que Apple.
+- **Actualización del pase al dar sello/canjear:** `src/lib/googleWallet.ts` → `updateGoogleWalletPass()` hace PATCH del objeto (contador + texto de premio dinámico). Conectado en `stamp/route.ts` y `redeem/route.ts`. Antes el pase de Google se quedaba congelado. Nunca rompe el flujo si Google falla.
+- **Banner reencuadrado solo para eureka-burgers:** `strip-google.png` en Storage (sujetos centrados, proporción ~3:1) porque las esquinas redondeadas de la plantilla de Google cortaban el logo. Ver `heroUrl` en `wallet/google/route.ts`.
+- **Limitaciones fijas de la plantilla de Google** (NO se pueden cambiar): logo del emisor chico arriba, tamaño de letra no configurable, el nombre del cliente no se muestra al frente (sí va en `accountName` dentro del pase). Apple sí permite diseño libre.
 
 ## Email (Resend)
 - **Proveedor:** Resend (`resend` npm package)
@@ -166,6 +170,12 @@ Cambio de mecánica pedido por el cliente: el premio ganado no se canjea automá
 - Scanner/staff: cookie `staff_auth_[slug]` (24h), misma contraseña
 - Super admin: contraseña en env `SUPER_ADMIN_PASSWORD`
 - Negocios legacy (sin `admin_password`): usan env `ADMIN_PASSWORD` como fallback
+- **IMPORTANTE (fix 2026-07-19):** todo endpoint de admin (`update`, `upload-logo`, `upload-strip`, `stats`, `customers`, `customer/[id]`) DEBE validar `cookie.value === admin_password`, no solo que la cookie exista. Antes `update`/`upload-*` solo checaban existencia → cualquiera con una cookie inventada modificaba el negocio. Y `stats` nunca debe devolver `admin_password` en el JSON.
+
+## Dashboard admin — notas (2026-07-19)
+- **Lista de clientes:** búsqueda + paginación server-side vía `GET /api/business/[slug]/customers?search=&sort=activity|registered&page=` (páginas de 20). El front hace debounce de 350ms. Muestra "🎁 N por canjear" por cliente y el modal de detalle lista premios disponibles con días para caducar.
+- **"Personalizar mi programa" oculto para eureka-burgers** (`slug !== 'eureka-burgers'`): editar ahí SÍ afecta tarjetas reales (meta de sellos y premio se leen en vivo; colores/logo se propagan en la siguiente actualización del pase). Escondido durante el piloto para que el staff no rompa nada. Código intacto, solo gated. **Pendiente: esconderlo también para María Bonita.**
+- Botones que apuntan a la tarjeta pública deben usar el dominio raíz `https://easyloyalty.io/${slug}` — en `app.` el middleware redirige `/${slug}` a `/admin` (por eso "+ Registrar cliente" se arregló y "Ver tarjeta" se quitó).
 
 ---
 

@@ -147,10 +147,16 @@ export async function POST(
       ],
     }
 
-    // Banner (strip image del negocio — foto de fondo ancha)
-    if (stripUrl) {
+    // Banner (strip image del negocio — foto de fondo ancha).
+    // eureka-burgers usa una versión re-encuadrada a la proporción de Google (~3:1, sujetos
+    // centrados) porque la original tiene el logo pegado a la esquina y el recorte redondeado
+    // del pase lo cortaba feo.
+    const heroUrl = slug === 'eureka-burgers'
+      ? 'https://udcvtwjumcunbgcqnvpn.supabase.co/storage/v1/object/public/logos/eureka-burgers/strip-google.png?v=1'
+      : stripUrl
+    if (heroUrl) {
       passObject.heroImage = {
-        sourceUri: { uri: stripUrl },
+        sourceUri: { uri: heroUrl },
         contentDescription: { defaultValue: { language: 'es', value: business.name } },
       }
     }

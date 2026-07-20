@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendWalletPush } from '@/lib/apns'
+import { updateGoogleWalletPass } from '@/lib/googleWallet'
 
 export async function POST(
   req: NextRequest,
@@ -16,7 +17,7 @@ export async function POST(
 
     const { data: customer, error: custError } = await supabaseAdmin
       .from('customers')
-      .select('*, businesses(name, slug, reward_description)')
+      .select('*, businesses(name, slug, reward_description, stamp_goal)')
       .eq('qr_code', qr_code)
       .single()
 
@@ -24,7 +25,7 @@ export async function POST(
       return NextResponse.json({ error: 'Tarjeta no encontrada' }, { status: 404 })
     }
 
-    const business = customer.businesses as { name: string; slug: string; reward_description: string }
+    const business = customer.businesses as { name: string; slug: string; reward_description: string; stamp_goal: number }
 
     if (business.slug !== slug) {
       return NextResponse.json({ error: 'Esta tarjeta no pertenece a este negocio' }, { status: 400 })
@@ -85,6 +86,16 @@ export async function POST(
     if (devices && devices.length > 0) {
       await Promise.allSettled(devices.map((d) => sendWalletPush(d.push_token)))
     }
+
+    // Actualizar pase de Google Wallet (si el cliente lo guardó en Android)
+    await updateGoogleWalletPass({
+      slug: business.slug,
+      qrCode: customer.qr_code,
+      customerId: customer.id,
+      stamps: customer.stamps,
+      stampGoal: business.stamp_goal,
+      rewardDescription: business.reward_description,
+    })
 
     return NextResponse.json({
       success: true,

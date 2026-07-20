@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (email) {
       const { data: existing } = await supabaseAdmin
         .from('customers')
-        .select('id, name, qr_code')
+        .select('id, name, qr_code, stamps')
         .eq('business_id', business.id)
         .eq('email', email)
         .single()
