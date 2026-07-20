@@ -59,10 +59,15 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 | Archivo | Descripción |
 |---|---|
-| `public/eureka-qr.html` | Tarjeta imprimible Eureka Burgers con QR |
-| `public/eureka-manual.html` | Manual de uso para Eureka Burgers |
+| `public/eureka-qr.html` | ⚠️ **Obsoleto** — mockup viejo, no es el QR real que se entregó al cliente. Sigue siendo servido en `/eureka-qr.html` porque vive en `public/`, pero no se usa. |
+| `public/eureka-manual.html` | ⚠️ **Obsoleto y con info incorrecta** — dice "9 sellos" (la meta real es 10 desde 2026-07-18). No es el manual real, sigue siendo servido en `/eureka-manual.html` pero no se usa. |
 | `public/mariabonita-qr.html` | Tarjeta imprimible María Bonita (2 programas) |
 | `public/landing-page.html` | Landing page de Easy Loyalty |
+
+**Manual y QR reales de Eureka Burgers no viven en `public/`** — son documentos generados aparte (Chrome headless → PDF) y entregados directo al cliente:
+- Fuente editable del manual: `eureka-burgers-loyalty/manual-fuente-html/manual_final.html` (fuera del repo de código, en la carpeta del proyecto)
+- PDFs finales (manual, accesos, QR): `eureka-burgers-loyalty/*.pdf` y copia en `~/Downloads`
+- Detalle completo en la memoria `eureka-burgers` (fuera de este repo)
 
 ---
 
