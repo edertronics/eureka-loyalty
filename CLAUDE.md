@@ -75,11 +75,13 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 | Negocio | Slug | Sellos | Premio | Estado |
 |---|---|---|---|---|
-| Eureka Burgers | `eureka-burgers` | 10 | Hamburguesa sencilla o malteada (a elegir) | **Activo** — único negocio con sistema de premios pendientes (ver abajo) |
+| Eureka Burgers | `eureka-burgers` | 6 | Hamburguesa sencilla o malteada (a elegir) | **Activo** — único negocio con sistema de premios pendientes (ver abajo) |
 | María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis | Activo |
 | María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis | Activo |
 | cafe-ricolino | `cafe-ricolino` | — | — | Prueba (sin email) |
 | cafe-nuevo | `cafe-nuevo` | — | — | Prueba (sin email) |
+
+**Meta de sellos de Eureka Burgers bajó de 10 a 6 el 2026-07-24** (pedido del cliente). Solo fue un `UPDATE` de `stamp_goal` en Supabase — se lee en vivo en toda la app (stamp, redeem, wallets, dashboard), no hay hardcodes. La vigencia de 30 días de premios pendientes no cambió. Al momento del cambio el negocio tenía 0 clientes registrados, así que no hubo caso de retroactividad que resolver. También se actualizó el texto y la captura de pantalla del manual real (`eureka-burgers-loyalty/manual-fuente-html/manual_final.html`, PDF regenerado con Chrome headless) de 10→6 sellos. El póster QR impreso ("Eureka Burgers - QR para imprimir.pdf") se eliminó del proyecto y de `~/Downloads` — Eureka Burgers ya tiene su propia área de Diseño y hará su propio póster; el QR en sí (que apunta a `easyloyalty.io/eureka-burgers`) no cambió.
 
 ---
 
@@ -147,6 +149,8 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - ~~`src/app/admin/page.tsx`~~ — usaba env `ADMIN_PASSWORD` global
 - ~~`src/app/api/admin/login/route.ts`~~ — creaba cookie global
 - ~~`src/app/api/admin/stats/route.ts`~~ — hardcodeada a `businessSlug = 'eureka-burgers'`
+
+*(Nota 2026-07-24: esta sección decía "eliminadas" desde antes, pero los 5 archivos seguían vivos en el repo y `/register` era accesible en producción con datos de sellos desactualizados. Se detectó al auditar el cambio de meta de sellos y se borraron de verdad — build de producción verificado sin ellas.)*
 
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
