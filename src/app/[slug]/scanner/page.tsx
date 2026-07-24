@@ -329,32 +329,30 @@ export default function DynamicScannerPage() {
       <div style={{ width: '100%', maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
 
         {/* Selector de modo: dar sello vs canjear premio */}
-        {slug === 'eureka-burgers' && (
-          <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 12, background: 'rgba(0,56,96,0.05)', border: `1px solid ${BDR}` }}>
-            <button
-              onClick={() => { setMode('stamp'); setError(''); setResult(null); setRedeemResult(null) }}
-              style={{
-                flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
-                border: 'none', cursor: 'pointer',
-                color: mode === 'stamp' ? '#fff' : NAVY,
-                background: mode === 'stamp' ? NAVY : 'transparent',
-              }}
-            >
-              Dar sello
-            </button>
-            <button
-              onClick={() => { setMode('redeem'); setError(''); setResult(null); setRedeemResult(null) }}
-              style={{
-                flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
-                border: 'none', cursor: 'pointer',
-                color: mode === 'redeem' ? '#fff' : NAVY,
-                background: mode === 'redeem' ? '#DA5C2D' : 'transparent',
-              }}
-            >
-              Canjear premio
-            </button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 12, background: 'rgba(0,56,96,0.05)', border: `1px solid ${BDR}` }}>
+          <button
+            onClick={() => { setMode('stamp'); setError(''); setResult(null); setRedeemResult(null) }}
+            style={{
+              flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
+              border: 'none', cursor: 'pointer',
+              color: mode === 'stamp' ? '#fff' : NAVY,
+              background: mode === 'stamp' ? NAVY : 'transparent',
+            }}
+          >
+            Dar sello
+          </button>
+          <button
+            onClick={() => { setMode('redeem'); setError(''); setResult(null); setRedeemResult(null) }}
+            style={{
+              flex: 1, padding: '10px 8px', borderRadius: 9, fontWeight: 800, fontSize: 13, fontFamily: FONT,
+              border: 'none', cursor: 'pointer',
+              color: mode === 'redeem' ? '#fff' : NAVY,
+              background: mode === 'redeem' ? '#DA5C2D' : 'transparent',
+            }}
+          >
+            Canjear premio
+          </button>
+        </div>
 
         {/* Cámara */}
         {cameraActive ? (

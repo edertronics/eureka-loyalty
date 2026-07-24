@@ -45,14 +45,10 @@ export async function POST(req: NextRequest) {
     const newStamps = customer.stamps + 1
     const reachedGoal = newStamps >= business.stamp_goal
 
-    // eureka-burgers usa el sistema nuevo de "premios pendientes" con vigencia de 1 mes,
-    // acumulables en paralelo. El resto de negocios conserva el canje automático inmediato.
-    const usesPendingRewards = business.slug === 'eureka-burgers'
-
-    // Si alcanzó la meta, reiniciar sellos. El canje (rewards_redeemed) solo se suma
-    // de inmediato para negocios que NO usan premios pendientes.
+    // Al alcanzar la meta, el sello se reinicia y el premio queda "disponible" hasta
+    // por 30 días (pueden acumularse varios en paralelo). El staff lo canjea después
+    // desde el scanner ("Canjear premio"), que ahí sí suma rewards_redeemed.
     const updatedStamps = reachedGoal ? 0 : newStamps
-    const updatedRewards = reachedGoal && !usesPendingRewards ? customer.rewards_redeemed + 1 : customer.rewards_redeemed
 
     // Actualizar sellos del cliente
     const { error: updateError } = await supabaseAdmin
@@ -60,7 +56,6 @@ export async function POST(req: NextRequest) {
       .update({
         stamps: updatedStamps,
         total_stamps: customer.total_stamps + 1,
-        rewards_redeemed: updatedRewards,
         last_stamp_at: new Date().toISOString(),
       })
       .eq('id', customer.id)
@@ -78,21 +73,13 @@ export async function POST(req: NextRequest) {
     })
 
     if (reachedGoal) {
-      if (usesPendingRewards) {
-        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        await supabaseAdmin.from('pending_rewards').insert({
-          customer_id: customer.id,
-          business_id: customer.business_id,
-          status: 'available',
-          expires_at: expiresAt.toISOString(),
-        })
-      } else {
-        await supabaseAdmin.from('reward_events').insert({
-          customer_id: customer.id,
-          business_id: customer.business_id,
-          staff_id: staff_id || null,
-        })
-      }
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      await supabaseAdmin.from('pending_rewards').insert({
+        customer_id: customer.id,
+        business_id: customer.business_id,
+        status: 'available',
+        expires_at: expiresAt.toISOString(),
+      })
 
       if (customer.email) {
         sendRewardEmail({

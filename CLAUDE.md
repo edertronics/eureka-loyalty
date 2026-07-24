@@ -75,7 +75,7 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 | Negocio | Slug | Sellos | Premio | Estado |
 |---|---|---|---|---|
-| Eureka Burgers | `eureka-burgers` | 6 | Hamburguesa sencilla o malteada (a elegir) | **Activo** — único negocio con sistema de premios pendientes (ver abajo) |
+| Eureka Burgers | `eureka-burgers` | 6 | Hamburguesa sencilla o malteada (a elegir) | Activo |
 | María Bonita Uñitas | `mariabonita-unas` | 6 | Próximo servicio gratis | Activo |
 | María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis | Activo |
 | cafe-ricolino | `cafe-ricolino` | — | — | Prueba (sin email) |
@@ -114,12 +114,13 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - **API Key:** env var `RESEND_API_KEY` (en Vercel: eureka-loyalty)
 - **Dominio verificado:** `easyloyalty.io` — verificado en Resend el 2026-06-06. Emails funcionan en producción.
 - **Módulo:** `src/lib/email.ts` — todas las funciones lanzan error si Resend rechaza (fix 2026-05-15)
+- **`CARD_URL` vs `APP_URL` (fix 2026-07-24):** el botón "Ver mi tarjeta" en los 5 correos usaba `APP_URL` (= `NEXT_PUBLIC_APP_URL`, que en producción es `app.easyloyalty.io`), y ese subdominio redirige `/{slug}` a `/{slug}/admin` — el cliente terminaba en el login del negocio. Vivió así desde el 2026-05-12 (creación del archivo), afectando a todos los negocios con clientes reales. Se separó `CARD_URL` (fuerza dominio raíz `easyloyalty.io` salvo en local dev) de `APP_URL` (que sigue siendo correcto para `adminUrl`/`scannerUrl` en `sendOnboardingEmail`). Mismo bug y mismo fix en el generador de QR/póster de `src/app/registro/page.tsx` (el QR descargable para negocios nuevos apuntaba a `app.easyloyalty.io/{slug}`); no afectó a ningún negocio real porque María Bonita y Eureka Burgers usan pósters hechos aparte.
 - **Emails implementados:**
   - `sendWelcomeEmail` — bienvenida al cliente al registrarse (si da email)
   - `sendRewardEmail` — premio ganado al completar la tarjeta
   - `sendOnboardingEmail` — links del programa al dueño del negocio tras registrarse
-  - `sendRewardReminderEmail` — recordatorio a los 14 días de ganar un premio pendiente (solo eureka-burgers, vía cron)
-  - `sendRewardExpiringEmail` — aviso urgente en la última semana antes de que caduque un premio pendiente (solo eureka-burgers, vía cron)
+  - `sendRewardReminderEmail` — recordatorio a los 14 días de ganar un premio pendiente (todos los negocios, vía cron)
+  - `sendRewardExpiringEmail` — aviso urgente en la última semana antes de que caduque un premio pendiente (todos los negocios, vía cron)
 
 ## Modelo de negocio (decisiones tomadas)
 - **Trial:** 3 meses gratis
@@ -155,19 +156,17 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 ## Lógica de sellos
 - Cooldown de **4 horas** por cliente (anti-fraude, automático)
 - Al completar la meta → `stamps` vuelve a 0 (siempre, todos los negocios)
-- **Para todos los negocios EXCEPTO eureka-burgers**: `rewards_redeemed` +1 de inmediato (canje automático) y se loguea en `reward_events`
-- **Para eureka-burgers**: NO se incrementa `rewards_redeemed` de inmediato — ver "Premios pendientes" abajo
+- `rewards_redeemed` NO se incrementa al completar la meta — se guarda como premio pendiente y se incrementa hasta que se canjea (ver abajo)
 
-## Premios pendientes con vigencia (SOLO eureka-burgers, 2026-07-18)
-Cambio de mecánica pedido por el cliente: el premio ganado no se canjea automático, se guarda como "disponible" hasta 1 mes, y pueden acumularse varios en paralelo.
+## Premios pendientes con vigencia (todos los negocios, universal desde 2026-07-24)
+Nació como mecánica especial de Eureka Burgers (2026-07-18): el premio ganado no se canjea automático, se guarda como "disponible" hasta 1 mes, y pueden acumularse varios en paralelo. El 2026-07-24 se quitó el scoping `slug === 'eureka-burgers'` de los 5 archivos que lo tenían (stamp, scanner, admin dashboard, Apple Wallet, Google Wallet) y ahora aplica a **todo negocio nuevo o existente** — no hay forma de volver al canje automático inmediato, se retiró esa ruta de código por completo.
 - **Tabla:** `pending_rewards` (RLS habilitado, solo accesible con `SUPABASE_SERVICE_ROLE_KEY`) — columnas: `customer_id`, `business_id`, `status` (`available`/`redeemed`/`expired`), `earned_at`, `expires_at` (+30 días de `earned_at`), `redeemed_at`, `staff_id`, `reminder_14d_sent_at`, `reminder_final_sent_at`
-- **Ganar premio:** `src/app/api/stamp/route.ts` — si `business.slug === 'eureka-burgers'`, inserta fila en `pending_rewards` en vez de incrementar `rewards_redeemed`
-- **Canjear:** `POST /api/business/[slug]/redeem` (nuevo) — busca el disponible más próximo a vencer (FIFO), lo marca `redeemed`, ahí sí incrementa `rewards_redeemed` y loguea en `reward_events`
-- **Scanner:** selector "Dar sello" / "Canjear premio" (el segundo solo aparece si el slug es `eureka-burgers`)
-- **Pase de Apple Wallet:** campo `auxiliaryFields` "PREMIO" dinámico + `changeMessage: '%@'` — muestra cuántos premios disponibles tiene el cliente, dispara aviso visible en pantalla de bloqueo cada vez que cambia (incluye cada sello normal, es intencional)
-- **Cron diario** (`vercel.json`, `0 16 * * *` UTC) → `GET /api/cron/pending-rewards`: caduca los vencidos, manda `sendRewardReminderEmail` a los 14 días de ganado, manda `sendRewardExpiringEmail` en la última semana antes de caducar
-- **Dashboard:** sección "Notificaciones — premios pendientes" (solo visible si slug es `eureka-burgers`) con por-caducar-en-7-días, disponibles sin canjear, caducados histórico, y desglose por cliente
-- **Pendiente:** habilitar lo mismo para María Bonita cuando el usuario lo pida — hoy el scoping es literal `slug === 'eureka-burgers'` en cada archivo tocado (stamp, redeem, wallet/apple, admin page)
+- **Ganar premio:** `src/app/api/stamp/route.ts` — al llegar a la meta, siempre inserta fila en `pending_rewards` (nunca incrementa `rewards_redeemed` directamente)
+- **Canjear:** `POST /api/business/[slug]/redeem` — busca el disponible más próximo a vencer (FIFO), lo marca `redeemed`, ahí sí incrementa `rewards_redeemed` y loguea en `reward_events`. Ya era genérico desde el inicio, sin scoping.
+- **Scanner:** selector "Dar sello" / "Canjear premio" visible en todos los negocios (`src/app/[slug]/scanner/page.tsx`)
+- **Pase de Apple Wallet y Google Wallet:** campo de premio dinámico (`auxiliaryFields`/`textModulesData`) en todos los negocios — muestra cuántos premios disponibles tiene el cliente o cuántos sellos le faltan; Apple dispara aviso visible en pantalla de bloqueo vía `changeMessage: '%@'` cada vez que cambia
+- **Cron diario** (`vercel.json`, `0 16 * * *` UTC) → `GET /api/cron/pending-rewards`: procesa TODOS los negocios — caduca los vencidos, manda `sendRewardReminderEmail` a los 14 días de ganado, manda `sendRewardExpiringEmail` en la última semana antes de caducar
+- **Dashboard:** sección "Notificaciones — premios pendientes" visible en todos los negocios, con por-caducar-en-7-días, disponibles sin canjear, caducados histórico, y desglose por cliente
 
 ## Auth
 - Admin del negocio: cookie `admin_auth_[slug]` (8h), contraseña en `businesses.admin_password`

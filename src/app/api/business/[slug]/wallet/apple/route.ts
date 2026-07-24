@@ -127,14 +127,14 @@ async function generatePass({ slug, customer_id, customer_name, stamps, stamp_go
 
     const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://app.easyloyalty.io').trim()
 
-    // Premios pendientes con vigencia — solo eureka-burgers por ahora. El campo "PREMIO"
-    // se vuelve dinámico y lleva changeMessage para que Wallet muestre un aviso visible
-    // en pantalla de bloqueo cada vez que el texto cambie (incluye cada sello normal).
+    // Premios pendientes con vigencia. El campo "PREMIO" se vuelve dinámico y lleva
+    // changeMessage para que Wallet muestre un aviso visible en pantalla de bloqueo
+    // cada vez que el texto cambie (incluye cada sello normal).
     let auxiliaryFields: Array<{ key: string; label: string; value: string; changeMessage?: string }> = [
       { key: 'reward', label: 'PREMIO', value: 'Estás más cerca de tu premio' },
     ]
 
-    if (slug === 'eureka-burgers' && customerRow?.id) {
+    if (customerRow?.id) {
       const { count: availableCount } = await supabaseAdmin
         .from('pending_rewards')
         .select('id', { count: 'exact', head: true })

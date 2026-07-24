@@ -27,21 +27,19 @@ export async function updateGoogleWalletPass(params: {
 
     const objectId = `${ISSUER_ID}.${slug}-${qrCode}`
 
-    // Mismo texto dinámico de premio que muestra el pase de Apple (solo eureka-burgers)
+    // Mismo texto dinámico de premio que muestra el pase de Apple
     let rewardText = rewardDescription || 'Premio especial al completar tu tarjeta'
-    if (slug === 'eureka-burgers') {
-      const { count } = await supabaseAdmin
-        .from('pending_rewards')
-        .select('id', { count: 'exact', head: true })
-        .eq('customer_id', customerId)
-        .eq('status', 'available')
-        .gt('expires_at', new Date().toISOString())
-      const n = count || 0
-      const remaining = Math.max(stampGoal - stamps, 0)
-      rewardText = n >= 1
-        ? `¡Tienes ${n} premio${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}! Cánjalo${n > 1 ? 's' : ''} en tu próxima visita`
-        : `Te faltan ${remaining} sello${remaining === 1 ? '' : 's'} para tu premio`
-    }
+    const { count } = await supabaseAdmin
+      .from('pending_rewards')
+      .select('id', { count: 'exact', head: true })
+      .eq('customer_id', customerId)
+      .eq('status', 'available')
+      .gt('expires_at', new Date().toISOString())
+    const n = count || 0
+    const remaining = Math.max(stampGoal - stamps, 0)
+    rewardText = n >= 1
+      ? `¡Tienes ${n} premio${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}! Cánjalo${n > 1 ? 's' : ''} en tu próxima visita`
+      : `Te faltan ${remaining} sello${remaining === 1 ? '' : 's'} para tu premio`
 
     const res = await fetch(
       `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${objectId}`,

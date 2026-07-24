@@ -19,7 +19,7 @@ interface RewardRow {
   } | null
 }
 
-// Corre una vez al día (Vercel Cron). Revisa premios pendientes de eureka-burgers:
+// Corre una vez al día (Vercel Cron). Revisa premios pendientes de todos los negocios:
 // caduca los vencidos, y manda los 2 correos programados (14 días, última semana).
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')

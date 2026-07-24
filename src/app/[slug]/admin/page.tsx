@@ -553,8 +553,8 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
           </div>
         </div>
 
-        {/* Notificaciones de premios pendientes — solo eureka-burgers por ahora */}
-        {slug === 'eureka-burgers' && stats?.pending_rewards && (
+        {/* Notificaciones de premios pendientes */}
+        {stats?.pending_rewards && (
           <div style={{ borderRadius: 16, padding: '16px 18px', marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 14px 0' }}>Notificaciones — premios pendientes</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: stats.pending_rewards.by_customer.length > 0 ? 14 : 0 }}>
