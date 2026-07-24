@@ -6,6 +6,10 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY)
 }
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://easyloyalty.io'
+// La tarjeta del cliente vive en el dominio raíz (easyloyalty.io), no en app.easyloyalty.io
+// (ahí el middleware redirige /{slug} a /{slug}/admin). En local dev APP_URL ya es localhost,
+// donde no hay separación de dominios, así que se reutiliza tal cual.
+const CARD_URL = APP_URL.includes('localhost') ? APP_URL : 'https://easyloyalty.io'
 
 export async function sendWelcomeEmail({
   to,
@@ -22,7 +26,7 @@ export async function sendWelcomeEmail({
   stampGoal: number
   rewardDescription: string
 }) {
-  const cardUrl = `${APP_URL}/${businessSlug}`
+  const cardUrl = `${CARD_URL}/${businessSlug}`
 
   const { error: e1 } = await getResend().emails.send({
     from: FROM,
@@ -94,7 +98,7 @@ export async function sendOnboardingEmail({
   businessName: string
   businessSlug: string
 }) {
-  const cardUrl    = `${APP_URL}/${businessSlug}`
+  const cardUrl    = `${CARD_URL}/${businessSlug}`
   const adminUrl   = `${APP_URL}/${businessSlug}/admin`
   const scannerUrl = `${APP_URL}/${businessSlug}/scanner`
 
@@ -191,7 +195,7 @@ export async function sendRewardEmail({
   businessSlug: string
   rewardDescription: string
 }) {
-  const cardUrl = `${APP_URL}/${businessSlug}`
+  const cardUrl = `${CARD_URL}/${businessSlug}`
 
   const { error: e3 } = await getResend().emails.send({
     from: FROM,
@@ -266,7 +270,7 @@ export async function sendRewardReminderEmail({
   rewardDescription: string
   daysLeft: number
 }) {
-  const cardUrl = `${APP_URL}/${businessSlug}`
+  const cardUrl = `${CARD_URL}/${businessSlug}`
 
   const { error } = await getResend().emails.send({
     from: FROM,
@@ -333,7 +337,7 @@ export async function sendRewardExpiringEmail({
   rewardDescription: string
   daysLeft: number
 }) {
-  const cardUrl = `${APP_URL}/${businessSlug}`
+  const cardUrl = `${CARD_URL}/${businessSlug}`
 
   const { error } = await getResend().emails.send({
     from: FROM,

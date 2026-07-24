@@ -497,7 +497,10 @@ export default function RegistroPage() {
         }).catch(() => {})
       }
 
-      const cardUrl = window.location.origin + '/' + slug
+      // La tarjeta del cliente vive en el dominio raíz (easyloyalty.io), no en app.easyloyalty.io
+      // (el registro siempre ocurre en app., y ahí /{slug} redirige a /{slug}/admin).
+      const cardOrigin = window.location.hostname === 'localhost' ? window.location.origin : 'https://easyloyalty.io'
+      const cardUrl = cardOrigin + '/' + slug
       const qrmod = await import('qrcode')
       const [qrPng, qrVector] = await Promise.all([
         qrmod.toDataURL(cardUrl, { width: 1024, margin: 2 }),
@@ -670,7 +673,7 @@ export default function RegistroPage() {
       if (!w) return
 
       const textOnPc = pcDark ? '#ffffff' : '#111111'
-      const cardUrl = 'app.easyloyalty.io/' + biz.slug
+      const cardUrl = 'easyloyalty.io/' + biz.slug
       const qr220 = '<img src="' + qrDataUrl + '" alt="QR" style="width:220px;height:220px;display:block;" />'
       const qr160 = '<img src="' + qrDataUrl + '" alt="QR" style="width:160px;height:160px;display:block;" />'
       const qr150 = '<img src="' + qrDataUrl + '" alt="QR" style="width:150px;height:150px;display:block;" />'
