@@ -103,6 +103,7 @@
     var trust    = hero.querySelector('.hero-trust')
     var vls      = hero.querySelectorAll('.vl')
     var hhls     = hero.querySelectorAll('.hhl')
+    var navEl    = document.getElementById('nav')
 
     /* Estados iniciales ocultos ANTES de apagar el CSS viejo — sin flash */
     var textbits = [tag, sub, trust].filter(Boolean)
@@ -112,6 +113,7 @@
     if (mark)     gsap.set(mark, { autoAlpha: 0, scale: 0.94, transformOrigin: '50% 50%' })
     gsap.set(vls,  { scaleY: 0, transformOrigin: '50% 0%' })
     gsap.set(hhls, { scaleX: 0, transformOrigin: '0% 50%' })
+    if (navEl)    gsap.set(navEl, { autoAlpha: 0, y: -14 })
     hero.classList.add('gsap-on')
 
     /* El wordmark se parte en letras cuando la fuente ya midió bien */
@@ -120,7 +122,8 @@
       : Promise.resolve()
 
     fontsReady.then(function () {
-      var tl = gsap.timeline({ defaults: { ease: MO.ease.out } })
+      /* Se construye pausado: lo dispara el preloader al abrir la cortina */
+      var tl = gsap.timeline({ paused: true, defaults: { ease: MO.ease.out } })
 
       tl.to(hhls, { scaleX: 1, duration: MO.dur.l, ease: MO.ease.inOut, stagger: 0.08 }, 0)
         .to(vls,  { scaleY: 1, duration: MO.dur.l, ease: MO.ease.inOut, stagger: 0.06 }, 0)
@@ -145,9 +148,95 @@
       if (sub)   tl.to(sub,   { autoAlpha: 1, y: 0, duration: MO.dur.m }, 0.75)
       if (btns.length) tl.to(btns, { autoAlpha: 1, y: 0, duration: MO.dur.m, stagger: 0.08 }, 0.9)
       if (trust) tl.to(trust, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 1.15)
+      if (navEl) tl.to(navEl, { autoAlpha: 1, y: 0, duration: MO.dur.m }, 0.35)
+
+      heroTl = tl
+      if (heroPlayRequested) tl.play()
     })
   }
+  var heroTl = null
+  var heroPlayRequested = false
+  function playHero () { if (heroTl) heroTl.play(); else heroPlayRequested = true }
   heroIntro()
+
+  /* ══════════════════════════════════════════════════════════════
+     FASE 4a — Preloader con cortina
+     Contador 0→100 sobre panel verde profundo; el panel se levanta
+     con curva y la entrada del hero arranca a media cortina — la
+     intro deja de ser "perdible". Repite visita en la misma sesión:
+     versión rápida. Solo existe con motion activo (inyectado por JS).
+     ══════════════════════════════════════════════════════════════ */
+  function preloader () {
+    try { history.scrollRestoration = 'manual' } catch (e) {}
+    window.scrollTo(0, 0)
+    lenis.stop()
+
+    var el = document.createElement('div')
+    el.id = 'elp'
+    el.innerHTML =
+      '<span class="elp-brand">Easy Loyalty</span>' +
+      '<span class="elp-tag">Programa de lealtad digital</span>' +
+      '<div class="elp-num" aria-hidden="true">0</div>'
+    document.body.appendChild(el)
+    var num = el.querySelector('.elp-num')
+
+    var quick = false
+    try {
+      quick = sessionStorage.getItem('elp') === '1'
+      sessionStorage.setItem('elp', '1')
+    } catch (e) {}
+
+    var counter = { v: 0 }
+    var tl = gsap.timeline({
+      onComplete: function () { el.remove(); lenis.start() }
+    })
+    tl.to(counter, {
+      v: 100,
+      duration: quick ? 0.45 : 1.05,
+      ease: 'power2.inOut',
+      onUpdate: function () { num.textContent = Math.round(counter.v) }
+    })
+      .to(num, { autoAlpha: 0, y: -40, duration: 0.28, ease: 'power2.in' }, quick ? 0.3 : 0.92)
+      .add('lift')
+      .add(function () { el.classList.add('lifting') }, 'lift')
+      .to(el, { yPercent: -100, duration: 0.85, ease: 'expo.inOut' }, 'lift')
+      .add(function () { playHero() }, 'lift+=0.3')
+  }
+  preloader()
+
+  /* ══════════════════════════════════════════════════════════════
+     FASE 4b — Fondo vivo
+     Aurora: 3 manchas de luz en los verdes del brand, desenfocadas,
+     derivando en loops lentos re-aleatorizados (repeatRefresh) —
+     el hero respira. Grano fílmico fijo sobre toda la página.
+     ══════════════════════════════════════════════════════════════ */
+  function livingBackground () {
+    var hero = document.querySelector('.hero')
+    if (hero) {
+      var wrap = document.createElement('div')
+      wrap.className = 'el-aurora'
+      wrap.setAttribute('aria-hidden', 'true')
+      wrap.innerHTML = '<div class="el-blob b1"></div><div class="el-blob b2"></div><div class="el-blob b3"></div>'
+      hero.insertBefore(wrap, hero.firstChild)
+      wrap.querySelectorAll('.el-blob').forEach(function (b) {
+        gsap.to(b, {
+          xPercent: 'random(-20, 20)',
+          yPercent: 'random(-16, 16)',
+          scale: 'random(0.85, 1.2)',
+          duration: 'random(14, 24)',
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+          repeatRefresh: true
+        })
+      })
+    }
+    var grain = document.createElement('div')
+    grain.className = 'el-grain'
+    grain.setAttribute('aria-hidden', 'true')
+    document.body.appendChild(grain)
+  }
+  livingBackground()
 
   /* ══════════════════════════════════════════════════════════════
      FASE 3 — "Cómo funciona" pinned
