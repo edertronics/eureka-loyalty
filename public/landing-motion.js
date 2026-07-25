@@ -84,6 +84,71 @@
   }
   initReveals()
 
+  /* ══════════════════════════════════════════════════════════════
+     FASE 2 — Hero orquestado
+     Secuencia de entrada: líneas de fondo → tag → wordmark (letra
+     por letra, enmascarado) → isotipo → subtítulo → CTAs → trust.
+     GSAP toma el control del hero (.gsap-on apaga el sistema .rv
+     solo ahí); si GSAP no carga, el hero vuelve al flujo viejo.
+     ══════════════════════════════════════════════════════════════ */
+  function heroIntro () {
+    var hero = document.querySelector('.hero')
+    if (!hero) return
+
+    var tag      = hero.querySelector('.hero-tag')
+    var wordmark = hero.querySelector('.hero-wordmark')
+    var mark     = hero.querySelector('.hero-right')
+    var sub      = hero.querySelector('.hero-sub')
+    var btns     = hero.querySelectorAll('.hero-btns a')
+    var trust    = hero.querySelector('.hero-trust')
+    var vls      = hero.querySelectorAll('.vl')
+    var hhls     = hero.querySelectorAll('.hhl')
+
+    /* Estados iniciales ocultos ANTES de apagar el CSS viejo — sin flash */
+    var textbits = [tag, sub, trust].filter(Boolean)
+    gsap.set(textbits, { autoAlpha: 0, y: MO.rise * 0.75 })
+    gsap.set(btns,     { autoAlpha: 0, y: MO.rise * 0.75 })
+    if (wordmark) gsap.set(wordmark, { autoAlpha: 0 })
+    if (mark)     gsap.set(mark, { autoAlpha: 0, scale: 0.94, transformOrigin: '50% 50%' })
+    gsap.set(vls,  { scaleY: 0, transformOrigin: '50% 0%' })
+    gsap.set(hhls, { scaleX: 0, transformOrigin: '0% 50%' })
+    hero.classList.add('gsap-on')
+
+    /* El wordmark se parte en letras cuando la fuente ya midió bien */
+    var fontsReady = (document.fonts && document.fonts.ready)
+      ? document.fonts.ready
+      : Promise.resolve()
+
+    fontsReady.then(function () {
+      var tl = gsap.timeline({ defaults: { ease: MO.ease.out } })
+
+      tl.to(hhls, { scaleX: 1, duration: MO.dur.l, ease: MO.ease.inOut, stagger: 0.08 }, 0)
+        .to(vls,  { scaleY: 1, duration: MO.dur.l, ease: MO.ease.inOut, stagger: 0.06 }, 0)
+
+      if (tag) tl.to(tag, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 0.15)
+
+      if (wordmark && typeof SplitText !== 'undefined') {
+        /* words+chars: las palabras conservan sus espacios al hacer wrap */
+        var split = SplitText.create(wordmark, { type: 'words,chars', mask: 'chars' })
+        gsap.set(wordmark, { autoAlpha: 1 })
+        tl.from(split.chars, {
+          yPercent: 120,
+          duration: MO.dur.m,
+          ease: MO.ease.hero,
+          stagger: 0.03
+        }, 0.3)
+      } else if (wordmark) {
+        tl.to(wordmark, { autoAlpha: 1, y: 0, duration: MO.dur.m, ease: MO.ease.hero }, 0.3)
+      }
+
+      if (mark)  tl.to(mark,  { autoAlpha: 1, scale: 1, duration: MO.dur.l, ease: MO.ease.hero }, 0.45)
+      if (sub)   tl.to(sub,   { autoAlpha: 1, y: 0, duration: MO.dur.m }, 0.75)
+      if (btns.length) tl.to(btns, { autoAlpha: 1, y: 0, duration: MO.dur.m, stagger: 0.08 }, 0.9)
+      if (trust) tl.to(trust, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 1.15)
+    })
+  }
+  heroIntro()
+
   /* API para las fases 2-5 y para depurar desde consola */
   window.ELMotion = {
     ready: true,
