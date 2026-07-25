@@ -407,6 +407,147 @@
   }
   howPinned()
 
+  /* ══════════════════════════════════════════════════════════════
+     FASE 5 — La historia de los sellos (cprev pinned)
+     La tarjeta "Ana García" empieza en 0/9. Desktop: la sección se
+     fija y cada tramo de scroll estampa un sello (pop back.out +
+     contador vivo); al noveno, la tarjeta pulsa, estalla una lluvia
+     de partículas del brand y aparece el premio. Scrollear hacia
+     atrás rebobina todo (los sellos se despegan, las partículas se
+     retraen). Móvil: la secuencia se auto-reproduce al entrar.
+     ══════════════════════════════════════════════════════════════ */
+  function cardStory () {
+    var sec = document.querySelector('.cprev')
+    if (!sec) return
+    var card    = sec.querySelector('.ccard')
+    var stampsW = sec.querySelector('.cc-stamps')
+    var prog    = sec.querySelector('.cc-prog')
+    var reward  = sec.querySelector('.cc-reward')
+    var eye     = sec.querySelector('.eye')
+    var wis     = sec.querySelectorAll('h2 .wl .wi')
+    var para    = sec.querySelector('.cprev-grid p')
+    var cta     = sec.querySelector('.cprev-grid .btn-dark')
+    var cardCell = card ? card.parentElement : null
+    if (!card || !stampsW || !prog || !reward) return
+
+    var TOTAL = 9
+    var check = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+    var html = ''
+    for (var i = 0; i < TOTAL; i++) html += '<div class="cs e">' + check + '</div>'
+    stampsW.innerHTML = html
+    var stamps = stampsW.querySelectorAll('.cs')
+
+    /* Capa de partículas (fuera del overflow:hidden de la tarjeta) */
+    var burstColors = ['#00C896', '#2FD4E6', '#F59E0B', '#F0654E', '#ffffff']
+    var partbox = null
+    if (cardCell) {
+      cardCell.style.position = 'relative'
+      partbox = document.createElement('div')
+      partbox.className = 'el-partbox'
+      partbox.setAttribute('aria-hidden', 'true')
+      for (var p = 0; p < 16; p++) {
+        var d = document.createElement('div')
+        d.className = 'el-part'
+        d.style.background = burstColors[p % burstColors.length]
+        d.style.left = '50%'
+        d.style.top = '30%'
+        partbox.appendChild(d)
+      }
+      cardCell.appendChild(partbox)
+    }
+
+    function setCount (n) { prog.textContent = n + ' / ' + TOTAL + ' sellos acumulados' }
+
+    /* Construye el timeline de la historia (compartido desktop/móvil) */
+    function buildStory (tl, compact) {
+      var step = compact ? 0.16 : 0.075
+      var t0 = compact ? 0 : 0.16
+
+      stamps.forEach(function (s, i) {
+        var svg = s.querySelector('svg')
+        gsap.set(svg, { scale: 0, rotation: -20, transformOrigin: '50% 50%' })
+        var at = t0 + i * step
+        tl.to(s, {
+          backgroundColor: '#00C896', borderColor: 'rgba(0,200,150,0)',
+          duration: step * 0.5, ease: 'power1.in',
+          onStart: function () { setCount(i + 1) },
+          onReverseComplete: function () { setCount(i) }
+        }, at)
+        tl.to(svg, { scale: 1, rotation: 0, duration: step * 0.9, ease: 'back.out(2.2)' }, at)
+      })
+
+      var fin = t0 + TOTAL * step + (compact ? 0.1 : 0.05)
+      tl.to(card, { scale: 1.045, duration: 0.07, ease: 'power2.out' }, fin)
+        .to(card, { scale: 1, duration: 0.12, ease: 'power2.inOut' }, fin + 0.07)
+        .to(reward, { autoAlpha: 1, scale: 1, duration: 0.14, ease: 'back.out(1.8)' }, fin + 0.04)
+      if (partbox) {
+        partbox.querySelectorAll('.el-part').forEach(function (d, i) {
+          var ang = (i / 16) * Math.PI * 2
+          var dist = 90 + (i % 4) * 45
+          tl.fromTo(d, { x: 0, y: 0, autoAlpha: 0, scale: 0.4 }, {
+            x: Math.cos(ang) * dist,
+            y: Math.sin(ang) * dist - 40,
+            autoAlpha: 1, scale: 1,
+            duration: 0.14, ease: 'power2.out'
+          }, fin + 0.05)
+          tl.to(d, { autoAlpha: 0, scale: 0.2, duration: 0.08 }, fin + 0.19)
+        })
+      }
+      return fin
+    }
+
+    var mm = gsap.matchMedia()
+
+    /* ── Desktop: pinned, el scroll estampa ── */
+    mm.add('(min-width: 921px)', function () {
+      sec.classList.add('gsap-on')
+      gsap.set(eye,  { autoAlpha: 0, y: 20 })
+      gsap.set(wis,  { x: 0, xPercent: -102 })
+      gsap.set([para, cta], { autoAlpha: 0, y: 26 })
+      gsap.set(card, { autoAlpha: 0, y: 60, rotationY: -14, transformOrigin: '50% 50%' })
+      gsap.set(reward, { autoAlpha: 0, scale: 0.5 })
+      setCount(0)
+
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sec,
+          start: 'center center',
+          end: '+=260%',
+          pin: true,
+          scrub: 0.8,
+          anticipatePin: 1
+        }
+      })
+      tl.to(eye, { autoAlpha: 1, y: 0, duration: 0.05, ease: MO.ease.out }, 0)
+        .to(wis, { xPercent: 0, duration: 0.09, ease: MO.ease.inOut, stagger: 0.03 }, 0.01)
+        .to([para, cta], { autoAlpha: 1, y: 0, duration: 0.08, ease: MO.ease.out, stagger: 0.03 }, 0.05)
+        .to(card, { autoAlpha: 1, y: 0, rotationY: 0, duration: 0.12, ease: MO.ease.out }, 0.04)
+
+      var fin = buildStory(tl, false)
+      tl.to({}, { duration: 0.14 })                       /* respiro final */
+
+      return function () { sec.classList.remove('gsap-on'); setCount(6) }
+    })
+
+    /* ── Móvil: auto-secuencia al entrar la tarjeta ── */
+    mm.add('(max-width: 920px)', function () {
+      sec.classList.add('gsap-on')
+      gsap.set(reward, { autoAlpha: 0, scale: 0.5 })
+      setCount(0)
+
+      var tl = gsap.timeline({ paused: true })
+      buildStory(tl, true)
+
+      ScrollTrigger.create({
+        trigger: card, start: 'top 70%', once: true,
+        onEnter: function () { tl.play() }
+      })
+
+      return function () { sec.classList.remove('gsap-on'); setCount(6) }
+    })
+  }
+  cardStory()
+
   /* API para las fases 2-5 y para depurar desde consola */
   window.ELMotion = {
     ready: true,

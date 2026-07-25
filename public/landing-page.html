@@ -586,6 +586,12 @@
     .testi-grid .tc:nth-child(2) .tc-av{background:#2FD4E6;}
     .testi-grid .tc:nth-child(3) .tc-av{background:var(--amber);}
 
+    /* Escena de sellos (cprev pinned): partículas del estallido final */
+    .el-part{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:3;}
+    .el-partbox{position:absolute;inset:0;pointer-events:none;overflow:visible;}
+    .cprev.gsap-on .ccard{transition:none;}
+    .cprev.gsap-on .ccard:hover{transform:none;}
+
     /* CTA final: eco del hero — cierre simétrico */
     .cfinal{background:radial-gradient(120% 140% at 50% 110%,#0A5A4C 0%,#063f3a 40%,#052738 75%,#03141f 100%);}
     .cfinal h2{color:#fff;}
