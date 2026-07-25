@@ -510,6 +510,91 @@
       body{cursor:auto;}
       #cur,#cur2{display:none;}
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       REDESIGN 2026 — Profundidad océano + acentos cálidos
+       Fondos oscuros: degradado azul→verde "infinito" (benchmark
+       de sitios tech premiados). Verde del brand = color de acción.
+       Acentos ámbar/coral en capas de contenido = friendly para
+       negocios locales (cafés, restaurantes). Bloque autocontenido:
+       borrar este bloque restaura el diseño anterior.
+       ═══════════════════════════════════════════════════════════ */
+    :root{--b0:#03141f;--b1:#052738;--cy:#2FD4E6;--amber:#F59E0B;--coral:#F0654E;}
+
+    /* Hero: fondo infinito, texto claro */
+    .hero{background:radial-gradient(130% 130% at 78% 8%,#0A5A4C 0%,#063f3a 34%,#052738 66%,#03141f 100%);}
+    .hero-wordmark{color:#fff;}
+    .hero .logo-loyalty{color:var(--g);}
+    .hero-tag{color:#9FF0DB;background:rgba(0,200,150,.13);}
+    .hero-tag::before{background:var(--g);}
+    .hero-sub{color:#D7F5EC;opacity:.82;}
+    .hero-highlight{color:var(--g);}
+    .hero-trust{color:#BDEFE2;opacity:.6;}
+    .hero .btn-dark{background:var(--g);color:var(--p);box-shadow:0 10px 32px rgba(0,200,150,.28);}
+    .hero .btn-dark:hover{background:#00E0A4;box-shadow:0 14px 40px rgba(0,200,150,.4);}
+    .hero .btn-ghost{color:#D7F5EC;border-color:rgba(255,255,255,.3);}
+    .hero .btn-ghost:hover{border-color:var(--g);}
+    .hhl{background:rgba(127,227,255,.07);}
+    .vl{background:linear-gradient(to bottom,transparent 0%,rgba(160,240,220,.12) 25%,rgba(160,240,220,.12) 75%,transparent 100%);}
+    .scan{background:linear-gradient(to right,transparent,rgba(127,227,255,.25),transparent);}
+    .hm-lbl{color:#BDEFE2;opacity:.35;}
+    .el-blob.b1{background:radial-gradient(circle,rgba(47,212,230,.4) 0%,rgba(47,212,230,0) 65%);}
+    .el-blob.b2{background:radial-gradient(circle,rgba(0,224,164,.35) 0%,rgba(0,224,164,0) 62%);}
+    .el-blob.b3{background:radial-gradient(circle,rgba(10,90,140,.55) 0%,rgba(10,90,140,0) 60%);}
+    .el-card-face{box-shadow:0 70px 110px -35px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(127,227,255,.1);}
+
+    /* Nav claro mientras flota sobre el hero oscuro */
+    nav:not(.scrolled) .nav-link{color:#E6FFF6;}
+    nav:not(.scrolled) .nav-link::after{background:var(--g);}
+    nav:not(.scrolled) .nav-cta{background:var(--g);color:var(--p);}
+    nav:not(.scrolled) .nav-logo-text{color:#fff;}
+
+    /* Proof: cada estadística con su acento */
+    .proof-stats .stat:nth-child(1) .stat-n{color:#00A87E;}
+    .proof-stats .stat:nth-child(2) .stat-n{color:#0FB5C9;}
+    .proof-stats .stat:nth-child(3) .stat-n{color:var(--amber);}
+    .proof-stats .stat:nth-child(4) .stat-n{color:var(--coral);}
+
+    /* Cómo funciona: océano profundo, íconos con acento por paso */
+    .how{background:linear-gradient(165deg,#063f3a 0%,#052738 55%,#03141f 100%);}
+    .steps .step:nth-child(2) .step-ico{background:rgba(47,212,230,.12);}
+    .steps .step:nth-child(2) .step-ico svg{stroke:var(--cy);}
+    .steps .step:nth-child(3) .step-ico{background:rgba(245,158,11,.14);}
+    .steps .step:nth-child(3) .step-ico svg{stroke:var(--amber);}
+
+    /* Features: mosaico de acentos (friendly, moderno) */
+    .feat-grid .fc:nth-child(2) .fc-ico{background:rgba(47,212,230,.13);}
+    .feat-grid .fc:nth-child(2) .fc-ico svg{stroke:#0FB5C9;}
+    .feat-grid .fc:nth-child(3) .fc-ico{background:rgba(245,158,11,.14);}
+    .feat-grid .fc:nth-child(3) .fc-ico svg{stroke:var(--amber);}
+    .feat-grid .fc:nth-child(4) .fc-ico{background:rgba(240,101,78,.12);}
+    .feat-grid .fc:nth-child(4) .fc-ico svg{stroke:var(--coral);}
+    .feat-grid .fc:nth-child(5) .fc-ico{background:rgba(124,111,255,.13);}
+    .feat-grid .fc:nth-child(5) .fc-ico svg{stroke:#7C6FFF;}
+
+    /* Preview de tarjeta: pastel menta→cielo */
+    .cprev{background:linear-gradient(135deg,#D9FFF3 0%,#DBF3FF 100%);}
+
+    /* Pricing: azul abisal */
+    .pricing{background:linear-gradient(165deg,#03141f 0%,#071E2E 100%);}
+    .pc{background:#081A28;}
+    .pc:hover{background:#0C2436;}
+
+    /* Testimonios: crema cálida + estrellas ámbar (café vibes) */
+    .testi{background:#FAF6EE;}
+    .tc-stars{color:var(--amber);}
+    .testi-grid .tc:nth-child(2) .tc-av{background:#2FD4E6;}
+    .testi-grid .tc:nth-child(3) .tc-av{background:var(--amber);}
+
+    /* CTA final: eco del hero — cierre simétrico */
+    .cfinal{background:radial-gradient(120% 140% at 50% 110%,#0A5A4C 0%,#063f3a 40%,#052738 75%,#03141f 100%);}
+    .cfinal h2{color:#fff;}
+    .cfinal h2 em{color:var(--g);}
+    .cfinal p{color:#D7F5EC;opacity:.65;}
+    .cfinal .cta-note{color:#BDEFE2;opacity:.4;}
+    .cfinal .btn-dark{background:var(--g);color:var(--p);box-shadow:0 10px 32px rgba(0,200,150,.28);}
+    .cfinal .btn-dark:hover{background:#00E0A4;}
+    footer{background:#03141f;}
   </style>
 </head>
 <body>

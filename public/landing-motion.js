@@ -226,14 +226,14 @@
     })
 
     /* Tilt 3D siguiendo el mouse (60fps via quickTo) */
-    var toRX = gsap.quickTo(card, 'rotationX', { duration: 0.7, ease: 'power3.out' })
-    var toRY = gsap.quickTo(card, 'rotationY', { duration: 0.7, ease: 'power3.out' })
+    var toRX = gsap.quickTo(card, 'rotationX', { duration: 0.45, ease: 'power3.out' })
+    var toRY = gsap.quickTo(card, 'rotationY', { duration: 0.45, ease: 'power3.out' })
     hero.addEventListener('mousemove', function (e) {
       var r = hero.getBoundingClientRect()
       var nx = (e.clientX - r.left) / r.width - 0.5
       var ny = (e.clientY - r.top) / r.height - 0.5
-      toRY(nx * 16)
-      toRX(ny * -11)
+      toRY(nx * 26)
+      toRX(ny * -17)
     }, { passive: true })
     hero.addEventListener('mouseleave', function () { toRX(0); toRY(0) })
   }
