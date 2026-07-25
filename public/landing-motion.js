@@ -149,6 +149,94 @@
   }
   heroIntro()
 
+  /* ══════════════════════════════════════════════════════════════
+     FASE 3 — "Cómo funciona" pinned
+     Desktop: la sección se fija en pantalla y el scroll del usuario
+     conduce la coreografía (scrub): título en barrido → paso 01 →
+     02 → 03, con barra de progreso ligada 1:1 al recorrido.
+     Móvil (≤920px, pasos apilados): reveals escalonados sin pin.
+     ══════════════════════════════════════════════════════════════ */
+  function howPinned () {
+    var how = document.querySelector('.how')
+    if (!how) return
+
+    var eye   = how.querySelector('.eye')
+    var wis   = how.querySelectorAll('h2 .wl .wi')
+    var steps = how.querySelectorAll('.step')
+    var nums  = how.querySelectorAll('.step-n')
+    var bar   = how.querySelector('.how-progress')
+
+    var mm = gsap.matchMedia()
+
+    /* ── Desktop: pin + scrub ── */
+    mm.add('(min-width: 921px)', function () {
+      how.classList.add('gsap-on')
+
+      gsap.set(eye,   { autoAlpha: 0, y: 24 })
+      /* x:0 limpia el translateX(-104%) del CSS base (GSAP lo captura en px
+         en el canal `x`, distinto de xPercent — si no, se suman los dos) */
+      gsap.set(wis,   { x: 0, xPercent: -102 })
+      gsap.set(steps, { autoAlpha: 0, y: 72 })
+      gsap.set(nums,  { yPercent: 45 })
+      if (bar) gsap.set(bar, { scaleX: 0 })
+
+      var tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: how,
+          start: 'center center',
+          end: '+=220%',
+          pin: true,
+          scrub: 0.8,
+          anticipatePin: 1
+        }
+      })
+
+      /* Título en barrido (0 → 12%) */
+      tl.to(eye, { autoAlpha: 1, y: 0, duration: 0.06, ease: MO.ease.out }, 0)
+        .to(wis, { xPercent: 0, duration: 0.1, ease: MO.ease.inOut, stagger: 0.035 }, 0.02)
+
+      /* Pasos: cada uno conduce su tramo del scroll */
+      steps.forEach(function (step, i) {
+        var at = 0.2 + i * 0.2
+        tl.to(step, { autoAlpha: 1, y: 0, duration: 0.13, ease: MO.ease.out }, at)
+        if (nums[i]) tl.to(nums[i], { yPercent: 0, duration: 0.15, ease: MO.ease.out }, at + 0.015)
+      })
+
+      /* Barra de progreso: 1:1 con el scroll hasta que aterriza el paso 03 */
+      if (bar) tl.to(bar, { scaleX: 1, duration: 0.76, ease: MO.ease.none }, 0)
+
+      /* Respiro final antes de despinear */
+      tl.to({}, { duration: 0.18 })
+
+      return function () { how.classList.remove('gsap-on') }
+    })
+
+    /* ── Móvil: reveals escalonados, sin pin ── */
+    mm.add('(max-width: 920px)', function () {
+      how.classList.add('gsap-on')
+      gsap.set(eye,   { autoAlpha: 0, y: 24 })
+      gsap.set(wis,   { x: 0, xPercent: -102 })
+      gsap.set(steps, { autoAlpha: 0, y: 48 })
+
+      ScrollTrigger.create({
+        trigger: how, start: 'top 75%', once: true,
+        onEnter: function () {
+          gsap.to(eye, { autoAlpha: 1, y: 0, duration: MO.dur.s, ease: MO.ease.out })
+          gsap.to(wis, { xPercent: 0, duration: MO.dur.m, ease: MO.ease.inOut, stagger: 0.12 })
+        }
+      })
+      ScrollTrigger.batch(steps, {
+        start: 'top 85%', once: true,
+        onEnter: function (els) {
+          gsap.to(els, { autoAlpha: 1, y: 0, duration: MO.dur.m, ease: MO.ease.out, stagger: MO.stagger, overwrite: true })
+        }
+      })
+
+      return function () { how.classList.remove('gsap-on') }
+    })
+  }
+  howPinned()
+
   /* API para las fases 2-5 y para depurar desde consola */
   window.ELMotion = {
     ready: true,
