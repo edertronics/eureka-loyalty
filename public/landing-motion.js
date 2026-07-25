@@ -145,6 +145,8 @@
       }
 
       if (mark)  tl.to(mark,  { autoAlpha: 1, scale: 1, duration: MO.dur.l, ease: MO.ease.hero }, 0.45)
+      var card3d = document.getElementById('elCard')
+      if (card3d) tl.from(card3d, { rotationY: -26, rotationX: 10, y: 44, duration: 1.6, ease: MO.ease.hero }, 0.5)
       if (sub)   tl.to(sub,   { autoAlpha: 1, y: 0, duration: MO.dur.m }, 0.75)
       if (btns.length) tl.to(btns, { autoAlpha: 1, y: 0, duration: MO.dur.m, stagger: 0.08 }, 0.9)
       if (trust) tl.to(trust, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 1.15)
@@ -157,6 +159,85 @@
   var heroTl = null
   var heroPlayRequested = false
   function playHero () { if (heroTl) heroTl.play(); else heroPlayRequested = true }
+
+  /* ══════════════════════════════════════════════════════════════
+     FASE 4c — La Tarjeta Viva (protagonista del hero)
+     Tarjeta de lealtad 3D construida en DOM: banner del brand,
+     sellos (6/10), QR. Flota en loop, se inclina siguiendo el
+     mouse (quickTo a 60fps) y recibe un barrido de luz periódico
+     como tarjeta física premium. Reemplaza al isotipo estático;
+     sin JS o con reduced-motion el isotipo original permanece.
+     ══════════════════════════════════════════════════════════════ */
+  function buildCard () {
+    var heroRight = document.querySelector('.hero-right')
+    var hero = document.querySelector('.hero')
+    if (!heroRight || !hero) return
+
+    var oldMark = heroRight.querySelector('.hero-mark-wrap')
+    if (oldMark) oldMark.style.display = 'none'
+
+    var check = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
+    var stamps = ''
+    for (var i = 0; i < 10; i++) {
+      stamps += i < 6
+        ? '<div class="el-stamp on">' + check + '</div>'
+        : '<div class="el-stamp off"></div>'
+    }
+    var qr =
+      '<svg viewBox="0 0 21 21" fill="#063f3a">' +
+      '<rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="#fff"/>' +
+      '<rect x="14" y="0" width="7" height="7"/><rect x="16" y="2" width="3" height="3" fill="#fff"/>' +
+      '<rect x="0" y="14" width="7" height="7"/><rect x="2" y="16" width="3" height="3" fill="#fff"/>' +
+      '<rect x="9" y="1" width="2" height="2"/><rect x="9" y="5" width="2" height="2"/>' +
+      '<rect x="1" y="9" width="2" height="2"/><rect x="5" y="10" width="2" height="2"/>' +
+      '<rect x="9" y="9" width="3" height="3"/><rect x="14" y="9" width="2" height="2"/>' +
+      '<rect x="18" y="10" width="2" height="2"/><rect x="9" y="14" width="2" height="2"/>' +
+      '<rect x="13" y="14" width="3" height="2"/><rect x="17" y="15" width="2" height="2"/>' +
+      '<rect x="9" y="18" width="3" height="2"/><rect x="15" y="18" width="2" height="2"/>' +
+      '</svg>'
+
+    var stage = document.createElement('div')
+    stage.className = 'el-card-stage'
+    stage.innerHTML =
+      '<div class="el-card-float"><div class="el-card" id="elCard"><div class="el-card-face">' +
+      '<div class="el-card-banner"><img src="img/logo-mark.png" alt=""><span>Easy Loyalty</span></div>' +
+      '<div class="el-card-body">' +
+      '<div class="el-card-label">Tus sellos</div>' +
+      '<div class="el-stamps">' + stamps + '</div>' +
+      '<div class="el-card-foot">' +
+      '<div class="el-card-count"><b>6</b>/10<small>Sellos</small></div>' +
+      '<div class="el-qr">' + qr + '</div>' +
+      '</div></div>' +
+      '<div class="el-card-glare"></div>' +
+      '</div></div></div>'
+    heroRight.appendChild(stage)
+
+    var float = stage.querySelector('.el-card-float')
+    var card  = stage.querySelector('.el-card')
+    var glare = stage.querySelector('.el-card-glare')
+
+    /* Flotación idle */
+    gsap.to(float, { y: -12, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 })
+
+    /* Barrido de luz periódico */
+    gsap.fromTo(glare, { xPercent: -130 }, {
+      xPercent: 260, duration: 2.4, ease: 'power2.inOut',
+      repeat: -1, repeatDelay: 3.8, delay: 2.2
+    })
+
+    /* Tilt 3D siguiendo el mouse (60fps via quickTo) */
+    var toRX = gsap.quickTo(card, 'rotationX', { duration: 0.7, ease: 'power3.out' })
+    var toRY = gsap.quickTo(card, 'rotationY', { duration: 0.7, ease: 'power3.out' })
+    hero.addEventListener('mousemove', function (e) {
+      var r = hero.getBoundingClientRect()
+      var nx = (e.clientX - r.left) / r.width - 0.5
+      var ny = (e.clientY - r.top) / r.height - 0.5
+      toRY(nx * 16)
+      toRX(ny * -11)
+    }, { passive: true })
+    hero.addEventListener('mouseleave', function () { toRX(0); toRY(0) })
+  }
+  buildCard()
   heroIntro()
 
   /* ══════════════════════════════════════════════════════════════
