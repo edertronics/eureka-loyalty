@@ -106,10 +106,14 @@
     var navEl    = document.getElementById('nav')
 
     /* Estados iniciales ocultos ANTES de apagar el CSS viejo — sin flash */
+    var lockMark = hero.querySelector('.hero-logo .lk-mark')
+    var h1       = hero.querySelector('.hero-h1')
     var textbits = [tag, sub, trust].filter(Boolean)
     gsap.set(textbits, { autoAlpha: 0, y: MO.rise * 0.75 })
     gsap.set(btns,     { autoAlpha: 0, y: MO.rise * 0.75 })
     if (wordmark) gsap.set(wordmark, { autoAlpha: 0 })
+    if (h1)       gsap.set(h1, { autoAlpha: 0 })
+    if (lockMark) gsap.set(lockMark, { autoAlpha: 0, scale: 0.72, transformOrigin: '50% 50%' })
     if (mark)     gsap.set(mark, { autoAlpha: 0, scale: 0.94, transformOrigin: '50% 50%' })
     gsap.set(vls,  { scaleY: 0, transformOrigin: '50% 0%' })
     gsap.set(hhls, { scaleX: 0, transformOrigin: '0% 50%' })
@@ -130,18 +134,32 @@
 
       if (tag) tl.to(tag, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 0.15)
 
-      if (wordmark && typeof SplitText !== 'undefined') {
+      /* el lockup entra primero, como firma: isotipo y wordmark juntos */
+      if (lockMark) tl.to(lockMark, { autoAlpha: 1, scale: 1, duration: MO.dur.m, ease: MO.ease.hero }, 0.12)
+      if (wordmark) tl.to(wordmark, { autoAlpha: 1, duration: MO.dur.s }, 0.18)
+
+      /* La entrada letra por letra se reserva para el TITULAR, que es
+         el mensaje. Antes vestía al wordmark — mucha coreografía para
+         decir el nombre de la marca. */
+      if (h1 && typeof SplitText !== 'undefined') {
         /* words+chars: las palabras conservan sus espacios al hacer wrap */
-        var split = SplitText.create(wordmark, { type: 'words,chars', mask: 'chars' })
-        gsap.set(wordmark, { autoAlpha: 1 })
+        var split = SplitText.create(h1, { type: 'words,chars', mask: 'chars' })
+        gsap.set(h1, { autoAlpha: 1 })
         tl.from(split.chars, {
           yPercent: 120,
           duration: MO.dur.m,
           ease: MO.ease.hero,
-          stagger: 0.03
+          stagger: 0.02,
+          /* La máscara de cada carácter mide el ANCHO DE AVANCE del
+             glifo, pero la tinta se sale de ahí: la "o" por su
+             curvatura y la "y" por la diagonal del descendente. Si
+             la máscara sobrevive a la animación, deja esas letras
+             recortadas para siempre. Al terminar se deshace el split
+             y el titular vuelve a ser texto normal, sin recortes. */
+          onComplete: function () { split.revert() }
         }, 0.3)
-      } else if (wordmark) {
-        tl.to(wordmark, { autoAlpha: 1, y: 0, duration: MO.dur.m, ease: MO.ease.hero }, 0.3)
+      } else if (h1) {
+        tl.to(h1, { autoAlpha: 1, y: 0, duration: MO.dur.m, ease: MO.ease.hero }, 0.3)
       }
 
       if (mark)  tl.to(mark,  { autoAlpha: 1, scale: 1, duration: MO.dur.l, ease: MO.ease.hero }, 0.45)
@@ -184,7 +202,7 @@
         : '<div class="el-stamp off"></div>'
     }
     var qr =
-      '<svg viewBox="0 0 21 21" fill="#063f3a">' +
+      '<svg viewBox="0 0 21 21" fill="#10214F">' +
       '<rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="#fff"/>' +
       '<rect x="14" y="0" width="7" height="7"/><rect x="16" y="2" width="3" height="3" fill="#fff"/>' +
       '<rect x="0" y="14" width="7" height="7"/><rect x="2" y="16" width="3" height="3" fill="#fff"/>' +
@@ -291,27 +309,123 @@
      derivando en loops lentos re-aleatorizados (repeatRefresh) —
      el hero respira. Grano fílmico fijo sobre toda la página.
      ══════════════════════════════════════════════════════════════ */
-  function livingBackground () {
-    var hero = document.querySelector('.hero')
-    if (hero) {
-      var wrap = document.createElement('div')
-      wrap.className = 'el-aurora'
-      wrap.setAttribute('aria-hidden', 'true')
-      wrap.innerHTML = '<div class="el-blob b1"></div><div class="el-blob b2"></div><div class="el-blob b3"></div>'
-      hero.insertBefore(wrap, hero.firstChild)
-      wrap.querySelectorAll('.el-blob').forEach(function (b) {
-        gsap.to(b, {
-          xPercent: 'random(-20, 20)',
-          yPercent: 'random(-16, 16)',
-          scale: 'random(0.85, 1.2)',
-          duration: 'random(14, 24)',
-          ease: 'sine.inOut',
-          repeat: -1,
-          yoyo: true,
-          repeatRefresh: true
-        })
-      })
+  /* Manchas de color que orbitan el fondo, para siempre.
+     Cada mancha cuelga de un orbitador (punto sin tamaño) que gira
+     360° sin fin: al estar la mancha desplazada del centro por --r,
+     describe una órbita real alrededor de ese punto. Periodos y
+     sentidos distintos por mancha → el conjunto nunca se ve repetir.
+     Rendimiento: el blur es fijo y solo se animan transforms, así
+     el compositor reutiliza la textura desenfocada. */
+  /* Tres ejes a la vez, porque la sensación de profundidad no sale
+     de la velocidad sola:
+       · r  = radio de órbita → el viaje por el espacio (~150-200 px/s)
+       · sc = escala 0.45↔1.8 → acercarse y alejarse
+       · op = opacidad         → refuerza esa lejanía
+     Los periodos de órbita, escala y opacidad son distintos entre sí
+     y entre manchas, así que las trayectorias nunca se sincronizan y
+     las manchas se cruzan y se tapan unas a otras. El blur queda fijo
+     por mancha (animarlo obliga a re-rasterizar y hunde los FPS); al
+     escalar una textura ya desenfocada el desenfoque crece con ella,
+     que es justo la pista visual de "esto está más cerca". */
+  var AURORA = [
+    { sel: '.hero', blobs: [
+      { c: 'rgba(0,200,150,.85)',   w: '42vw', x: '30%', y: '20%', r: '28vw', t: 15, d:  1, bl: '80px' },
+      { c: 'rgba(126,155,242,.95)', w: '44vw', x: '74%', y: '14%', r: '31vw', t: 19, d: -1, bl: '92px' },
+      { c: 'rgba(185,163,236,.92)', w: '40vw', x: '58%', y: '58%', r: '26vw', t: 13, d:  1, bl: '74px' },
+      { c: 'rgba(240,175,198,.88)', w: '42vw', x: '40%', y: '80%', r: '29vw', t: 17, d: -1, bl: '86px' },
+      { c: 'rgba(248,205,163,.85)', w: '38vw', x: '14%', y: '72%', r: '24vw', t: 12, d:  1, bl: '70px' },
+      { c: 'rgba(48,76,226,.90)',   w: '42vw', x: '88%', y: '60%', r: '27vw', t: 21, d: -1, bl: '98px' }
+    ]},
+    { sel: '.cprev', blobs: [
+      { c: 'rgba(0,200,150,.62)',   w: '40vw', x: '26%', y: '26%', r: '26vw', t: 16, d: -1, bl: '80px' },
+      { c: 'rgba(58,88,232,.72)',   w: '38vw', x: '86%', y: '18%', r: '23vw', t: 13, d:  1, bl: '74px' },
+      { c: 'rgba(240,175,198,.88)', w: '42vw', x: '68%', y: '76%', r: '29vw', t: 18, d: -1, bl: '88px' },
+      { c: 'rgba(248,205,163,.88)', w: '36vw', x: '12%', y: '84%', r: '22vw', t: 14, d:  1, bl: '70px' },
+      { c: 'rgba(185,163,236,.78)', w: '40vw', x: '48%', y: '48%', r: '31vw', t: 20, d:  1, bl: '84px' }
+    ]},
+    { sel: '.cfinal', blobs: [
+      { c: 'rgba(58,88,232,.85)',   w: '46vw', x: '50%', y: '2%',   r: '28vw', t: 17, d:  1, bl: '96px' },
+      { c: 'rgba(0,200,150,.60)',   w: '38vw', x: '22%', y: '96%',  r: '25vw', t: 13, d: -1, bl: '80px' },
+      { c: 'rgba(240,175,198,.52)', w: '40vw', x: '78%', y: '92%',  r: '27vw', t: 19, d:  1, bl: '88px' }
+    ]},
+    { sel: '.how', blobs: [
+      { c: 'rgba(58,88,232,.62)',   w: '42vw', x: '78%', y: '26%', r: '28vw', t: 20, d: -1, bl: '100px' },
+      { c: 'rgba(0,200,150,.38)',   w: '38vw', x: '18%', y: '78%', r: '25vw', t: 16, d:  1, bl: '88px' }
+    ]},
+    { sel: '.pricing', blobs: [
+      { c: 'rgba(185,163,236,.50)', w: '40vw', x: '20%', y: '22%', r: '26vw', t: 18, d:  1, bl: '96px' },
+      { c: 'rgba(58,88,232,.62)',   w: '42vw', x: '82%', y: '74%', r: '29vw', t: 15, d: -1, bl: '100px' }
+    ]}
+  ]
+
+  function auroraField (cfg) {
+    var host = document.querySelector(cfg.sel)
+    if (!host) return
+
+    var field = document.createElement('div')
+    field.className = 'af'
+    field.setAttribute('aria-hidden', 'true')
+    field.innerHTML = cfg.blobs.map(function (b) {
+      return '<div class="af-orb" style="left:' + b.x + ';top:' + b.y + '">' +
+             '<div class="af-b" style="--w:' + b.w + ';--c:' + b.c +
+             ';--r:' + b.r + ';--bl:' + (b.bl || '80px') + '"></div></div>'
+    }).join('')
+    host.insertBefore(field, host.firstChild)
+    host.classList.add('af-on')
+
+    var orbs = field.querySelectorAll('.af-orb')
+    var tweens = []
+    cfg.blobs.forEach(function (b, i) {
+      var orb = orbs[i]
+      var blob = orb.firstChild
+
+      /* fase inicial al azar: si no, todas arrancan alineadas */
+      gsap.set(orb, { rotation: Math.random() * 360 })
+      gsap.set(blob, { scale: 0.65 + Math.random() * 0.95, opacity: 0.7 + Math.random() * 0.3 })
+
+      /* 1. viaje: la órbita alrededor de su punto */
+      tweens.push(gsap.to(orb, {
+        rotation: b.d > 0 ? '+=360' : '-=360',
+        duration: b.t, ease: MO.ease.none, repeat: -1
+      }))
+
+      /* 2. deriva del centro de órbita: sin esto el recorrido sería
+            un carrusel fijo y se leería el patrón a los pocos giros */
+      tweens.push(gsap.to(orb, {
+        x: 'random(-140, 140)', y: 'random(-110, 110)',
+        duration: 'random(11, 19)', ease: 'sine.inOut',
+        repeat: -1, yoyo: true, repeatRefresh: true
+      }))
+
+      /* 3. profundidad: acercarse/alejarse. Periodos distintos a los
+            de la órbita para que nunca coincidan los dos ciclos */
+      tweens.push(gsap.to(blob, {
+        scale: 'random(0.5, 1.75)',
+        duration: 'random(7, 13)', ease: 'sine.inOut',
+        repeat: -1, yoyo: true, repeatRefresh: true
+      }))
+      tweens.push(gsap.to(blob, {
+        opacity: 'random(0.58, 1)',
+        duration: 'random(9, 16)', ease: 'sine.inOut',
+        repeat: -1, yoyo: true, repeatRefresh: true
+      }))
+    })
+
+    /* Un fondo que no se ve no merece frames. onRefresh además del
+       toggle: si solo se escuchara el toggle, un campo que arranca
+       fuera de pantalla podría quedarse pausado para siempre. */
+    function setRunning (on) {
+      tweens.forEach(function (t) { on ? t.play() : t.pause() })
     }
+    ScrollTrigger.create({
+      trigger: host, start: 'top bottom', end: 'bottom top',
+      onToggle:  function (self) { setRunning(self.isActive) },
+      onRefresh: function (self) { setRunning(self.isActive) }
+    })
+  }
+
+  function livingBackground () {
+    AURORA.forEach(auroraField)
     var grain = document.createElement('div')
     grain.className = 'el-grain'
     grain.setAttribute('aria-hidden', 'true')
@@ -338,7 +452,14 @@
 
     var mm = gsap.matchMedia()
 
-    /* ── Desktop: pin + scrub ── */
+    /* ── Desktop: pin + scrub, pero comprimido ──
+       El efecto (cada paso conducido por el scroll) se conserva; lo
+       que estaba mal era la escala: +=220% de ventana obligaba a
+       recorrer casi 2000px para ver salir tres textos. Ahora el
+       recorrido es +=65% (~585px, medio golpe de rueda) y los pasos
+       arrancan antes y más juntos dentro de él, así que los tres
+       aterrizan en el primer 60% del tramo y el resto es el respiro
+       antes de soltar el pin. */
     mm.add('(min-width: 921px)', function () {
       how.classList.add('gsap-on')
 
@@ -354,29 +475,29 @@
         scrollTrigger: {
           trigger: how,
           start: 'center center',
-          end: '+=220%',
+          end: '+=65%',
           pin: true,
-          scrub: 0.8,
+          scrub: 0.45,
           anticipatePin: 1
         }
       })
 
-      /* Título en barrido (0 → 12%) */
-      tl.to(eye, { autoAlpha: 1, y: 0, duration: 0.06, ease: MO.ease.out }, 0)
-        .to(wis, { xPercent: 0, duration: 0.1, ease: MO.ease.inOut, stagger: 0.035 }, 0.02)
+      /* Título: entra casi de inmediato para no gastar recorrido */
+      tl.to(eye, { autoAlpha: 1, y: 0, duration: 0.05, ease: MO.ease.out }, 0)
+        .to(wis, { xPercent: 0, duration: 0.09, ease: MO.ease.inOut, stagger: 0.025 }, 0.01)
 
-      /* Pasos: cada uno conduce su tramo del scroll */
+      /* Pasos: 0.13 de separación en vez de 0.2, y arrancan en 0.14
+         en vez de 0.2 — los tres quedan puestos en 0.58 */
       steps.forEach(function (step, i) {
-        var at = 0.2 + i * 0.2
-        tl.to(step, { autoAlpha: 1, y: 0, duration: 0.13, ease: MO.ease.out }, at)
-        if (nums[i]) tl.to(nums[i], { yPercent: 0, duration: 0.15, ease: MO.ease.out }, at + 0.015)
+        var at = 0.14 + i * 0.13
+        tl.to(step, { autoAlpha: 1, y: 0, duration: 0.16, ease: MO.ease.out }, at)
+        if (nums[i]) tl.to(nums[i], { yPercent: 0, duration: 0.18, ease: MO.ease.out }, at + 0.01)
       })
 
-      /* Barra de progreso: 1:1 con el scroll hasta que aterriza el paso 03 */
-      if (bar) tl.to(bar, { scaleX: 1, duration: 0.76, ease: MO.ease.none }, 0)
+      if (bar) tl.to(bar, { scaleX: 1, duration: 0.58, ease: MO.ease.none }, 0)
 
-      /* Respiro final antes de despinear */
-      tl.to({}, { duration: 0.18 })
+      /* Respiro corto antes de despinear */
+      tl.to({}, { duration: 0.12 })
 
       return function () { how.classList.remove('gsap-on') }
     })
@@ -431,14 +552,14 @@
     if (!card || !stampsW || !prog || !reward) return
 
     var TOTAL = 9
-    var check = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#063f3a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+    var check = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10214F" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
     var html = ''
     for (var i = 0; i < TOTAL; i++) html += '<div class="cs e">' + check + '</div>'
     stampsW.innerHTML = html
     var stamps = stampsW.querySelectorAll('.cs')
 
     /* Capa de partículas (fuera del overflow:hidden de la tarjeta) */
-    var burstColors = ['#00C896', '#2FD4E6', '#F59E0B', '#F0654E', '#ffffff']
+    var burstColors = ['#00C896', '#7E9BF2', '#B9A3EC', '#F0AFC6', '#F8CDA3']
     var partbox = null
     if (cardCell) {
       cardCell.style.position = 'relative'
