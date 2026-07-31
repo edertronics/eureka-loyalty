@@ -124,7 +124,17 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 ## Modelo de negocio (decisiones tomadas)
 - **Trial:** 3 meses gratis
-- **Cobro:** Stripe (pendiente) — pedir tarjeta DESPUÉS de personalizar la tarjeta, cobro automático al vencer
+- **Precios publicados en la landing (2026-07-31):** $35 / $79 / $199 USD
+  al mes. Se fijaron por debajo de loyalzclub.com ($39/$89/$249). Son una
+  propuesta del equipo, no una decisión validada contra márgenes.
+- **Cobro:** Stripe — **NO EXISTE NINGUNA LÍNEA DE CÓDIGO todavía.** No hay
+  SDK, ni ruta de checkout, ni estado de suscripción en `businesses`, ni
+  webhooks. La landing ya anuncia precios y trial: ese hueco es la ruta
+  crítica del producto.
+- **Restricción que impone la landing:** promete "3 meses gratis, sin
+  tarjeta de crédito". Eso descarta el trial nativo de Stripe con tarjeta
+  por adelantado y obliga a un diseño distinto (cobrar al final del trial
+  pidiendo el método de pago entonces).
 - **Flujo onboarding ideal:** Registro → Visual Card Builder → Pósters/QR → Dashboard (después: Stripe)
 
 ## Onboarding (registro/page.tsx) — 3 pasos
