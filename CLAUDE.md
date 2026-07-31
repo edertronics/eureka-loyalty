@@ -59,10 +59,10 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 
 | Archivo | Descripción |
 |---|---|
-| `public/eureka-qr.html` | ⚠️ **Obsoleto** — mockup viejo, no es el QR real que se entregó al cliente. Sigue siendo servido en `/eureka-qr.html` porque vive en `public/`, pero no se usa. |
-| `public/eureka-manual.html` | ⚠️ **Obsoleto y con info incorrecta** — dice "9 sellos" (la meta real es 10 desde 2026-07-18). No es el manual real, sigue siendo servido en `/eureka-manual.html` pero no se usa. |
 | `public/mariabonita-qr.html` | Tarjeta imprimible María Bonita (2 programas) |
-| `public/landing-page.html` | Landing page de Easy Loyalty |
+| `public/landing-page.html` | Landing page de Easy Loyalty (ver sección abajo) |
+
+*(2026-07-31: se borraron `eureka-qr.html` y `eureka-manual.html`. Llevaban meses marcados como obsoletos pero seguían sirviéndose públicamente, y el manual decía "9 sellos" cuando la meta real de Eureka es 6 — información equivocada de un cliente vivo, accesible desde internet. Están en el historial de git si hicieran falta.)*
 
 **Manual y QR reales de Eureka Burgers no viven en `public/`** — son documentos generados aparte (Chrome headless → PDF) y entregados directo al cliente:
 - Fuente editable del manual: `eureka-burgers-loyalty/manual-fuente-html/manual_final.html` (fuera del repo de código, en la carpeta del proyecto)
@@ -189,3 +189,55 @@ npm run dev    # Desarrollo local (localhost:3000)
 npm run build  # Build de producción
 npm run lint   # ESLint
 ```
+
+---
+
+## Landing page (`public/landing-page.html`)
+
+Un solo archivo: markup, todo el CSS en línea y el JS de apoyo. El
+movimiento vive aparte en `public/landing-motion.js` (GSAP + Lenis).
+Para cambios del sitio público **siempre se edita este archivo**, nunca
+nada de `src/`.
+
+**Sistema visual "Aurora"** (2026-07-31, a partir de una referencia
+gráfica del usuario): tinta navy `#10214F`, azul eléctrico `#2B4BE0`
+como único acento tipográfico, papel cálido `#F1F0EC`, y todo el color
+concentrado en un degradado iridiscente. Tipografía por contraste de
+peso: display black ultra-apretado / labels Light con tracking amplio /
+micro-labels bold en azul.
+
+- **Fondo vivo:** manchas desenfocadas orbitan en cinco secciones
+  (`AURORA` en landing-motion.js). El blur es fijo y solo se animan
+  transforms — animar el blur obliga a re-rasterizar cada frame.
+  ScrollTrigger las pausa fuera de pantalla. El radio de órbita es el
+  parámetro que decide si el efecto se percibe: por debajo de ~15vw el
+  movimiento es invisible.
+- **Logotipo:** el isotipo va SIEMPRE a la izquierda del wordmark, a la
+  altura de mayúscula real de HK Grotesk (`.697em`). Se pinta con
+  máscara CSS sobre `currentColor` desde `img/logo-mark-tight.png`, no
+  como `<img>`, para tomar el color de cada contexto.
+- **Recortes de tinta:** los envoltorios de barrido usan `clip-path`
+  con insets negativos, no `overflow:hidden`. Con `line-height:.98` la
+  caja de línea queda más baja que la tinta y cortaba descendentes. Y
+  las máscaras de SplitText se revierten al terminar la animación, si
+  no recortan la "o" y la "y" para siempre.
+
+**Precios publicados:** $35 / $79 / $199 USD al mes, más 3 meses gratis
+sin pedir tarjeta. Se fijaron por debajo de loyalzclub.com ($39/$89/$249)
+cruzando barreras psicológicas. ⚠️ **La página ya los anuncia pero no
+existe ningún sistema de cobro** — ver "Modelo de negocio".
+
+**Reglas de contenido que no se rompen:**
+- Nada de testimonios ni cifras que no se puedan respaldar. En
+  2026-07-31 se retiraron tres testimonios inventados atribuidos a
+  personas con nombre (uno de ellos en Eureka Burgers, cliente real) y
+  las métricas "+40% retención" y "2× más visitas".
+- No se anuncian funciones que no estén en el código. Se quitaron "API
+  pública" y "Automatizaciones con IA" del plan alto por no existir.
+- El push es **solo transaccional** (al sellar, al canjear y los
+  recordatorios del cron). No hay campañas ni segmentación: no se
+  redacta como si las hubiera.
+- Las fotos de las escenas son generadas con IA e ilustrativas. Los
+  pies dicen el giro ("Cafetería", "Barbería"), nunca el nombre de un
+  negocio real, para no aparentar que son fotos de un cliente.
+- Falta un aviso de privacidad real: el enlace del pie sigue muerto.

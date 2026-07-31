@@ -45,3 +45,6 @@ certificate.pem
 key.pem
 wwdr.pem
 wwdr.der
+
+# archivos temporales de previsualización (se sirven desde public/)
+public/_*.html

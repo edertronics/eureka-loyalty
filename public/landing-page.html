@@ -54,14 +54,8 @@
     .elp-tag{font-family:var(--f);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(217,255,243,.4);}
 
     /* ── Fondo vivo: aurora + grano ── */
-    .el-aurora{position:absolute;inset:0;pointer-events:none;z-index:0;}
-    .el-blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform;}
-    .el-blob.b1{width:55vw;height:55vw;left:-15vw;top:-18vw;background:radial-gradient(circle,rgba(16,33,79,.55) 0%,rgba(16,33,79,0) 65%);}
-    .el-blob.b2{width:48vw;height:48vw;right:-12vw;top:8vh;background:radial-gradient(circle,rgba(217,255,243,.6) 0%,rgba(217,255,243,0) 62%);}
-    .el-blob.b3{width:44vw;height:44vw;left:22vw;bottom:-20vw;background:radial-gradient(circle,rgba(0,255,192,.5) 0%,rgba(0,255,192,0) 60%);}
     .hero .wrap{position:relative;z-index:2;}
     .el-grain{position:fixed;inset:-100%;z-index:600;pointer-events:none;opacity:.055;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
-    @media(max-width:920px){.el-blob{filter:blur(50px);}.el-blob.b3{display:none;}}
 
     /* ── Tarjeta 3D protagonista (inyectada por JS con motion activo) ── */
     .el-card-stage{position:relative;width:min(400px,92%);margin:0 auto;perspective:1400px;}
@@ -95,16 +89,12 @@
     @media(max-width:920px){.el-card-stage{width:min(320px,84%);}}
     /* Barra de progreso de la sección pinned "Cómo funciona" */
     .how-progress{position:absolute;left:0;bottom:0;width:100%;height:3px;background:var(--g);transform:scaleX(0);transform-origin:left center;z-index:2;}
-    .rv-l{opacity:0;transform:translateX(-40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
-    .rv-l.in{opacity:1;transform:none;}
     .d1{transition-delay:.1s;} .d2{transition-delay:.2s;} .d3{transition-delay:.3s;}
     .d4{transition-delay:.4s;} .d5{transition-delay:.5s;} .d6{transition-delay:.6s;}
 
     /* Word reveal — clip from bottom */
-    .word-row{overflow:hidden;display:block;}
     .word{display:inline-block;transform:translateY(110%);opacity:0;
       transition:transform .75s cubic-bezier(.16,1,.3,1),opacity .75s cubic-bezier(.16,1,.3,1);}
-    .word.in{transform:translateY(0);opacity:1;}
 
     /* ── WIPE from left (Enerblock style) ── */
     /* .wl = line wrapper (clips), .wi = inner text that slides */
@@ -290,26 +280,6 @@
     .hero-trust span::before{content:'✓';}
 
     /* Phone mockup */
-    .phone{
-      width:270px;height:490px;border-radius:42px;background:var(--p);
-      box-shadow:0 48px 96px rgba(16,33,79,.4),0 0 0 1.5px rgba(16,33,79,.2);
-      padding:14px 12px;margin:0 auto;position:relative;
-    }
-    .phone-notch{width:76px;height:26px;background:var(--p);border-radius:0 0 16px 16px;margin:0 auto 10px;}
-    .phone-screen{background:var(--w);border-radius:30px;height:calc(100% - 52px);overflow:hidden;display:flex;flex-direction:column;}
-    .ps-top{background:var(--g);padding:16px;flex:1;}
-    .ps-brand{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p);opacity:.5;margin-bottom:3px;}
-    .ps-name{font-size:20px;font-weight:900;color:var(--p);margin-bottom:14px;}
-    .ps-stamps{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
-    .st{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-    .st.f{background:var(--p);}
-    .st.e{background:rgba(16,33,79,.15);border:1.5px solid rgba(16,33,79,.25);}
-    .ps-prog{font-size:9px;font-weight:600;color:var(--p);opacity:.6;}
-    .ps-qr{background:#fff;padding:10px 12px;display:flex;align-items:center;gap:9px;}
-    .ps-qrbox{width:48px;height:48px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .ps-qrlbl{font-size:9px;font-weight:700;color:var(--p);margin-bottom:2px;}
-    .ps-qrsub{font-size:8px;color:var(--p);opacity:.5;}
-    .ps-wallet{background:#000;color:#fff;margin:8px 10px;border-radius:8px;padding:7px 10px;font-size:8px;font-weight:600;display:flex;align-items:center;gap:5px;}
 
     /* ── PROOF ── */
     .proof{background:var(--w);padding:80px 0;overflow:hidden;}
@@ -431,20 +401,6 @@
     .pcta:hover{background:rgba(255,255,255,.16);transform:translateY(-1px);}
 
     /* ── TESTIMONIALS ── */
-    .testi{background:var(--m);padding:120px 0;}
-    .testi .eye{color:var(--p);opacity:.38;}
-    .testi h2{font-size:clamp(34px,4vw,54px);font-weight:800;color:var(--p);letter-spacing:-.022em;line-height:1.1;max-width:480px;margin-bottom:64px;}
-    .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-    .tc{background:#fff;border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(16,33,79,.06);position:relative;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s;}
-    .tc::after{content:'';position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--g);transition:width .45s cubic-bezier(.16,1,.3,1);}
-    .tc:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(16,33,79,.1);}
-    .tc:hover::after{width:100%;}
-    .tc-stars{color:var(--g);font-size:14px;letter-spacing:3px;margin-bottom:16px;}
-    .tc-text{font-size:14px;color:var(--p);opacity:.72;line-height:1.75;margin-bottom:24px;}
-    .tc-author{display:flex;align-items:center;gap:12px;}
-    .tc-av{width:38px;height:38px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:var(--p);flex-shrink:0;}
-    .tc-name{font-size:13px;font-weight:700;color:var(--p);}
-    .tc-biz{font-size:12px;color:var(--p);opacity:.42;}
 
     /* ── CTA FINAL ── */
     .cfinal{background:var(--g);padding:120px 0;text-align:center;position:relative;overflow:hidden;}
@@ -491,7 +447,6 @@
       .hero-ener,.hero-grid,.cprev-grid{grid-template-columns:1fr;}
       .hero-right{order:-1;}
       .hero-mark-wrap{width:min(320px,80%);}
-      .phone{order:-1;}
       .proof-stats{grid-template-columns:repeat(2,1fr);}
       .stat:nth-child(2){border-right:none;}
       .stat:nth-child(3){border-top:1px solid rgba(16,33,79,.1);}
@@ -500,7 +455,6 @@
       .step{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
       .feat-grid{grid-template-columns:repeat(2,1fr);}
       .price-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto;}
-      .testi-grid{grid-template-columns:1fr;}
       .foot-top{grid-template-columns:1fr 1fr;}
     }
     @media(max-width:600px){
@@ -648,7 +602,6 @@
     .how .rule{background:var(--g);margin:-56px 0 34px;}
     .feat .rule{margin:-48px 0 30px;}
     .cprev .rule{margin:4px 0 26px;}
-    .testi .rule{margin:-40px 0 26px;}
     .pricing .rule{background:var(--g);margin:-52px 0 36px;}
 
     /* Micro-label "REQUISITOS" */
@@ -680,7 +633,7 @@
        los paddings sí se suman. clip-path no toca el layout.
        En .wl-down el barrido es vertical y el techo debe seguir
        recortando, así que ahí solo se abre por abajo. */
-    .wl,.eye-wl,.word-row{overflow:visible;clip-path:inset(-.22em 0 -.38em 0);}
+    .wl,.eye-wl{overflow:visible;clip-path:inset(-.22em 0 -.38em 0);}
     .wl-down{overflow:visible;clip-path:inset(0 0 -.38em 0);}
     .how h2{max-width:700px;}
     .feat h2{max-width:780px;}
@@ -892,16 +845,6 @@
     }
 
     /* ── TESTIMONIOS: crema cálida ────────────────────────────── */
-    .testi{background:var(--cream);}
-    .testi h2{color:var(--p);}
-    .tc{border-radius:0;box-shadow:0 2px 20px rgba(16,33,79,.05);}
-    .tc::after{background:var(--blue);}
-    .tc-stars{color:var(--blue);}
-    .tc-text{opacity:1;color:rgba(16,33,79,.72);font-weight:300;}
-    .tc-av{border-radius:0;background:var(--p);color:#fff;}
-    .testi-grid .tc:nth-child(2) .tc-av{background:var(--blue);}
-    .testi-grid .tc:nth-child(3) .tc-av{background:var(--g);color:var(--p);}
-    .tc-biz{opacity:1;color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
 
     /* ── Escena de sellos (cprev pinned) ──────────────────────── */
     .el-part{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:3;}
@@ -965,7 +908,7 @@
 <nav id="nav">
   <div class="wrap">
     <div class="nav-in">
-      <a href="#" class="nav-logo">
+      <a href="/" class="nav-logo" aria-label="Easy Loyalty — inicio">
         <span class="lk-mark lk-nav" aria-hidden="true"></span>
         <span class="nav-logo-text"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></span>
       </a>
@@ -1046,7 +989,6 @@
     </div>
   </div>
 </section>
-
 
 <!-- ══════════════ SOCIAL PROOF ══════════════ -->
 <section class="proof">
@@ -1434,7 +1376,7 @@
       </div>
     </div>
     <div class="foot-bot">
-      <p class="foot-copy">© 2025 Easy Loyalty · Hecho en México · <a href="#">Privacidad</a></p>
+      <p class="foot-copy">© 2026 Easy Loyalty · Hecho en México · <a href="#">Privacidad</a></p>
     </div>
   </div>
 </footer>
@@ -1466,7 +1408,7 @@ const animCursor = () => {
 animCursor()
 
 /* Cursor hover state */
-document.querySelectorAll('a,button,.fc,.step,.tc,.pc').forEach(el => {
+document.querySelectorAll('a,button,.fc,.step,.pc').forEach(el => {
   el.addEventListener('mouseenter', () => {
     cur.style.width = '6px'; cur.style.height = '6px'
     cur2.style.width = '60px'; cur2.style.height = '60px'
@@ -1497,7 +1439,7 @@ addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50),
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') })
 }, { threshold: 0.12 })
-document.querySelectorAll('.rv,.rv-l').forEach(el => obs.observe(el))
+document.querySelectorAll('.rv').forEach(el => obs.observe(el))
 
 /* ── Wipe-from-left: dispara todas las .wl de una sección al entrar ── */
 const wipeObs = new IntersectionObserver(entries => {
