@@ -26,15 +26,25 @@
     .wrap{max-width:1160px;margin:0 auto;padding:0 40px;}
 
     /* ── CUSTOM CURSOR ── */
+    /* El cursor se mueve con transform, NO con left/top. Con left/top el
+       navegador rehace el layout en cada movimiento del ratón —cientos
+       de veces por segundo con un mouse moderno— y eso es lo que hacía
+       que el puntero se sintiera pesado.
+       El centrado va dentro del propio transform para que siga
+       funcionando cuando el punto cambia de tamaño al pasar por un link.
+       Sin transición en transform: la suavidad la da el bucle de
+       animación, y una transición encima solo añadiría retraso. */
     #cur{
-      position:fixed;width:12px;height:12px;border-radius:50%;
-      background:var(--p);pointer-events:none;z-index:9999;
-      transform:translate(-50%,-50%);transition:transform .1s,width .3s,height .3s,background .3s;
+      position:fixed;left:0;top:0;width:12px;height:12px;border-radius:50%;
+      background:var(--p);pointer-events:none;z-index:9999;will-change:transform;
+      transform:translate3d(-200px,-200px,0) translate(-50%,-50%);
+      transition:width .3s,height .3s,background .3s;
     }
     #cur2{
-      position:fixed;width:40px;height:40px;border-radius:50%;
-      border:1.5px solid var(--p);pointer-events:none;z-index:9998;
-      transform:translate(-50%,-50%);transition:transform .08s linear,width .3s,height .3s,border-color .3s;
+      position:fixed;left:0;top:0;width:40px;height:40px;border-radius:50%;
+      border:1.5px solid var(--p);pointer-events:none;z-index:9998;will-change:transform;
+      transform:translate3d(-200px,-200px,0) translate(-50%,-50%);
+      transition:width .3s,height .3s,border-color .3s;
     }
     .cursor-on-dark #cur{ background:var(--g); }
     .cursor-on-dark #cur2{ border-color:var(--g); }
@@ -55,38 +65,164 @@
 
     /* ── Fondo vivo: aurora + grano ── */
     .hero .wrap{position:relative;z-index:2;}
-    .el-grain{position:fixed;inset:-100%;z-index:600;pointer-events:none;opacity:.055;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+    /* inset:0, no -100%. Estando fija no necesita sobresalir del
+       viewport, y con -100% era una capa de NUEVE pantallas que el
+       navegador tenía que fusionar sobre toda la página en cada cuadro. */
+    .el-grain{position:fixed;inset:0;z-index:600;pointer-events:none;opacity:.055;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
 
-    /* ── Tarjeta 3D protagonista (inyectada por JS con motion activo) ── */
-    .el-card-stage{position:relative;width:min(400px,92%);margin:0 auto;perspective:1400px;}
-    .el-card-float{transform-style:preserve-3d;will-change:transform;}
-    .el-card{position:relative;aspect-ratio:38/46;transform-style:preserve-3d;border-radius:26px;will-change:transform;}
-    .el-card-face{
-      position:absolute;inset:0;border-radius:26px;overflow:hidden;
-      background:linear-gradient(148deg,#0b544b 0%,#10214F 52%,#04302c 100%);
-      box-shadow:0 70px 100px -35px rgba(3,34,30,.6),inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,255,255,.04);
+    /* ── Dos teléfonos 3D del hero (inyectados por JS con motion activo) ──
+       Todo es DOM: marco, canto y pase giran juntos dentro del mismo
+       contexto preserve-3d, así la perspectiva se recalcula de verdad
+       en vez de deformar una imagen plana —que es justo lo que delata
+       a un mockup fotográfico cuando se mueve.
+
+       El grosor son seis placas con la misma silueta a distinta Z. Al
+       girar, las de atrás asoman por un costado y el aparato deja de
+       leerse como calcomanía. Van de oscuro a claro para imitar el
+       chaflán del titanio.
+
+       Las placas llevan clip-path (silueta squircle generada en JS):
+       clip-path es una "grouping property" y fuerza flat en los
+       DESCENDIENTES, no en el propio elemento, así que cada placa
+       sigue colocándose bien en el espacio 3D del padre. Por eso las
+       placas son hojas y .ph conserva el preserve-3d. */
+    /* El alto del escenario tiene que superar al del teléfono, si no
+       el de abajo-izquierda acaba MÁS ALTO que el de arriba-derecha y
+       se come el pase del de atrás. La diferencia entre ambos altos es
+       exactamente el desfase vertical entre los dos aparatos. */
+    .ph-stage{
+      position:relative;width:min(430px,100%);margin:0 auto;aspect-ratio:1/1.22;
+      perspective:1500px;perspective-origin:50% 42%;
     }
-    .el-card-banner{display:flex;align-items:center;gap:12px;padding:20px 24px;background:linear-gradient(120deg,#00C896,#00E0A4);}
-    .el-card-banner img{width:36px;height:36px;object-fit:contain;}
-    .el-card-banner span{font-weight:800;color:var(--p);font-size:17px;letter-spacing:-.02em;}
-    .el-card-body{padding:24px;display:flex;flex-direction:column;gap:16px;}
-    .el-card-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(217,255,243,.5);}
-    .el-stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;}
-    .el-stamp{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-    .el-stamp.on{background:var(--g);}
-    .el-stamp.on svg{width:45%;height:45%;stroke:var(--p);stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
-    .el-stamp.off{border:1.5px dashed rgba(255,255,255,.24);}
-    .el-card-foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px;}
-    .el-card-count{color:#fff;font-size:14px;font-weight:600;}
-    .el-card-count b{font-size:34px;font-weight:900;color:var(--g);letter-spacing:-.03em;line-height:1;}
-    .el-card-count small{display:block;font-size:10px;font-weight:600;color:rgba(217,255,243,.45);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
-    .el-qr{width:58px;height:58px;border-radius:10px;background:#fff;padding:6px;}
-    .el-qr svg{width:100%;height:100%;display:block;}
-    .el-card-glare{
-      position:absolute;inset:0;pointer-events:none;
-      background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.20) 47%,rgba(160,255,225,.13) 53%,transparent 65%);
+    .ph-float{position:absolute;width:51%;transform-style:preserve-3d;will-change:transform;}
+    .ph-a{left:0;bottom:0;z-index:2;}
+    .ph-b{right:0;top:0;z-index:1;}
+    /* Tres capas, una por tipo de movimiento, porque los tres corren a la
+       vez y GSAP no puede animar la misma propiedad desde dos sitios:
+         .ph-float → flotación en reposo + parallax del mouse + giro base
+         .ph-in    → la ENTRADA (caída desde el fondo)
+         .ph       → la inclinación que sigue al cursor
+       Si se mezclaran, la entrada pisaría la flotación y el teléfono
+       daría un tirón al aterrizar. */
+    .ph-in{position:relative;transform-style:preserve-3d;will-change:transform;}
+    .ph{position:relative;aspect-ratio:9/19.2;transform-style:preserve-3d;will-change:transform;}
+
+    /* Chispas del sello completado. Viven en .ph-float (que es el bloque
+       contenedor más cercano) y NO dentro de la pantalla, porque ahí el
+       overflow:hidden se las comería. */
+    .ph-burst{position:absolute;inset:0;pointer-events:none;z-index:6;}
+    .ph-spark{position:absolute;top:44%;left:50%;width:7px;height:7px;border-radius:50%;opacity:0;}
+
+    /* Halo del que se materializa el aparato al cargar la página. Lo
+       inyecta el JS, así que sin motor de movimiento no existe. */
+    .ph-halo{
+      position:absolute;inset:-16%;border-radius:50%;pointer-events:none;opacity:0;
+      background:radial-gradient(circle,rgba(255,255,255,.85) 0%,rgba(126,155,242,.5) 36%,
+                 rgba(185,163,236,.28) 55%,transparent 72%);
+      filter:blur(26px);
     }
-    @media(max-width:920px){.el-card-stage{width:min(320px,84%);}}
+
+    /* silueta compartida: sin JS quedan esquinas circulares, que es el
+       equivalente honesto (radio en % sobre un rectángulo alargado da
+       esquinas elípticas; el segundo valor las vuelve circulares) */
+    .ph-plate,.ph-face{position:absolute;inset:0;border-radius:13%/6.1%;}
+    .ph-plate{background:linear-gradient(145deg,#3c4048,#15171b 55%,#2a2d33);}
+    /* el canto: cuanto más al fondo, más oscuro */
+    .ph-p1{transform:translateZ(-2px);background:linear-gradient(145deg,#8b9099,#3a3d44 52%,#5c616b);}
+    .ph-p2{transform:translateZ(-4px);}
+    .ph-p3{transform:translateZ(-6px);background:linear-gradient(145deg,#2f333a,#101216 55%,#212429);}
+    .ph-p4{transform:translateZ(-8px);background:linear-gradient(145deg,#26292f,#0d0f12 55%,#1a1c21);}
+    .ph-p5{transform:translateZ(-10px);background:linear-gradient(145deg,#1d2025,#090a0d 55%,#131519);}
+    .ph-p6{transform:translateZ(-12px);background:#0a0b0e;}
+
+    /* cara frontal: marco metálico + pantalla */
+    .ph-face{
+      overflow:hidden;padding:1.6%;
+      background:linear-gradient(140deg,#9aa0aa 0%,#4a4e57 22%,#75797f 38%,#2c2f36 62%,#666b74 80%,#33363d 100%);
+      box-shadow:inset 0 0 0 .5px rgba(255,255,255,.28);
+    }
+    .ph-screen{
+      container-type:inline-size;
+      position:relative;width:100%;height:100%;border-radius:11.4%/5.6%;
+      overflow:hidden;background:#070b18;
+      display:flex;flex-direction:column;
+    }
+    .ph-island{
+      position:absolute;top:2.6cqw;left:50%;transform:translateX(-50%);
+      width:31cqw;height:9cqw;border-radius:5cqw;background:#000;z-index:4;
+    }
+    /* reflejo fijo del cristal */
+    .ph-glass{
+      position:absolute;inset:0;z-index:5;pointer-events:none;
+      background:linear-gradient(118deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 26%,
+                 transparent 44%,transparent 64%,rgba(255,255,255,.05) 88%,rgba(255,255,255,.11) 100%);
+    }
+    /* brillo especular que JS desplaza según el ángulo de giro */
+    .ph-spec{
+      position:absolute;inset:-40% -120%;z-index:6;pointer-events:none;
+      background:linear-gradient(102deg,transparent 38%,rgba(255,255,255,.22) 48%,
+                 rgba(214,232,255,.10) 54%,transparent 64%);
+    }
+    /* La sombra va detrás por Z, no por z-index: dentro de un contexto
+       preserve-3d el orden lo decide la profundidad, y un z-index aquí
+       no haría nada. */
+    .ph-shadow{
+      position:absolute;left:6%;right:6%;bottom:-9%;height:16%;
+      transform:translateZ(-40px);
+      border-radius:50%;background:rgba(10,21,51,.44);filter:blur(26px);
+    }
+
+    /* ── el pase dentro de la pantalla ──────────────────────────── */
+    .ph-status{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:4.4cqw 7cqw 0;font-size:4.4cqw;font-weight:600;color:#fff;
+      font-variant-numeric:tabular-nums;
+    }
+    .ph-status i{display:block;width:4.6cqw;height:4.6cqw;opacity:.9;}
+    .ph-status i.b{width:7.6cqw;}   /* la pila es más ancha que su alto */
+    .ph-status i svg{width:100%;height:100%;display:block;fill:#fff;}
+    .ph-sig{display:flex;align-items:center;gap:1.6cqw;}
+    /* centrado: con el pase pegado arriba, la mitad inferior de la
+       pantalla quedaba muerta y el teléfono se veía apagado */
+    .ph-ui{flex:1;display:flex;flex-direction:column;justify-content:center;
+      padding:6cqw 5.5cqw 8cqw;gap:3.6cqw;}
+    .ph-app{
+      font-size:3.5cqw;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+      color:rgba(220,227,255,.42);
+    }
+    .ph-pass{border-radius:5cqw;overflow:hidden;background:var(--ink-2);
+      box-shadow:0 6cqw 12cqw -4cqw rgba(0,0,0,.6),inset 0 0 0 .4cqw rgba(255,255,255,.07);}
+    .ph-pass-top{display:flex;align-items:center;gap:3cqw;padding:5cqw 5.5cqw;}
+    .ph-pass-top .lk-mark{height:5.6cqw;color:var(--p);}
+    .ph-pass-name{font-size:5cqw;font-weight:800;color:var(--p);letter-spacing:-.02em;}
+    .ph-pass-body{padding:5.5cqw;display:flex;flex-direction:column;gap:4.5cqw;}
+    .ph-pass-lbl{font-size:3.2cqw;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+      color:rgba(220,227,255,.5);}
+    .ph-stamps{display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:2.6cqw;}
+    .ph-stamp{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    .ph-stamp.off{border:.5cqw dashed rgba(255,255,255,.24);}
+    .ph-stamp svg{width:48%;height:48%;stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    .ph-pass-foot{display:flex;align-items:flex-end;justify-content:space-between;}
+    .ph-count{color:#fff;font-size:4cqw;font-weight:600;line-height:1;}
+    .ph-count b{display:block;font-size:11cqw;font-weight:900;letter-spacing:-.04em;line-height:.9;}
+    .ph-count small{display:block;font-size:3cqw;font-weight:600;letter-spacing:.1em;
+      text-transform:uppercase;color:rgba(220,227,255,.45);margin-top:1.4cqw;}
+    .ph-qr{width:17cqw;height:17cqw;border-radius:2.4cqw;background:#fff;padding:1.6cqw;}
+    .ph-qr svg{width:100%;height:100%;display:block;}
+    .ph-note{font-size:3.3cqw;font-weight:500;color:rgba(220,227,255,.38);text-align:center;}
+
+    /* pase cálido (cafetería) */
+    .pass-warm .ph-pass-top{background:linear-gradient(118deg,#F8CDA3,#F0AFC6);}
+    .pass-warm .ph-stamp.on{background:#F8CDA3;}
+    .pass-warm .ph-stamp svg{stroke:#3A2418;}
+    .pass-warm .ph-count b{color:#F8CDA3;}
+    /* pase frío (barbería) */
+    .pass-cool .ph-pass-top{background:linear-gradient(118deg,#7E9BF2,#B9A3EC);}
+    .pass-cool .ph-stamp.on{background:#7E9BF2;}
+    .pass-cool .ph-stamp svg{stroke:#0A1533;}
+    .pass-cool .ph-count b{color:#9DB4F7;}
+
+    @media(max-width:920px){.ph-stage{width:min(360px,92%);}}
     /* Barra de progreso de la sección pinned "Cómo funciona" */
     .how-progress{position:absolute;left:0;bottom:0;width:100%;height:3px;background:var(--g);transform:scaleX(0);transform-origin:left center;z-index:2;}
     .d1{transition-delay:.1s;} .d2{transition-delay:.2s;} .d3{transition-delay:.3s;}
@@ -146,9 +282,53 @@
       background:var(--p);color:#fff;
       padding:10px 24px;border-radius:100px;font-size:14px;font-weight:700;
       transition:background .25s,transform .25s;
+      /* nowrap + flex:none: en la barra estrecha el flex lo comprimía y
+         "3 meses gratis" caía en dos renglones dentro de la píldora */
+      white-space:nowrap;flex:none;
     }
     .nav-cta:hover{background:var(--g);transform:translateY(-1px);}
-    @media(max-width:768px){.nav-links{display:none;}}
+    .nav-right{display:flex;align-items:center;gap:14px;}
+    /* Botón de menú: tres trazos que se convierten en aspa. Se dibujan
+       con transform para que la transición sea fluida. */
+    .nav-burger{
+      display:none;width:42px;height:42px;padding:0;border:0;background:none;
+      cursor:pointer;position:relative;flex:none;
+    }
+    .nav-burger span{
+      position:absolute;left:11px;width:20px;height:2px;border-radius:2px;
+      background:var(--p);transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s;
+    }
+    .nav-burger span:nth-child(1){top:14px;}
+    .nav-burger span:nth-child(2){top:20px;}
+    .nav-burger span:nth-child(3){top:26px;}
+    nav.nav-open .nav-burger span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+    nav.nav-open .nav-burger span:nth-child(2){opacity:0;}
+    nav.nav-open .nav-burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+
+    @media(max-width:768px){
+      .nav-burger{display:block;}
+      /* La lista NO se duplica en un panel aparte: es la misma lista, que
+         en estrecho pasa a ser el desplegable. Un segundo juego de
+         enlaces se desincroniza en cuanto se toca uno de los dos. */
+      .nav-links{
+        position:absolute;top:100%;left:0;right:0;
+        flex-direction:column;align-items:stretch;gap:0;
+        background:rgba(255,255,255,.98);backdrop-filter:blur(18px);
+        padding:6px 0 14px;box-shadow:0 20px 44px -20px rgba(10,21,51,.3);
+        opacity:0;transform:translateY(-10px);pointer-events:none;
+        transition:opacity .26s ease,transform .26s cubic-bezier(.16,1,.3,1);
+      }
+      nav.nav-open .nav-links{opacity:1;transform:none;pointer-events:auto;}
+      .nav-link{display:block;padding:15px 5vw;font-size:16px;font-weight:600;}
+      .nav-link::after{display:none;}   /* el subrayado de hover no aplica al tacto */
+      .nav-cta{padding:9px 18px;font-size:13px;}
+      /* la marca del nav también se partía en dos con la barra apretada */
+      .nav-logo-text{font-size:17px;white-space:nowrap;}
+      .nav-logo{flex:none;}
+    }
+    @media(max-width:380px){
+      .nav-cta{padding:8px 13px;font-size:12px;}
+    }
 
     /* ── HERO ── */
     .hero{
@@ -245,7 +425,18 @@
       color:var(--p);background:rgba(16,33,79,.1);padding:6px 16px;border-radius:100px;
       margin-bottom:28px;
     }
-    .hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--p);}
+    .hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--p);flex:none;}
+    /* Marcas dentro de la píldora. Los iconos van en em para que sigan a
+       la tipografía: si crece el texto y el logo no, se descuelga. */
+    /* wrap + center: con tres marcas dentro, la píldora ya no cabe de una
+       línea en pantallas estrechas. Envolver es preferible a recortar. */
+    .hero-tag{flex-wrap:wrap;justify-content:center;}
+    .ht-item{display:inline-flex;align-items:center;gap:.7em;white-space:nowrap;}
+    .ht-ico{width:1.35em;height:1.35em;flex:none;display:block;}
+    /* La manzana es una silueta: toma el color del texto. El logo de
+       Google conserva sus cuatro colores, que es como se reconoce. */
+    .ht-apple,.ht-qr{fill:currentColor;}
+    .ht-sep{width:1px;height:1.5em;background:currentColor;opacity:.28;flex:none;}
 
     h1{
       font-size:clamp(56px,7vw,100px);font-weight:900;line-height:.97;
@@ -572,8 +763,11 @@
        de alinearse a la primera mayúscula.
        El tamaño vive en el contenedor: isotipo y wordmark lo heredan,
        así el lockup escala como una sola pieza. */
-    .hero-logo{display:flex;align-items:center;gap:11px;color:var(--p);
-      font-size:clamp(21px,2vw,27px);}
+    /* La separación va en em y no en px: así el lockup se mantiene igual
+       de apretado a cualquier tamaño. En px, al crecer la tipografía el
+       hueco se quedaba fijo y el isotipo parecía irse soltando. */
+    .hero-logo{display:flex;align-items:center;gap:.26em;color:var(--p);
+      font-size:clamp(26px,2.5vw,34px);}
     .hero-wordmark{font-size:inherit;}
     .lk-hero{height:.697em;}
     .bname-text{color:var(--g);}
@@ -582,7 +776,14 @@
        crecer, el auto-ajuste de ancho reduce solo la tipografía —
        que es justo el equilibrio pedido. */
     .lk-big{height:.697em;vertical-align:0;margin-right:.14em;}
-    @media(max-width:920px){.hero-logo{gap:14px;}}
+    @media(max-width:920px){
+      .hero-logo{gap:.26em;}
+      /* Apilado, los teléfonos quedan JUSTO encima del logotipo y le
+         invaden su área de protección. El respiro se le pide al riel de
+         la retícula, no a un margen del logo: así el aire existe aunque
+         el orden de los bloques cambie. */
+      .hero-ener{gap:78px;}
+    }
 
     /* ── TIPOGRAFÍA: el sistema de la referencia ──────────────── */
 
@@ -646,9 +847,11 @@
     .hero-highlight{color:var(--blue);font-weight:800;font-size:1.1em;margin-top:14px;line-height:1.45;}
     .hero-tag{
       color:var(--p);background:transparent;border:1px solid rgba(16,33,79,.22);
-      font-weight:300;letter-spacing:.26em;font-size:10px;padding:9px 20px;
+      font-weight:300;letter-spacing:.2em;font-size:11px;padding:9px 22px;gap:14px;
     }
-    .hero-tag::before{background:var(--blue);width:8px;height:8px;border-radius:2px;}
+    /* El punto de viñeta sobraba en cuanto la píldora pasó a llevar las
+       marcas: quedaba como una pieza suelta antes de la manzana. */
+    .hero-tag::before{display:none;}
     .hero-trust{color:var(--p);opacity:1;font-weight:300;letter-spacing:.04em;text-transform:uppercase;font-size:10px;gap:13px;}
     .hero-trust span::before{color:var(--blue);font-weight:800;}
     .hm-lbl{opacity:1;color:var(--blue);letter-spacing:.2em;font-weight:800;}
@@ -660,6 +863,12 @@
       letter-spacing:-.035em;color:var(--p);margin:0 0 6px;max-width:12ch;
     }
     .hero-tag{margin-bottom:22px;}
+    /* En estrecho la píldora aprieta el interletrado en vez de partirse:
+       tres marcas en dos líneas se leen peor que una línea condensada. */
+    @media(max-width:600px){
+      .hero-tag{letter-spacing:.06em;font-size:10px;gap:9px;padding:8px 13px;}
+      .ht-item{gap:.5em;}
+    }
 
     /* ── Íconos: círculos de contorno delgado (referencia) ────── */
     .step-ico,.fc-ico{
@@ -702,46 +911,68 @@
     .scenes .rule{margin:28px 0 26px;}
     .scenes-sub{max-width:620px;color:rgba(16,33,79,.62);font-weight:300;
       font-size:clamp(15px,1.35vw,18px);line-height:1.65;}
-    /* Mosaico 3 + 2 sobre una retícula de 6: la primera fila da el
-       abanico de giros, la segunda deja respirar las dos escenas más
-       cálidas en un tamaño mayor. */
-    .scene-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:60px;}
-    .scene-fig:nth-child(-n+3){grid-column:span 2;}
-    .scene-fig:nth-child(n+4){grid-column:span 3;}
-    .scene-fig{position:relative;margin:0;overflow:hidden;line-height:0;}
+    /* Banda en bucle: una sola fila que viaja de derecha a izquierda
+       sin fin. El truco es que .scene-track contiene DOS copias
+       idénticas de las cinco escenas y se desplaza exactamente -50%
+       de su propio ancho; al terminar, la segunda copia ocupa el
+       lugar que tenía la primera y el salto de vuelta a 0 es
+       invisible. Por eso el porcentaje: en un transform se mide
+       contra el ancho del propio elemento, no del contenedor, así que
+       funciona igual con cualquier tamaño de tarjeta o de pantalla.
+       Va sin gap a propósito — pegadas se leen como una sola tira de
+       película, que es el lenguaje que ya tenía la sección. */
+    .scene-marquee{
+      position:relative;margin-top:60px;
+      overflow:hidden;              /* imprescindible: el riel mide varios miles de px */
+      /* los bordes se desvanecen hacia el papel de la sección para que
+         la tira se sienta infinita y no cortada a cuchillo */
+      -webkit-mask:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+              mask:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+    }
+    .scene-track{
+      display:flex;width:max-content;
+      animation:scene-run 34s linear infinite;
+      will-change:transform;
+    }
+    /* al pasar el cursor se detiene para poder leer el pie de foto */
+    .scene-marquee:hover .scene-track{animation-play-state:paused;}
+    @keyframes scene-run{
+      from{transform:translate3d(0,0,0);}
+      to{transform:translate3d(-50%,0,0);}
+    }
+    .scene-fig{
+      position:relative;margin:0;overflow:hidden;line-height:0;
+      flex:none;width:clamp(260px,24vw,380px);
+    }
     .scene-fig img{
-      width:100%;height:clamp(290px,25vw,370px);object-fit:cover;display:block;
+      width:100%;height:clamp(320px,27vw,420px);object-fit:cover;display:block;
       transition:transform .9s cubic-bezier(.16,1,.3,1);
     }
-    .scene-fig:nth-child(n+4) img{height:clamp(340px,32vw,470px);}
     .scene-fig:hover img{transform:scale(1.045);}
     /* El velo sube más alto y más opaco de lo que parece necesario:
        cuando el pie cae en dos líneas, la etiqueta trepa hasta la
        zona donde un degradado corto ya se ha desvanecido y el texto
        queda sobre la foto sin contraste. */
     .scene-fig figcaption{
-      position:absolute;left:0;right:0;bottom:0;padding:120px 32px 28px;line-height:1.55;
+      position:absolute;left:0;right:0;bottom:0;padding:110px 24px 24px;line-height:1.5;
       background:linear-gradient(to top,rgba(10,21,51,.95) 0%,rgba(10,21,51,.86) 30%,
                  rgba(10,21,51,.55) 62%,rgba(10,21,51,.18) 84%,rgba(10,21,51,0) 100%);
     }
     .scene-fig .mlbl{color:var(--g);}
     .scene-fig figcaption p{
-      margin-top:9px;max-width:36ch;color:#fff;font-weight:300;
-      font-size:clamp(14px,1.15vw,16px);letter-spacing:.005em;
-    }
-    @media(max-width:920px){
-      .scene-grid{grid-template-columns:1fr 1fr;}
-      .scene-fig:nth-child(-n+3),.scene-fig:nth-child(n+4){grid-column:span 1;}
-      .scene-fig:nth-child(5){grid-column:span 2;}
-      .scene-fig img,.scene-fig:nth-child(n+4) img{height:clamp(210px,30vw,300px);}
-      .scene-fig:nth-child(5) img{height:clamp(280px,52vw,400px);}
-      .scene-fig figcaption{padding:70px 18px 22px;}
-      .scene-fig figcaption p{font-size:13px;}
+      margin-top:8px;color:#fff;font-weight:300;
+      font-size:clamp(13px,1.05vw,15px);letter-spacing:.005em;
     }
     @media(max-width:600px){
-      .scene-grid{grid-template-columns:1fr;}
-      .scene-fig:nth-child(5){grid-column:span 1;}
-      .scene-fig img,.scene-fig:nth-child(n+4) img{height:clamp(260px,58vw,340px);}
+      .scene-marquee{margin-top:44px;}
+      .scene-fig figcaption{padding:80px 18px 20px;}
+    }
+    /* Con movimiento reducido la banda se queda quieta y pasa a ser un
+       carrusel que el usuario empuja con el dedo o el trackpad: el
+       contenido sigue siendo alcanzable, que es lo que importa. */
+    @media(prefers-reduced-motion:reduce){
+      .scene-marquee{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+      .scene-track{animation:none;}
     }
 
     /* ── BANDA DE VIDEO: respiro antes del cierre ─────────────────
@@ -881,18 +1112,6 @@
     .foot-copy a{color:var(--g);}
     .foot-tag{font-weight:300;}
 
-    /* ── Tarjeta 3D del hero (inyectada por JS) ───────────────── */
-    .el-card-face{
-      background:linear-gradient(148deg,#1B2F66 0%,#10214F 52%,#0A1533 100%);
-      box-shadow:0 60px 90px -28px rgba(10,21,51,.45),inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(126,155,242,.14);
-      border-radius:0;
-    }
-    .el-card,.el-card-stage .el-card-face{border-radius:0;}
-    .el-card-label{color:rgba(220,227,255,.5);}
-    .el-card-count small{color:rgba(220,227,255,.45);}
-    .el-qr{border-radius:0;}
-    .el-stamp.on{background:var(--g);}
-    .el-stamp.on svg{stroke:var(--p);}
     .cursor-on-dark #cur{background:var(--g);}
     .cursor-on-dark #cur2{border-color:var(--g);}
     #cur{background:var(--blue);}
@@ -908,17 +1127,29 @@
 <nav id="nav">
   <div class="wrap">
     <div class="nav-in">
-      <a href="/" class="nav-logo" aria-label="Easy Loyalty — inicio">
+      <!-- "#" y no "/": siendo una sola página, el inicio ES el principio
+           del scroll. Con "/" el navegador recarga, y dentro de un visor
+           incrustado esa raíz no existe y se cae a una página en negro. -->
+      <a href="#" class="nav-logo" aria-label="Easy Loyalty — inicio">
         <span class="lk-mark lk-nav" aria-hidden="true"></span>
         <span class="nav-logo-text"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></span>
       </a>
-      <ul class="nav-links">
+      <!-- El CTA sale de la lista a propósito: dentro se ocultaba junto
+           con ella en móvil, y esconder la llamada principal es lo único
+           en lo que todas las guías coinciden que cuesta conversiones. -->
+      <ul class="nav-links" id="navLinks">
         <li><a href="#como-funciona" class="nav-link">Cómo funciona</a></li>
         <li><a href="#features" class="nav-link">Funciones</a></li>
         <li><a href="#pricing" class="nav-link">Precios</a></li>
         <li><a href="#faq" class="nav-link">Preguntas</a></li>
-        <li><a href="https://app.easyloyalty.io/registro" target="_blank" class="nav-cta">3 meses gratis</a></li>
       </ul>
+      <div class="nav-right">
+        <a href="https://app.easyloyalty.io/registro" target="_blank" class="nav-cta">3 meses gratis</a>
+        <button type="button" class="nav-burger" id="navBurger"
+                aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </div>
 </nav>
@@ -953,7 +1184,36 @@
           <span class="lk-mark lk-hero" id="heroLockMark" aria-hidden="true"></span>
           <div class="hero-wordmark"><span class="logo-easy">Easy</span><span class="logo-loyalty"> Loyalty</span></div>
         </div>
-        <div class="hero-tag rv d1">Apple Wallet · Google Wallet · QR</div>
+        <div class="hero-tag rv d1">
+          <span class="ht-item">
+            <svg class="ht-ico ht-apple" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 1.43c0 1.14-.47 2.27-1.24 3.09-.83.9-2.19 1.6-3.31 1.5-.14-1.1.41-2.26 1.16-3.01.85-.87 2.3-1.5 3.39-1.58zM20.9 8.4c-.2.12-2.7 1.5-2.67 4.47.03 3.56 3.12 4.74 3.16 4.76-.03.08-.5 1.7-1.63 3.36-.98 1.44-2 2.87-3.6 2.9-1.57.03-2.08-.93-3.87-.93s-2.36.9-3.85.96c-1.55.06-2.73-1.55-3.72-2.98C2.7 18.02 1.15 12.7 3.2 9.1c1.02-1.79 2.84-2.92 4.82-2.95 1.52-.03 2.95 1.02 3.88 1.02s2.67-1.26 4.5-1.08c.77.03 2.92.31 4.3 2.31z"/></svg>
+            Apple Wallet
+          </span>
+          <span class="ht-sep" aria-hidden="true"></span>
+          <span class="ht-item">
+            <svg class="ht-ico" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+            </svg>
+            Google Wallet
+          </span>
+          <span class="ht-sep" aria-hidden="true"></span>
+          <span class="ht-item">
+            <!-- QR sobre una retícula exacta de 24: los tres ojos son
+                 marcos de 7×7 con su pupila de 3×3 centrada, y los
+                 módulos sueltos caen todos en múltiplos de 3. La versión
+                 anterior tenía trazos a mano alzada y se veía torcida. -->
+            <svg class="ht-ico ht-qr" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 3h7v7H3V3zm1.75 1.75v3.5h3.5v-3.5h-3.5z"/>
+              <path d="M14 3h7v7h-7V3zm1.75 1.75v3.5h3.5v-3.5h-3.5z"/>
+              <path d="M3 14h7v7H3v-7zm1.75 1.75v3.5h3.5v-3.5h-3.5z"/>
+              <path d="M12 3h1.5v3H12V3zm0 4.5h1.5V12H12V7.5zM3 12h4.5v1.5H3V12zm6 0h3v1.5H9V12zm4.5 0H18v1.5h-4.5V12zm6 0H21v1.5h-1.5V12zM12 15h1.5v3H12v-3zm3-1.5h1.5V15H15v-1.5zm3 0h3V15h-3v-1.5zm1.5 3H21V21h-1.5v-4.5zm-3 1.5H18v3h-1.5v-3zM12 19.5h3V21h-3v-1.5z"/>
+            </svg>
+            QR
+          </span>
+        </div>
         <h1 class="hero-h1">Haz que tus clientes vuelvan.</h1>
         <div class="rule rv d2" aria-hidden="true"></div>
         <p class="hero-sub rv d3">Su tarjeta de sellos vive en Apple Wallet y Google Wallet, junto a su tarjeta de crédito. No en una app que nadie descarga. <span class="hero-highlight">10 minutos para lanzarlo. 3 meses gratis para probarlo.</span></p>
@@ -1061,47 +1321,91 @@
     <p class="scenes-sub rv d1">Cafeterías, barberías, veterinarias, salones, hamburgueserías.
       <span class="em">Cualquier negocio al que la gente regresa.</span></p>
   </div>
-  <div class="scene-grid">
-    <figure class="scene-fig rv">
-      <img src="img/escena-cafe.webp" width="1100" height="619" loading="lazy" decoding="async"
-           alt="Una clienta muestra en su teléfono la tarjeta de lealtad al barista de una cafetería" />
-      <figcaption>
-        <span class="mlbl">Cafetería</span>
-        <p>Pide su café, muestra el QR y suma su sello.</p>
-      </figcaption>
-    </figure>
-    <figure class="scene-fig rv d1">
-      <img src="img/escena-barberia.webp" width="1100" height="619" loading="lazy" decoding="async"
-           alt="Un cliente muestra en su teléfono la tarjeta de lealtad al barbero en una barbería" />
-      <figcaption>
-        <span class="mlbl">Barbería</span>
-        <p>Sale del corte con el siguiente ya empezado.</p>
-      </figcaption>
-    </figure>
-    <figure class="scene-fig rv d2">
-      <img src="img/escena-salon.webp" width="1100" height="619" loading="lazy" decoding="async"
-           alt="Una clienta muestra en su teléfono la tarjeta de lealtad en la recepción de un salón de belleza" />
-      <figcaption>
-        <span class="mlbl">Salón de belleza</span>
-        <p>Se va con el siguiente premio más cerca.</p>
-      </figcaption>
-    </figure>
-    <figure class="scene-fig rv d1">
-      <img src="img/escena-veterinaria.webp" width="1440" height="810" loading="lazy" decoding="async"
-           alt="Una clienta con su perro en brazos muestra en su teléfono la tarjeta de lealtad en la recepción de una veterinaria" />
-      <figcaption>
-        <span class="mlbl">Veterinaria</span>
-        <p>Cada consulta suma. La siguiente ya trae premio.</p>
-      </figcaption>
-    </figure>
-    <figure class="scene-fig rv d2">
-      <img src="img/escena-burger.webp" width="1440" height="810" loading="lazy" decoding="async"
-           alt="Una pareja muestra en su teléfono la tarjeta de lealtad en el mostrador de una hamburguesería" />
-      <figcaption>
-        <span class="mlbl">Hamburguesería</span>
-        <p>Cada visita cuenta, y la hamburguesa gratis se ve venir.</p>
-      </figcaption>
-    </figure>
+  <!-- El segundo juego de figuras es una copia exacta del primero y
+       existe sólo para cerrar el bucle: sin él, al llegar al -50% se
+       vería el hueco. Va con aria-hidden para que un lector de
+       pantalla no lea las cinco escenas dos veces, y los <img>
+       repiten la misma URL, así que salen de caché sin costar una
+       descarga extra. Si se toca una escena, hay que tocar las dos. -->
+  <div class="scene-marquee rv">
+    <div class="scene-track">
+      <figure class="scene-fig">
+        <img src="img/escena-cafe.webp" width="1100" height="619" loading="lazy" decoding="async"
+             alt="Una clienta muestra en su teléfono la tarjeta de lealtad al barista de una cafetería" />
+        <figcaption>
+          <span class="mlbl">Cafetería</span>
+          <p>Pide su café, muestra el QR y suma su sello.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig">
+        <img src="img/escena-barberia.webp" width="1100" height="619" loading="lazy" decoding="async"
+             alt="Un cliente muestra en su teléfono la tarjeta de lealtad al barbero en una barbería" />
+        <figcaption>
+          <span class="mlbl">Barbería</span>
+          <p>Sale del corte con el siguiente ya empezado.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig">
+        <img src="img/escena-salon.webp" width="1100" height="619" loading="lazy" decoding="async"
+             alt="Una clienta muestra en su teléfono la tarjeta de lealtad en la recepción de un salón de belleza" />
+        <figcaption>
+          <span class="mlbl">Salón de belleza</span>
+          <p>Se va con el siguiente premio más cerca.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig">
+        <img src="img/escena-veterinaria.webp" width="1440" height="810" loading="lazy" decoding="async"
+             alt="Una clienta con su perro en brazos muestra en su teléfono la tarjeta de lealtad en la recepción de una veterinaria" />
+        <figcaption>
+          <span class="mlbl">Veterinaria</span>
+          <p>Cada consulta suma. La siguiente ya trae premio.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig">
+        <img src="img/escena-burger.webp" width="1440" height="810" loading="lazy" decoding="async"
+             alt="Una pareja muestra en su teléfono la tarjeta de lealtad en el mostrador de una hamburguesería" />
+        <figcaption>
+          <span class="mlbl">Hamburguesería</span>
+          <p>Cada visita cuenta, y la hamburguesa gratis se ve venir.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="scene-fig" aria-hidden="true">
+        <img src="img/escena-cafe.webp" width="1100" height="619" loading="lazy" decoding="async" alt="" />
+        <figcaption>
+          <span class="mlbl">Cafetería</span>
+          <p>Pide su café, muestra el QR y suma su sello.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig" aria-hidden="true">
+        <img src="img/escena-barberia.webp" width="1100" height="619" loading="lazy" decoding="async" alt="" />
+        <figcaption>
+          <span class="mlbl">Barbería</span>
+          <p>Sale del corte con el siguiente ya empezado.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig" aria-hidden="true">
+        <img src="img/escena-salon.webp" width="1100" height="619" loading="lazy" decoding="async" alt="" />
+        <figcaption>
+          <span class="mlbl">Salón de belleza</span>
+          <p>Se va con el siguiente premio más cerca.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig" aria-hidden="true">
+        <img src="img/escena-veterinaria.webp" width="1440" height="810" loading="lazy" decoding="async" alt="" />
+        <figcaption>
+          <span class="mlbl">Veterinaria</span>
+          <p>Cada consulta suma. La siguiente ya trae premio.</p>
+        </figcaption>
+      </figure>
+      <figure class="scene-fig" aria-hidden="true">
+        <img src="img/escena-burger.webp" width="1440" height="810" loading="lazy" decoding="async" alt="" />
+        <figcaption>
+          <span class="mlbl">Hamburguesería</span>
+          <p>Cada visita cuenta, y la hamburguesa gratis se ve venir.</p>
+        </figcaption>
+      </figure>
+    </div>
   </div>
 </section>
 
@@ -1385,6 +1689,11 @@
 <script defer src="vendor/gsap.min.js"></script>
 <script defer src="vendor/ScrollTrigger.min.js"></script>
 <script defer src="vendor/SplitText.min.js"></script>
+<!-- Plugins libres desde que Webflow compró GreenSock (abril 2025): ya no
+     hay membresía ni token. Todos en 3.15.0, la misma versión del núcleo. -->
+<script defer src="vendor/DrawSVGPlugin.min.js"></script>
+<script defer src="vendor/CustomEase.min.js"></script>
+<script defer src="vendor/CustomBounce.min.js"></script>
 <script defer src="vendor/lenis.min.js"></script>
 <script defer src="landing-motion.js"></script>
 
@@ -1394,18 +1703,33 @@ const cur = document.getElementById('cur')
 const cur2 = document.getElementById('cur2')
 let mx = 0, my = 0, cx = 0, cy = 0
 
+/* El PUNTO se dibuja aquí mismo, en el propio evento, no en el bucle:
+   escribir un transform no provoca layout, así que es barato, y de este
+   modo el punto va pegado al ratón sin esperar al siguiente cuadro. */
+let curDirty = true
 document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY
-  cur.style.left = mx + 'px'; cur.style.top = my + 'px'
-})
+  mx = e.clientX; my = e.clientY; curDirty = true
+  cur.style.transform = 'translate3d(' + mx + 'px,' + my + 'px,0) translate(-50%,-50%)'
+}, { passive: true })
 
+/* 0.5: el aro cubre la mitad de la distancia que le falta en cada
+   cuadro, o sea el 94% en cuatro. Antes era 0.12 —diecinueve cuadros
+   para lo mismo— y por eso se sentía que venía arrastrándose. Ahora se
+   separa lo justo para que el efecto se aprecie en un movimiento rápido
+   y se pega al punto en cuanto te detienes. */
+let curFrame = 0
 const animCursor = () => {
-  cx += (mx - cx) * 0.12
-  cy += (my - cy) * 0.12
-  cur2.style.left = cx + 'px'; cur2.style.top = cy + 'px'
+  /* LEER antes de ESCRIBIR. checkDark mide con getBoundingClientRect, y
+     si se llama después de tocar estilos obliga al navegador a recalcular
+     el layout en el acto. Además cada cuatro cuadros basta: es un cambio
+     de color, no una posición. */
+  if (curDirty && (curFrame & 3) === 0) { checkDark(); curDirty = false }
+  curFrame++
+  cx += (mx - cx) * 0.5
+  cy += (my - cy) * 0.5
+  cur2.style.transform = 'translate3d(' + cx + 'px,' + cy + 'px,0) translate(-50%,-50%)'
   requestAnimationFrame(animCursor)
 }
-animCursor()
 
 /* Cursor hover state */
 document.querySelectorAll('a,button,.fc,.step,.pc').forEach(el => {
@@ -1419,21 +1743,59 @@ document.querySelectorAll('a,button,.fc,.step,.pc').forEach(el => {
   })
 })
 
-/* Cursor color on dark sections */
+/* Cursor color on dark sections.
+   Antes corría en CADA mousemove y medía cuatro secciones con
+   getBoundingClientRect: cuatro reflujos sincrónicos por movimiento del
+   ratón. Ahora lo llama el bucle de animación, como mucho una vez por
+   cuadro, y solo si el ratón se movió. Se conserva la medición en vivo
+   —y no posiciones cacheadas— porque .how va anclada y su posición en
+   pantalla no coincide con la del documento. */
 const darkSections = document.querySelectorAll('.how,.pricing,.cfinal,footer')
+let wasDark = null
 const checkDark = () => {
   let onDark = false
-  darkSections.forEach(s => {
-    const r = s.getBoundingClientRect()
-    if (my >= r.top && my <= r.bottom) onDark = true
-  })
+  for (let i = 0; i < darkSections.length; i++) {
+    const r = darkSections[i].getBoundingClientRect()
+    if (my >= r.top && my <= r.bottom) { onDark = true; break }
+  }
+  if (onDark === wasDark) return          // no tocar el DOM si no cambió
+  wasDark = onDark
   document.body.classList.toggle('cursor-on-dark', onDark)
 }
-document.addEventListener('mousemove', checkDark)
+animCursor()
 
 /* ── Nav scroll ── */
 const nav = document.getElementById('nav')
 addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), {passive:true})
+
+/* ── Menú móvil ──
+   El CTA vive fuera de este desplegable y siempre se ve: lo único en lo
+   que coinciden todas las guías de conversión es que esconder la llamada
+   principal detrás de un menú cuesta ventas. Aquí dentro van solo los
+   enlaces de sección, que son consulta, no acción. */
+const navBurger = document.getElementById('navBurger')
+const setMenu = open => {
+  nav.classList.toggle('nav-open', open)
+  navBurger.setAttribute('aria-expanded', open ? 'true' : 'false')
+  navBurger.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú')
+}
+navBurger.addEventListener('click', () => setMenu(!nav.classList.contains('nav-open')))
+
+/* Cierre al elegir destino, y al tocar fuera. Ambos van en FASE DE
+   CAPTURA sobre document: el manejador de anclas del sistema de
+   movimiento corta la propagación ahí mismo, así que un listener normal
+   colgado de la lista nunca llegaría a ejecutarse. */
+document.addEventListener('click', e => {
+  if (!nav.classList.contains('nav-open')) return
+  const dentro = e.target.closest && e.target.closest('#nav')
+  const enlace = e.target.closest && e.target.closest('#navLinks a')
+  if (enlace || !dentro) setMenu(false)
+}, true)
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false) })
+/* Al volver a escritorio la lista es de nuevo una barra: si se quedara
+   marcada como abierta, el aspa seguiría dibujada sin panel que cerrar. */
+addEventListener('resize', () => { if (innerWidth > 768) setMenu(false) }, {passive:true})
 
 /* ── IntersectionObserver for .rv ── */
 const obs = new IntersectionObserver(entries => {
@@ -1594,24 +1956,38 @@ if (heroMark && turb && disp) {
 }
 
 /* ── Big name: inline-block + scrollWidth → llena 100% viewport ── */
-/* ── Banda de video: se descarga solo cuando está por verse ──
-   El clip pesa 3 MB; con preload="none" + este observer, quien no
-   baje hasta ahí no lo paga. Se pausa al salir de pantalla y no se
-   reproduce si el sistema pide movimiento reducido (queda el póster). */
+/* ── Banda de video: descarga temprana, arranque anticipado ──
+   Descargar y reproducir son dos momentos distintos, y ahí estaba el
+   retraso: antes el archivo se pedía a 400px de entrar en pantalla, así
+   que el usuario llegaba antes que los 3 MB y se comía el póster unos
+   segundos. Ahora se pide en cuanto termina de cargar la página —en el
+   evento load, para no competir con el hero por el ancho de banda— y se
+   reproduce con un viewport y medio de anticipación. Al llegar a la
+   banda el clip ya lleva rato corriendo.
+   No se reproduce si el sistema pide movimiento reducido: queda el póster. */
 const filmVid = document.getElementById('filmVid')
 if (filmVid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const filmPlay = () => filmVid.play().catch(() => {})  // si lo bloquea, queda el póster
+  const filmFetch = () => {
+    if (filmVid.src) return
+    filmVid.preload = 'auto'          // en el marcado va "none" para no pedirlo al parsear
+    filmVid.src = filmVid.dataset.src
+    filmVid.load()
+  }
+  if (document.readyState === 'complete') filmFetch()
+  else window.addEventListener('load', filmFetch, { once: true })
+
   const filmIO = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) { if (filmVid.src) filmVid.pause(); return }
-      if (filmVid.src) { filmPlay(); return }
-      /* primera vez: pedir el archivo y esperar a tener datos.
-         Llamar play() en el mismo tick que se asigna el src hace que
-         la promesa se rechace y el clip se quede en el póster. */
-      filmVid.src = filmVid.dataset.src
-      filmVid.addEventListener('canplay', filmPlay, { once: true })
+      filmFetch()                     // por si alguien llega ahí antes del load
+      /* readyState 3 = HAVE_FUTURE_DATA: ya hay con qué arrancar.
+         Llamar play() en el mismo tick que se asigna el src hace que la
+         promesa se rechace y el clip se quede congelado en el póster. */
+      if (filmVid.readyState >= 3) filmPlay()
+      else filmVid.addEventListener('canplay', filmPlay, { once: true })
     })
-  }, { rootMargin: '400px 0px' })
+  }, { rootMargin: '150% 0px' })
   filmIO.observe(filmVid)
 }
 

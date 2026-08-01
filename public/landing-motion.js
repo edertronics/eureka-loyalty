@@ -21,6 +21,16 @@
 
   gsap.registerPlugin(ScrollTrigger)
   if (typeof SplitText !== 'undefined') gsap.registerPlugin(SplitText)
+  /* Cada plugin va con guarda propia: si uno falta, la sección que lo usa
+     degrada sola en vez de tumbar todo el sistema de movimiento. */
+  if (typeof DrawSVGPlugin !== 'undefined') gsap.registerPlugin(DrawSVGPlugin)
+  if (typeof CustomEase !== 'undefined') gsap.registerPlugin(CustomEase)
+  if (typeof CustomBounce !== 'undefined') {
+    gsap.registerPlugin(CustomBounce)
+    /* rebote del sello al caer en su casilla: firme pero corto, para que
+       diez seguidos no se sientan como gelatina */
+    CustomBounce.create('selloIn', { strength: 0.58, squash: 1.4, squashID: 'selloIn-squash' })
+  }
 
   /* ── Tokens del lenguaje de movimiento ──
      La disciplina vive aquí: TODA animación de la página usa estos
@@ -40,10 +50,12 @@
   /* ── Lenis: scroll suave sincronizado con el ticker de GSAP ──
      Patrón oficial: Lenis actualiza ScrollTrigger, GSAP maneja el raf.
      En touch (celulares) Lenis deja el scroll nativo — mejor perf. */
-  var lenis = new Lenis({
-    duration: 1.1,
-    anchors: true // los links #seccion del nav siguen funcionando, suavizados
-  })
+  /* SIN `anchors: true`. Lenis traía su propio manejador de anclas y
+     competía con el nuestro: los dos respondían al mismo clic y ganaba
+     el suyo, que lleva al borde de la sección. Las anclas las gobierna
+     anchorsToPinned() más abajo, que es el único que sabe que una
+     sección anclada no se ve completa en su borde. */
+  var lenis = new Lenis({ duration: 1.1 })
   lenis.on('scroll', ScrollTrigger.update)
   gsap.ticker.add(function (time) { lenis.raf(time * 1000) })
   gsap.ticker.lagSmoothing(0)
@@ -162,9 +174,14 @@
         tl.to(h1, { autoAlpha: 1, y: 0, duration: MO.dur.m, ease: MO.ease.hero }, 0.3)
       }
 
-      if (mark)  tl.to(mark,  { autoAlpha: 1, scale: 1, duration: MO.dur.l, ease: MO.ease.hero }, 0.45)
-      var card3d = document.getElementById('elCard')
-      if (card3d) tl.from(card3d, { rotationY: -26, rotationX: 10, y: 44, duration: 1.6, ease: MO.ease.hero }, 0.5)
+      /* El contenedor solo se destapa, rápido: quien hace el número son
+         los teléfonos. Antes escalaba en 1.2s y retenía la caída, que
+         es justo lo que tiene que verse. */
+      if (mark) tl.to(mark, { autoAlpha: 1, scale: 1, duration: MO.dur.s, ease: MO.ease.out }, 0.1)
+      /* La caída se encaja aquí para que aterricen mientras el titular
+         termina de entrar: los dos momentos se apoyan en vez de
+         turnarse. */
+      if (phonesEnter) tl.add(phonesEnter(), 0.15)
       if (sub)   tl.to(sub,   { autoAlpha: 1, y: 0, duration: MO.dur.m }, 0.75)
       if (btns.length) tl.to(btns, { autoAlpha: 1, y: 0, duration: MO.dur.m, stagger: 0.08 }, 0.9)
       if (trust) tl.to(trust, { autoAlpha: 1, y: 0, duration: MO.dur.s }, 1.15)
@@ -179,28 +196,14 @@
   function playHero () { if (heroTl) heroTl.play(); else heroPlayRequested = true }
 
   /* ══════════════════════════════════════════════════════════════
-     FASE 4c — La Tarjeta Viva (protagonista del hero)
-     Tarjeta de lealtad 3D construida en DOM: banner del brand,
-     sellos (6/10), QR. Flota en loop, se inclina siguiendo el
-     mouse (quickTo a 60fps) y recibe un barrido de luz periódico
-     como tarjeta física premium. Reemplaza al isotipo estático;
-     sin JS o con reduced-motion el isotipo original permanece.
+     Fábrica del teléfono — compartida por el hero y el viaje del premio
+     Vive aquí arriba y no dentro de una sección porque el mismo aparato
+     se usa en dos lugares con comportamientos distintos: en el hero
+     sigue al mouse, en el viaje lo maneja el scroll. Si el marcado se
+     duplicara, cualquier ajuste al aparato habría que hacerlo dos veces.
      ══════════════════════════════════════════════════════════════ */
-  function buildCard () {
-    var heroRight = document.querySelector('.hero-right')
-    var hero = document.querySelector('.hero')
-    if (!heroRight || !hero) return
-
-    var oldMark = heroRight.querySelector('.hero-mark-wrap')
-    if (oldMark) oldMark.style.display = 'none'
-
+  var PH = (function () {
     var check = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
-    var stamps = ''
-    for (var i = 0; i < 10; i++) {
-      stamps += i < 6
-        ? '<div class="el-stamp on">' + check + '</div>'
-        : '<div class="el-stamp off"></div>'
-    }
     var qr =
       '<svg viewBox="0 0 21 21" fill="#10214F">' +
       '<rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="#fff"/>' +
@@ -214,49 +217,365 @@
       '<rect x="9" y="18" width="3" height="2"/><rect x="15" y="18" width="2" height="2"/>' +
       '</svg>'
 
+    var statusBar =
+      '<div class="ph-status"><span>9:41</span><div class="ph-sig">' +
+      '<i><svg viewBox="0 0 24 16"><rect x="0" y="10" width="4" height="6" rx="1"/>' +
+      '<rect x="6" y="7" width="4" height="9" rx="1"/><rect x="12" y="4" width="4" height="12" rx="1"/>' +
+      '<rect x="18" y="0" width="4" height="16" rx="1"/></svg></i>' +
+      '<i><svg viewBox="0 0 24 18"><path d="M12 15.6l3.1-3.7a4.8 4.8 0 0 0-6.2 0zM12 8.3c2.1 0 4 .8 5.5 2.1l2.2-2.6A11.8 11.8 0 0 0 12 4.8c-3 0-5.8 1.1-7.9 3l2.2 2.6A8.4 8.4 0 0 1 12 8.3z"/></svg></i>' +
+      '<i class="b"><svg viewBox="0 0 28 14"><rect x=".6" y=".6" width="23" height="12.8" rx="3.6" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/>' +
+      '<rect x="2.4" y="2.4" width="17" height="9.2" rx="2.2"/>' +
+      '<path d="M25.4 5.1v3.8a2.3 2.3 0 0 0 0-3.8z" fill-opacity=".45"/></svg></i>' +
+      '</div></div>'
+
+    /* Seis placas iguales a distinta Z = el canto del aparato. */
+    var plates = ''
+    for (var p = 6; p >= 1; p--) plates += '<div class="ph-plate ph-p' + p + '"></div>'
+
+    /* Un pase. `done` es el estado inicial; el viaje del premio arranca
+       en 0 y va encendiendo sellos con el scroll. */
+    function pass (o) {
+      var st = ''
+      for (var i = 0; i < o.total; i++) {
+        st += i < o.done
+          ? '<div class="ph-stamp on">' + check + '</div>'
+          : '<div class="ph-stamp off">' + (o.drawable ? check : '') + '</div>'
+      }
+      return '<div class="ph-pass">' +
+        '<div class="ph-pass-top">' +
+        '<span class="lk-mark" aria-hidden="true"></span>' +
+        '<span class="ph-pass-name">' + o.name + '</span>' +
+        '</div>' +
+        '<div class="ph-pass-body">' +
+        '<div class="ph-pass-lbl">Tus sellos</div>' +
+        /* la retícula se adapta al total para no dejar una fila coja:
+           10 sellos caen en 2×5, 8 en 2×4 */
+        '<div class="ph-stamps" style="--cols:' + (o.total % 5 ? 4 : 5) + '">' + st + '</div>' +
+        '<div class="ph-pass-foot">' +
+        '<div class="ph-count"><b>' + o.done + '</b><small>de ' + o.total + ' sellos</small></div>' +
+        '<div class="ph-qr">' + qr + '</div>' +
+        '</div></div></div>'
+    }
+
+    function phone (o) {
+      return '<div class="ph-float ' + (o.pos || '') + '"><div class="ph-in"><div class="ph">' +
+        plates +
+        '<div class="ph-face"><div class="ph-screen">' +
+        '<div class="ph-island"></div>' +
+        statusBar +
+        '<div class="ph-ui ' + o.tone + '">' +
+        '<div class="ph-app">' + o.app + '</div>' +
+        pass(o) +
+        '<div class="ph-note">' + (o.note || 'Sin instalar ninguna app') + '</div>' +
+        '</div>' +
+        '<div class="ph-glass"></div><div class="ph-spec"></div>' +
+        '</div></div>' +
+        '<div class="ph-shadow"></div>' +
+        '</div></div>' +
+        '<div class="ph-burst" aria-hidden="true"></div>' +
+        '</div>'
+    }
+
+    /* Silueta squircle: las esquinas de un teléfono real no son un
+       arco de círculo, son una superelipse (curvatura continua). Es
+       de los detalles que más delatan a un mockup falso, y con un
+       border-radius no se puede expresar. Se calcula en píxeles
+       porque en % las esquinas se estirarían con el alto. */
+    function squircle (w, h) {
+      var r = w * 0.17, n = 5, steps = 14, pts = []
+      function corner (cx, cy, sx, sy, rev) {
+        for (var i = 0; i <= steps; i++) {
+          var t = (rev ? steps - i : i) / steps * Math.PI / 2
+          pts.push(
+            (cx + sx * r * Math.pow(Math.cos(t), 2 / n)).toFixed(1) + 'px ' +
+            (cy + sy * r * Math.pow(Math.sin(t), 2 / n)).toFixed(1) + 'px')
+        }
+      }
+      corner(r, r, -1, -1, false)          // sup-izq: del canto izquierdo al techo
+      corner(w - r, r, 1, -1, true)        // sup-der
+      corner(w - r, h - r, 1, 1, false)    // inf-der
+      corner(r, h - r, -1, 1, true)        // inf-izq
+      return 'polygon(' + pts.join(',') + ')'
+    }
+
+    /* Recorta todas las placas de `root` y se re-suscribe al resize.
+       Se mide el .ph de cada aparato por separado: en el viaje el
+       teléfono es mucho más grande que los del hero. */
+    function reshape (root) {
+      root.querySelectorAll('.ph').forEach(function (ph) {
+        var w = ph.offsetWidth, h = ph.offsetHeight
+        if (!w || !h) return
+        var clip = squircle(w, h)
+        ph.querySelectorAll('.ph-plate,.ph-face').forEach(function (el) {
+          el.style.clipPath = clip
+        })
+      })
+    }
+    function autoReshape (root) {
+      reshape(root)
+      window.addEventListener('resize', function () { reshape(root) }, { passive: true })
+    }
+
+    return { check: check, pass: pass, phone: phone, reshape: autoReshape }
+  })()
+
+  /* ══════════════════════════════════════════════════════════════
+     FASE 4c — Los dos teléfonos (protagonistas del hero)
+     Dos aparatos construidos íntegramente en DOM, cada uno con un
+     pase distinto en pantalla: así se ve que la tarjeta se
+     personaliza por negocio, que es el argumento de venta.
+
+     Se inclinan siguiendo el mouse, pero NO por igual: el de
+     adelante responde completo y el de atrás un 58%, además de
+     estar más lejos en Z. Esa diferencia es lo que produce el
+     parallax —si los dos giraran igual se leerían como una sola
+     lámina— y es lo que da la sensación de profundidad entre ellos.
+
+     Reemplaza al isotipo estático; sin JS o con movimiento reducido
+     el isotipo original permanece.
+     ══════════════════════════════════════════════════════════════ */
+  function buildPhones () {
+    var heroRight = document.querySelector('.hero-right')
+    var hero = document.querySelector('.hero')
+    if (!heroRight || !hero) return
+
+    var oldMark = heroRight.querySelector('.hero-mark-wrap')
+    if (oldMark) oldMark.style.display = 'none'
+    /* La etiqueta "Apple · Google Wallet" acompañaba al isotipo; con los
+       teléfonos encima se solapa, y además sobra: los dos wallets ya se
+       anuncian dentro de las pantallas y en la píldora del hero. */
+    var oldMeta = heroRight.querySelector('.hero-mark-meta')
+    if (oldMeta) oldMeta.style.display = 'none'
+
     var stage = document.createElement('div')
-    stage.className = 'el-card-stage'
+    stage.className = 'ph-stage'
     stage.innerHTML =
-      '<div class="el-card-float"><div class="el-card" id="elCard"><div class="el-card-face">' +
-      '<div class="el-card-banner"><img src="img/logo-mark.png" alt=""><span>Easy Loyalty</span></div>' +
-      '<div class="el-card-body">' +
-      '<div class="el-card-label">Tus sellos</div>' +
-      '<div class="el-stamps">' + stamps + '</div>' +
-      '<div class="el-card-foot">' +
-      '<div class="el-card-count"><b>6</b>/10<small>Sellos</small></div>' +
-      '<div class="el-qr">' + qr + '</div>' +
-      '</div></div>' +
-      '<div class="el-card-glare"></div>' +
-      '</div></div></div>'
+      /* drawable: los sellos que faltan llevan su palomita ya puesta pero
+         sin trazar, para poder dibujarla cuando el visitante baje */
+      PH.phone({ pos: 'ph-a', tone: 'pass-warm', app: 'Apple Wallet',
+                 name: 'Café Aurora', total: 10, done: 7, drawable: true }) +
+      PH.phone({ pos: 'ph-b', tone: 'pass-cool', app: 'Google Wallet',
+                 name: 'Barbería Norte', total: 8, done: 4, drawable: true })
     heroRight.appendChild(stage)
+    PH.reshape(stage)
 
-    var float = stage.querySelector('.el-card-float')
-    var card  = stage.querySelector('.el-card')
-    var glare = stage.querySelector('.el-card-glare')
+    /* El de adelante manda; el de atrás responde menos y va más lejos.
+       `delay` desfasa la materialización: si los dos aparecieran a la
+       vez se leerían como una sola pieza partida en dos. */
+    var units = [
+      { sel: '.ph-a', baseY: -10, baseZ: -4, depth: 1.00, z: 0,   dur: 3.4, delay: 0,
+        caida: { y: -560, z: -2200, rotationZ: -40, rotationY: 32, rotationX: 22 } },
+      { sel: '.ph-b', baseY: 12,  baseZ: 5,  depth: 0.58, z: -50, dur: 4.1, delay: 0.18,
+        caida: { y: -760, z: -2700, rotationZ:  46, rotationY: -36, rotationX: 27 } }
+    ]
 
-    /* Flotación idle */
-    gsap.to(float, { y: -12, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 })
+    units.forEach(function (u, idx) {
+      var float = stage.querySelector(u.sel)
+      var inner = float.querySelector('.ph-in')
+      var ph = float.querySelector('.ph')
+      var spec = float.querySelector('.ph-spec')
+      u.inner = inner
+      u.float = float
+      u.ph = ph
 
-    /* Barrido de luz periódico */
-    gsap.fromTo(glare, { xPercent: -130 }, {
-      xPercent: 260, duration: 2.4, ease: 'power2.inOut',
-      repeat: -1, repeatDelay: 3.8, delay: 2.2
+      gsap.set(float, { rotationZ: u.baseZ, z: u.z })
+      gsap.set(ph, { rotationY: u.baseY })
+      /* El estado de partida de la materialización (oculto, un pelo más
+         grande y desenfocado) se fija más abajo, junto con el halo, para
+         que los dos pedazos de la entrada vivan en el mismo sitio. */
+
+      /* Flotación idle desfasada: en sincronía se verían pegados. */
+      gsap.to(float, {
+        y: idx ? -16 : -11, duration: u.dur, ease: 'sine.inOut',
+        yoyo: true, repeat: -1, delay: idx * 0.9
+      })
+
+      /* Barrido de luz periódico, para que no se congele sin mouse. */
+      gsap.fromTo(spec, { xPercent: -55 }, {
+        xPercent: 55, duration: 2.6, ease: 'power2.inOut',
+        repeat: -1, repeatDelay: 4.4, delay: 2 + idx * 1.4
+      })
+
+      u.toRX = gsap.quickTo(ph, 'rotationX', { duration: 0.5, ease: 'power3.out' })
+      u.toRY = gsap.quickTo(ph, 'rotationY', { duration: 0.5, ease: 'power3.out' })
+      u.toX  = gsap.quickTo(float, 'x', { duration: 0.7, ease: 'power3.out' })
+      /* El especular se corre en px sobre el barrido periódico, que
+         usa xPercent: son canales distintos y se suman sin pelearse. */
+      u.toSpec = gsap.quickTo(spec, 'x', { duration: 0.5, ease: 'power3.out' })
     })
 
-    /* Tilt 3D siguiendo el mouse (60fps via quickTo) */
-    var toRX = gsap.quickTo(card, 'rotationX', { duration: 0.45, ease: 'power3.out' })
-    var toRY = gsap.quickTo(card, 'rotationY', { duration: 0.45, ease: 'power3.out' })
     hero.addEventListener('mousemove', function (e) {
       var r = hero.getBoundingClientRect()
       var nx = (e.clientX - r.left) / r.width - 0.5
       var ny = (e.clientY - r.top) / r.height - 0.5
-      toRY(nx * 26)
-      toRX(ny * -17)
+      units.forEach(function (u) {
+        u.toRY(u.baseY + nx * 26 * u.depth)
+        u.toRX(ny * -17 * u.depth)
+        u.toX(nx * 26 * u.depth)              // desplazamiento = parallax
+        u.toSpec(nx * -90 * u.depth)          // la luz corre al contrario
+      })
     }, { passive: true })
-    hero.addEventListener('mouseleave', function () { toRX(0); toRY(0) })
+
+    hero.addEventListener('mouseleave', function () {
+      units.forEach(function (u) {
+        u.toRX(0); u.toRY(u.baseY); u.toX(0); u.toSpec(0)
+      })
+    })
+
+    /* ── LA ENTRADA: caen desde el fondo ──────────────────────────
+       Se entrega como línea de tiempo para que el hero la encaje en su
+       secuencia; así aterrizan JUNTO con el titular y no como un
+       número aparte. La desaceleración es expo: casi todo el recorrido
+       ocurre en el primer tercio del tiempo y el último tramo es un
+       frenado largo — es lo que hace que se sienta que pesan y no que
+       simplemente se deslizan. */
+    /* Dos entradas según la máquina, y la razón es de rendimiento, no
+       estética: animar `filter: blur()` obliga al navegador a RASTERIZAR
+       DE NUEVO el teléfono completo —seis placas, máscara squircle,
+       sombra— en cada cuadro. En un escritorio se absorbe; en un celular
+       la página se queda pasmada varios segundos.
+       Mover y girar, en cambio, lo resuelve la tarjeta gráfica sin
+       repintar nada. Así que el móvil recibe la caída desde el fondo,
+       que es puro transform, y el escritorio conserva la
+       materialización. Se decide una sola vez al construir: no es un
+       efecto que deba cambiar si giras el teléfono a media entrada. */
+    var conBlur = window.matchMedia('(min-width: 921px)').matches
+
+    units.forEach(function (u) {
+      if (conBlur) {
+        gsap.set(u.inner, { autoAlpha: 0, scale: 1.07 })
+        var halo = document.createElement('div')
+        halo.className = 'ph-halo'
+        u.float.insertBefore(halo, u.float.firstChild)
+        u.halo = halo
+      } else {
+        gsap.set(u.inner, { autoAlpha: 0, y: u.caida.y, z: u.caida.z,
+                            rotationZ: u.caida.rotationZ,
+                            rotationY: u.caida.rotationY,
+                            rotationX: u.caida.rotationX })
+      }
+    })
+
+    var entered = false
+    phonesEnter = function () {
+      var tl = gsap.timeline()
+
+      units.forEach(function (u) {
+        var sh = u.float.querySelector('.ph-shadow')
+
+        if (conBlur) {
+          /* El halo entra primero y se apaga cuando el aparato ya es
+             nítido: la luz "deja" el teléfono, no al revés. */
+          tl.fromTo(u.halo, { opacity: 0, scale: 0.55 },
+            { opacity: 1, scale: 1.15, duration: 0.55, ease: 'power2.out' }, u.delay)
+            .to(u.halo, { opacity: 0, scale: 1.5, duration: 1.2, ease: 'power2.in' }, u.delay + 0.6)
+          tl.fromTo(u.inner,
+            { autoAlpha: 0, scale: 1.07, filter: 'blur(30px) brightness(1.5)' },
+            { autoAlpha: 1, scale: 1, filter: 'blur(0px) brightness(1)',
+              duration: 1.5, ease: 'power2.out' }, u.delay + 0.15)
+          tl.fromTo(sh, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, u.delay + 0.85)
+        } else {
+          /* Caída desde el fondo: solo transform y opacidad, cero
+             repintado. La desaceleración larga es lo que hace que se
+             sienta que el aparato pesa en vez de deslizarse. */
+          tl.to(u.inner, {
+            autoAlpha: 1, y: 0, z: 0, rotationZ: 0, rotationY: 0, rotationX: 0,
+            duration: 1.9, ease: MO.ease.hero
+          }, u.delay)
+          /* La sombra entra tarde: mientras cae no hay suelo que la
+             reciba, y desde el principio delataría que nunca estuvo
+             lejos de verdad. */
+          tl.fromTo(sh, { autoAlpha: 0, scaleX: 0.5 },
+            { autoAlpha: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' }, u.delay + 0.8)
+        }
+      })
+      entered = true
+      return tl
+    }
+
+    /* Red de seguridad. Al arrancar invisibles, los teléfonos dependen
+       de que la secuencia del hero llegue a construirse — y esa espera
+       a document.fonts.ready. Si esa promesa no resuelve (una fuente
+       que nunca llega, una pestaña en segundo plano), el hero se
+       quedaría sin su elemento principal para siempre. Antes esto no
+       podía pasar: los teléfonos se veían desde el primer momento.
+       A los 5 s se destapan sin animación y ya. */
+    setTimeout(function () {
+      if (entered) return
+      units.forEach(function (u) {
+        gsap.set(u.inner, { autoAlpha: 1, y: 0, z: 0,
+                            rotationZ: 0, rotationY: 0, rotationX: 0 })
+      })
+    }, 5000)
+
+    /* ── LA SALIDA: se despiden mientras el hero sube ─────────────
+       Sin anclar: la página nunca se detiene. Los sellos que faltan se
+       completan durante ese recorrido y cada tarjeta que llega a su
+       meta suelta un puñado de chispas.
+       El alejamiento va sobre .ph-stage —el contenedor— y no sobre los
+       teléfonos: sus tres capas ya están ocupadas por la entrada, la
+       flotación y el cursor. */
+    var toneColor = { 'ph-a': '#F8CDA3', 'ph-b': '#7E9BF2' }
+    var hasDraw = typeof DrawSVGPlugin !== 'undefined'
+    var bounce = (typeof CustomBounce !== 'undefined') ? 'selloIn' : 'back.out(2.4)'
+
+    var out = gsap.timeline({
+      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.55 }
+    })
+
+    units.forEach(function (u) {
+      var key = u.sel.slice(1)
+      var color = toneColor[key]
+      var pending = u.float.querySelectorAll('.ph-stamp.off')
+      var countN = u.float.querySelector('.ph-count b')
+      var done0 = u.float.querySelectorAll('.ph-stamp.on').length
+      var marks = u.float.querySelectorAll('.ph-stamp.off polyline')
+      if (hasDraw) gsap.set(marks, { drawSVG: '0%' })
+      else gsap.set(marks, { autoAlpha: 0 })
+
+      /* Se reparten en el primer 65% del recorrido para que el último
+         sello caiga con el hero todavía a la vista. */
+      var span = 0.65 / Math.max(pending.length, 1)
+      pending.forEach(function (st, i) {
+        var at = 0.05 + i * span
+        out.to(st, { backgroundColor: color, borderColor: color, duration: span * 0.5 }, at)
+          .fromTo(st, { scale: 0.5 }, { scale: 1, duration: span * 0.9, ease: bounce }, at)
+        var mark = st.querySelector('polyline')
+        if (hasDraw) out.to(mark, { drawSVG: '100%', duration: span * 0.6 }, at + span * 0.15)
+        else out.to(mark, { autoAlpha: 1, duration: span * 0.4 }, at + span * 0.15)
+        out.set(countN, { textContent: done0 + i + 1 }, at + span * 0.2)
+      })
+
+      /* Chispas al completar la tarjeta */
+      var burst = u.float.querySelector('.ph-burst')
+      var sparks = []
+      for (var s = 0; s < 16; s++) {
+        var el = document.createElement('span')
+        el.className = 'ph-spark'
+        el.style.background = color
+        burst.appendChild(el)
+        sparks.push(el)
+      }
+      var tBurst = 0.05 + pending.length * span
+      sparks.forEach(function (sp, i) {
+        var ang = (i / sparks.length) * Math.PI * 2
+        var dist = 70 + (i % 4) * 34
+        out.fromTo(sp,
+          { x: 0, y: 0, scale: 0.5, autoAlpha: 1 },
+          { x: Math.cos(ang) * dist, y: Math.sin(ang) * dist - 26,
+            scale: 0, autoAlpha: 0, duration: 0.26, ease: 'power2.out' },
+          tBurst + (i % 3) * 0.012)
+      })
+    })
+
+    /* El conjunto se aleja al final, ya con las tarjetas completas */
+    out.to(stage, { y: -70, scale: 0.9, rotationZ: -3, autoAlpha: 0.5,
+                    duration: 0.28, ease: 'power2.in' }, 0.74)
   }
-  buildCard()
+  var phonesEnter = null
+  buildPhones()
   heroIntro()
+
 
   /* ══════════════════════════════════════════════════════════════
      FASE 4a — Preloader con cortina
@@ -668,6 +987,60 @@
     })
   }
   cardStory()
+
+  /* ══════════════════════════════════════════════════════════════
+     Enlaces del menú hacia secciones ancladas
+     Una sección anclada con scrub reparte su contenido a lo largo de
+     un tramo de scroll: al principio del tramo está vacía. Un enlace
+     normal deja al visitante justo ahí —vio el titular y nada más, y
+     tiene que ponerse a hacer scroll para que aparezca lo que venía a
+     leer—. Aquí el enlace apunta al final del tramo, donde la sección
+     ya está completa. Sigue pudiendo subir para ver cómo se arma.
+     ══════════════════════════════════════════════════════════════ */
+  function anchorsToPinned () {
+    /* Devuelve el anclaje VIVO de una sección. Si gsap.matchMedia
+       reconstruye la sección al cruzar los 920px, el bueno es el ÚLTIMO
+       creado — el de mayor recorrido sería un criterio arbitrario que
+       podría quedarse con uno viejo. */
+    function pinDe (target) {
+      var vivos = ScrollTrigger.getAll().filter(function (t) {
+        return t.pin && t.trigger === target && t.end > t.start
+      })
+      return vivos.length ? vivos[vivos.length - 1] : null
+    }
+
+    var nav = document.getElementById('nav')
+
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a[href^="#"]') : null
+      if (!a) return
+      var href = a.getAttribute('href')
+      var target = href.length > 1 ? document.getElementById(href.slice(1)) : null
+
+      /* Se corta la propagación además de prevenir el salto: así ningún
+         otro manejador de anclas puede volver a mover la página después
+         de nosotros. */
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (!target) { lenis.scrollTo(0, { duration: 1.1 }); return }
+
+      var st = pinDe(target)
+      if (st) {
+        /* Una sección anclada reparte su contenido por un tramo de
+           scroll: en su borde está vacía. Se aterriza casi al final del
+           tramo, ya montada. 0.97 y no 1 porque en el final exacto el
+           anclaje se suelta y la sección arranca hacia arriba. */
+        lenis.scrollTo(st.start + (st.end - st.start) * 0.97, { duration: 1.2 })
+      } else {
+        lenis.scrollTo(target, {
+          duration: 1.1,
+          offset: nav ? -nav.offsetHeight : 0   // que el nav fijo no tape el titular
+        })
+      }
+    }, true)   // fase de captura: antes que cualquier otro manejador
+  }
+  anchorsToPinned()
 
   /* API para las fases 2-5 y para depurar desde consola */
   window.ELMotion = {

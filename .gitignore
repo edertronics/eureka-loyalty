@@ -48,3 +48,8 @@ wwdr.der
 
 # archivos temporales de previsualización (se sirven desde public/)
 public/_*.html
+
+# OneDrive los restaura de su caché cada tanto; se borraron a propósito
+# en eab0e3a (servían info equivocada de un cliente vivo)
+public/eureka-qr.html
+public/eureka-manual.html

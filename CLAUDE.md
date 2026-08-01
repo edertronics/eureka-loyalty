@@ -232,6 +232,48 @@ micro-labels bold en azul.
   las máscaras de SplitText se revierten al terminar la animación, si
   no recortan la "o" y la "y" para siempre.
 
+**Los dos teléfonos del hero** (2026-07-31) son el número principal de
+la página y están construidos íntegramente en DOM: seis placas a
+distinta Z para el canto metálico, silueta squircle calculada en JS
+(una superelipse real — `border-radius` no sabe expresar curvatura
+continua), isla dinámica, barra de estado y un pase de lealtad vivo por
+pantalla, personalizado por negocio.
+
+- **Tres capas de transform por aparato, una por tipo de movimiento:**
+  `.ph-float` (flotación en reposo, parallax del mouse, giro base),
+  `.ph-in` (la entrada) y `.ph` (inclinación que sigue al cursor). No se
+  mezclan: GSAP no puede animar la misma propiedad desde dos sitios.
+- **La entrada cambia según la máquina, por rendimiento:** escritorio
+  recibe la "materialización" (halo de luz, desenfoque → nítido) y móvil
+  una caída desde el fondo hecha solo con transforms. Animar
+  `filter: blur()` obliga a re-rasterizar el teléfono entero en cada
+  cuadro y en un celular deja la página pasmada varios segundos. Se
+  decide una vez al construir con `matchMedia`, no con un contexto de
+  `gsap.matchMedia`, porque el efecto no debe cambiar a media entrada.
+- **Arrancan invisibles**, así que dependen de que la secuencia del hero
+  llegue a construirse (espera a `document.fonts.ready`). Hay una red de
+  seguridad a los 5 s que los destapa sin animación.
+- Plugins en `public/vendor/` a 3.15.0: DrawSVG, CustomEase,
+  CustomBounce. Todos gratis desde que Webflow compró GreenSock (abril
+  2025) — sin membresía ni token. **El repo ya trae ocho skills de GSAP
+  en `.claude/skills/`**: no correr `npx skills add` para ellas, sustituye
+  el archivo rastreado por un symlink y duplica el árbol en `.agents/`.
+
+**Anclas del menú:** las gobierna `anchorsToPinned()` en
+landing-motion.js, y Lenis va **sin** `anchors: true` — los dos
+manejadores respondían al mismo clic y ganaba el de Lenis. Una sección
+anclada con scrub está vacía en su borde, así que el enlace aterriza al
+97% del tramo, ya montada. El logotipo del nav apunta a `#`, no a `/`:
+siendo una sola página el inicio es el principio del scroll, y con `/`
+un visor incrustado se cae a una página en blanco.
+
+**Rendimiento — causas reales encontradas y corregidas:** el cursor
+personalizado se movía con `left`/`top` (layout en cada evento del
+ratón), el chequeo de sección oscura medía cuatro `getBoundingClientRect`
+por evento, y `.el-grain` era una capa de nueve pantallas con
+`mix-blend-mode`. Ver la nota de rendimiento en memoria antes de tocar
+bucles de puntero o capas de fusión.
+
 **Precios publicados:** $35 / $79 / $199 USD al mes, más 3 meses gratis
 sin pedir tarjeta. Se fijaron por debajo de loyalzclub.com ($39/$89/$249)
 cruzando barreras psicológicas. ⚠️ **La página ya los anuncia pero no
@@ -251,3 +293,7 @@ existe ningún sistema de cobro** — ver "Modelo de negocio".
   pies dicen el giro ("Cafetería", "Barbería"), nunca el nombre de un
   negocio real, para no aparentar que son fotos de un cliente.
 - Falta un aviso de privacidad real: el enlace del pie sigue muerto.
+- Las marcas de Apple y Google en la píldora del hero son **dibujos
+  propios aproximados**, no el arte oficial. Apple (badge "Add to Apple
+  Wallet") y Google publican sus piezas con geometría, tamaños mínimos y
+  espacio libre especificados. Sustituirlas antes de publicar.
