@@ -110,7 +110,15 @@
     /* Chispas del sello completado. Viven en .ph-float (que es el bloque
        contenedor más cercano) y NO dentro de la pantalla, porque ahí el
        overflow:hidden se las comería. */
-    .ph-burst{position:absolute;inset:0;pointer-events:none;z-index:6;}
+    /* Las chispas existen desde que se construye el teléfono, pero solo
+       se ven al salir del hero. Dentro de un contexto 3D cada una es
+       una capa que el compositor tiene que evaluar en cada cuadro: 32
+       capas invisibles compitiendo justo durante la entrada. Medido,
+       ocultarlas quita un 16% del trabajo del hilo principal en esa
+       ventana. Con `display:none` no existen para el compositor; el
+       ScrollTrigger de la salida las enciende cuando hacen falta. */
+    .ph-burst{position:absolute;inset:0;pointer-events:none;z-index:6;display:none;}
+    .ph-stage.chispas .ph-burst{display:block;}
     .ph-spark{position:absolute;top:44%;left:50%;width:7px;height:7px;border-radius:50%;opacity:0;}
 
     /* Halo del que se materializa el aparato al cargar la página. Lo
@@ -272,8 +280,21 @@
     .nav-logo{opacity:0;pointer-events:none;transition:opacity .5s cubic-bezier(.16,1,.3,1);}
     .nav-logo.show{opacity:1;pointer-events:auto;}
     .nav-logo-text{font-family:var(--f);font-size:20px;line-height:1;color:var(--p);letter-spacing:-0.02em;}
-    .logo-easy{font-weight:400 !important;letter-spacing:-0.01em;}
-    .logo-loyalty{font-weight:900 !important;letter-spacing:-0.05em;}
+    /* ── EL WORDMARK ES EL DEL LOGOTIPO, NO UNA INTERPRETACIÓN ──
+       Estos dos pesos no son una decisión de diseño: están medidos
+       sobre img/logo.png, el archivo original de la marca. Sobre esa
+       imagen, ambas palabras comparten altura de mayúscula (286 px) y
+       el grosor de asta es 42 px en "Easy" y 71 px en "Loyalty".
+       Comparando con la familia real (HK Grotesk Wide) letra a letra
+       —misma altura de mayúscula, superposición de píxeles— gana
+       Regular para "Easy" (IoU 0.88) y Bold para "Loyalty" (IoU 0.91).
+       Antes decía 900: Black es dos pesos más pesado que la marca y se
+       notaba. El tracking sale de la misma medida: -0.03em reproduce
+       el ancho de tinta del original con 3 px de error sobre 1515.
+       Si algún día hay que retocar esto, se mide contra el PNG otra
+       vez; no se elige a ojo. */
+    .logo-easy{font-weight:400 !important;letter-spacing:-0.03em;}
+    .logo-loyalty{font-weight:700 !important;letter-spacing:-0.03em;}
     .nav-links{display:flex;align-items:center;gap:40px;list-style:none;}
     .nav-link{position:relative;font-size:14px;font-weight:500;color:var(--p);}
     .nav-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:var(--p);transition:width .3s ease;}
@@ -481,6 +502,15 @@
     .stat-n{font-size:clamp(44px,5vw,68px);font-weight:900;color:var(--p);line-height:1;letter-spacing:-.04em;margin-bottom:8px;}
     .stat-l{font-size:13px;color:var(--p);opacity:.45;font-weight:500;}
     .proof-wallets{display:flex;align-items:center;justify-content:center;gap:24px;padding-top:48px;flex-wrap:wrap;}
+    /* Las dos insignias son UN grupo, no dos hermanos sueltos de la
+       fila. Antes colgaban directamente del flex y, al no caber, la de
+       Google se iba a una segunda línea centrada: quedaba a media calle
+       respecto a la de Apple. Agrupadas, cuando se apilan lo hacen
+       alineadas por su borde derecho, una exactamente debajo de la otra. */
+    .wbadges{display:flex;align-items:center;justify-content:flex-end;gap:24px;flex-wrap:wrap;}
+    @media(max-width:768px){
+      .wbadges{flex-direction:column;align-items:flex-end;gap:12px;}
+    }
     .proof-wallets-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--p);opacity:.35;}
     .wbadge{display:flex;align-items:center;gap:8px;background:rgba(16,33,79,.06);border-radius:12px;padding:10px 20px;transition:background .2s;}
     .wbadge:hover{background:rgba(16,33,79,.1);}
@@ -651,9 +681,36 @@
     @media(max-width:600px){
       .wrap{padding:0 20px;}
       .feat-grid{grid-template-columns:1fr;}
-      .foot-top{grid-template-columns:1fr;}
       body{cursor:auto;}
       #cur,#cur2{display:none;}
+
+      /* El aire entre secciones se ajusta al final de la hoja, no aquí:
+         ver "AIRE ENTRE SECCIONES EN EL TELÉFONO". */
+
+      /* PIE EN DOS COLUMNAS. Apilado en una sola ocupaba casi dos
+         pantallas de alto para ocho enlaces, todos alineados a la
+         izquierda y con medio ancho vacío al lado.
+         El reparto no es automático sino explícito, y es por las
+         cantidades: Producto trae cuatro enlaces, Empresa uno y Soporte
+         tres. Puestos en flujo normal quedaría una columna larga y otra
+         con un hueco. Colocando Producto a la izquierda ocupando dos
+         filas, y Empresa sobre Soporte a la derecha, las dos columnas
+         terminan con cuatro elementos y el bloque queda parejo. */
+      .foot-top{
+        grid-template-columns:1fr 1fr;
+        gap:28px 20px;
+        margin-bottom:30px;padding-bottom:28px;
+        align-items:start;
+      }
+      .foot-top > :first-child{grid-column:1 / -1;grid-row:1;}
+      .foot-col:nth-of-type(2){grid-column:1;grid-row:2 / span 2;}  /* Producto */
+      .foot-col:nth-of-type(3){grid-column:2;grid-row:2;}           /* Empresa  */
+      .foot-col:nth-of-type(4){grid-column:2;grid-row:3;}           /* Soporte  */
+      .foot-col h4{margin-bottom:11px;}
+      .foot-col ul{gap:9px;}
+      .foot-logo img{height:42px;margin-bottom:10px;}
+      .foot-tag{max-width:none;font-size:12.5px;line-height:1.55;}
+      footer{padding:44px 0 28px;}
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -734,6 +791,16 @@
     .cprev.af-on{background:linear-gradient(120deg,#F4F3EF 0%,#EFF1FB 52%,#E9EEFB 100%);}
     .cfinal.af-on{background:linear-gradient(160deg,#101F4A 0%,#0A1533 100%);}
     .how .wrap,.pricing .wrap{position:relative;z-index:1;}
+    /* NO tocar el radio del desenfoque buscando rendimiento: ya se
+       intentó. Medido en la ventana de entrada del hero con la CPU a
+       6×, 22 px / 38 px / 58 px dan 2.267 / 2.123 / 2.149 ms de hilo
+       principal — todo ruido. Lo que cuesta de estas manchas no es
+       cuánto se difuminan sino que existan: son dieciocho capas de casi
+       media pantalla que hay que pintar y componer, y quitarlas del
+       todo baja esa cifra a 1.650 ms. Si algún día hace falta más aire
+       en el teléfono, la palanca es REDUCIR EL NÚMERO de manchas, que
+       es una decisión de diseño y se pregunta. Bajar el desenfoque solo
+       las vuelve más intensas y no ahorra nada. */
     @media(max-width:920px){.af-b{filter:blur(58px);}}
 
     /* ── LOGOTIPO = isotipo + wordmark, nunca separados ───────────
@@ -924,6 +991,13 @@
     .scene-marquee{
       position:relative;margin-top:60px;
       overflow:hidden;              /* imprescindible: el riel mide varios miles de px */
+      /* La banda se puede agarrar y empujar. `pan-y` es la mitad
+         importante: le dice al navegador que el gesto VERTICAL sigue
+         siendo suyo —la página tiene que poder scrollear con el dedo
+         encima de las fotos— y que el horizontal es nuestro. Sin esto,
+         o se pierde el arrastre o se pierde el scroll. */
+      touch-action:pan-y;
+      -webkit-user-select:none;user-select:none;
       /* los bordes se desvanecen hacia el papel de la sección para que
          la tira se sienta infinita y no cortada a cuchillo */
       -webkit-mask:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
@@ -947,8 +1021,18 @@
     .scene-fig img{
       width:100%;height:clamp(320px,27vw,420px);object-fit:cover;display:block;
       transition:transform .9s cubic-bezier(.16,1,.3,1);
+      /* si no, el navegador cree que quieres arrastrar la foto a otra
+         ventana y se lleva el gesto con una miniatura fantasma */
+      -webkit-user-drag:none;
     }
     .scene-fig:hover img{transform:scale(1.045);}
+    /* Mientras se empuja la banda, el zoom al pasar por encima estorba:
+       el riel se mueve y las fotos se quedarían creciendo al azar. */
+    .scene-marquee.agarrada .scene-fig:hover img{transform:none;}
+    @media(max-width:768px){
+      .scene-marquee{cursor:grab;}
+      .scene-marquee.agarrada{cursor:grabbing;}
+    }
     /* El velo sube más alto y más opaco de lo que parece necesario:
        cuando el pie cae en dos líneas, la etiqueta trepa hasta la
        zona donde un degradado corto ya se ha desvanecido y el texto
@@ -1116,6 +1200,24 @@
     .cursor-on-dark #cur2{border-color:var(--g);}
     #cur{background:var(--blue);}
     #cur2{border-color:var(--blue);}
+
+    /* ── AIRE ENTRE SECCIONES EN EL TELÉFONO ───────────────────────
+       La misma medida no vale en las dos pantallas. Los 120 px de
+       arriba y abajo que dan respiro en un monitor son, en un teléfono
+       de 844 px de alto, 240 px de vacío en CADA frontera: más de un
+       cuarto de pantalla dos veces seguidas, y se lee como un error de
+       maquetación, no como elegancia.
+       VA AL FINAL DE LA HOJA A PROPÓSITO. El primer intento estuvo
+       arriba, con el resto de reglas móviles, y `.scenes` y `.faq` lo
+       ignoraron: declaran su padding más abajo, en el bloque Aurora, y
+       a igual especificidad gana la última. Puesto aquí no hay nada
+       después que lo pueda pisar.
+       El hero conserva el suyo: ahí el aire lo pide el lockup. */
+    @media(max-width:600px){
+      .how,.feat,.cprev,.pricing,.faq,.cfinal{padding:64px 0;}
+      .proof{padding:56px 0;}
+      .scenes{padding:64px 0 0;}
+    }
   </style>
 </head>
 <body>
@@ -1262,18 +1364,20 @@
     </div>
     <div class="proof-wallets rv">
       <span class="proof-wallets-lbl">Compatible con</span>
-      <div class="wbadge">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#10214F"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-        <span>Apple Wallet</span>
-      </div>
-      <div class="wbadge">
-        <svg width="18" height="18" viewBox="0 0 24 24">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        <span>Google Wallet</span>
+      <div class="wbadges">
+        <div class="wbadge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#10214F"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <span>Apple Wallet</span>
+        </div>
+        <div class="wbadge">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Google Wallet</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1732,7 +1836,10 @@ const animCursor = () => {
 }
 
 /* Cursor hover state */
-document.querySelectorAll('a,button,.fc,.step,.pc').forEach(el => {
+/* La banda de escenas entra en esta lista aunque no sea un enlace: es
+   lo único que le avisa al visitante de que se puede agarrar, porque el
+   cursor del sistema está oculto y no hay una manita que mostrar. */
+document.querySelectorAll('a,button,.fc,.step,.pc,.scene-marquee').forEach(el => {
   el.addEventListener('mouseenter', () => {
     cur.style.width = '6px'; cur.style.height = '6px'
     cur2.style.width = '60px'; cur2.style.height = '60px'
@@ -1752,11 +1859,28 @@ document.querySelectorAll('a,button,.fc,.step,.pc').forEach(el => {
    pantalla no coincide con la del documento. */
 const darkSections = document.querySelectorAll('.how,.pricing,.cfinal,footer')
 let wasDark = null
+/* Las secciones solo cambian de sitio en pantalla cuando hay scroll o
+   cambia el tamaño de la ventana. Mover el ratón no las mueve, así que
+   volver a medirlas en cada comprobación era regalar cuatro reflujos
+   sincrónicos: medido, 180 lecturas forzadas por 87 movimientos del
+   ratón. Ahora se miden una vez por posición de scroll y se reutilizan
+   mientras la mano se pasea. `.how` va anclada, pero un elemento
+   anclado tampoco se mueve si el scroll no se mueve. */
+let dsCajas = null, dsScroll = -1
+addEventListener('resize', () => { dsCajas = null }, { passive: true })
 const checkDark = () => {
+  const sy = window.scrollY
+  if (!dsCajas || sy !== dsScroll) {
+    dsCajas = []
+    for (let i = 0; i < darkSections.length; i++) {
+      const r = darkSections[i].getBoundingClientRect()
+      dsCajas.push([r.top, r.bottom])
+    }
+    dsScroll = sy
+  }
   let onDark = false
-  for (let i = 0; i < darkSections.length; i++) {
-    const r = darkSections[i].getBoundingClientRect()
-    if (my >= r.top && my <= r.bottom) { onDark = true; break }
+  for (let i = 0; i < dsCajas.length; i++) {
+    if (my >= dsCajas[i][0] && my <= dsCajas[i][1]) { onDark = true; break }
   }
   if (onDark === wasDark) return          // no tocar el DOM si no cambió
   wasDark = onDark
@@ -1766,7 +1890,16 @@ animCursor()
 
 /* ── Nav scroll ── */
 const nav = document.getElementById('nav')
-addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 50), {passive:true})
+/* Solo se toca el DOM cuando el estado CAMBIA. Antes se reescribía la
+   clase en cada evento de scroll —cientos por segundo con scroll suave—
+   aunque el valor fuera el mismo. */
+let navFijo = null
+addEventListener('scroll', () => {
+  const fijo = scrollY > 50
+  if (fijo === navFijo) return
+  navFijo = fijo
+  nav.classList.toggle('scrolled', fijo)
+}, { passive: true })
 
 /* ── Menú móvil ──
    El CTA vive fuera de este desplegable y siempre se ve: lo único en lo
@@ -1859,18 +1992,27 @@ const counterObs = new IntersectionObserver(entries => {
     if (!target) return
     const num = parseInt(target)
     if (isNaN(num)) {
-      setTimeout(() => { el.textContent = target }, 300)
+      setTimeout(() => { el.textContent = target }, 120)
       return
     }
-    let start = 0
-    const dur = 1200, step = 16
-    const inc = num / (dur / step)
-    const go = () => {
-      start = Math.min(start + inc, num)
-      el.textContent = Math.floor(start) + target.replace(/\d+/g,'').replace(/\+/,'')
-      if (start < num) setTimeout(go, step)
+    /* Antes: 1,2 s con un setTimeout cada 16 ms. Contar de 0 a 3 en ese
+       tiempo son veinticinco pasos por cada número visible, así que el
+       "3" se pasaba casi medio segundo mostrando un 0 — se leía como si
+       la página se hubiera quedado pegada, no como un contador.
+       Ahora: 520 ms con desaceleración, y sobre requestAnimationFrame en
+       vez de setTimeout, que además ata cada escritura a un cuadro real
+       en lugar de pelearse con el reloj de temporizadores. */
+    const sufijo = target.replace(/\d+/g, '').replace(/\+/, '')
+    const dur = 520
+    let t0 = 0
+    const go = ts => {
+      if (!t0) t0 = ts
+      const p = Math.min((ts - t0) / dur, 1)
+      const suave = 1 - Math.pow(1 - p, 3)     // frena al final, arranca decidido
+      el.textContent = Math.round(num * suave) + sufijo
+      if (p < 1) requestAnimationFrame(go)
     }
-    setTimeout(go, 200)
+    requestAnimationFrame(go)
     counterObs.unobserve(el)
   })
 }, { threshold: 0.5 })
@@ -1895,6 +2037,28 @@ const turb        = document.getElementById('turb')
 const disp        = document.getElementById('disp')
 const heroSection = document.getElementById('heroSection')
 
+/* ── UN EFECTO QUE YA NO SE VE PERO SEGUÍA COBRANDO ────────────────
+   Este bloque anima el isotipo gigante con un filtro de agua (SVG
+   feTurbulence + feDisplacementMap). Cuando el hero pasó a mostrar los
+   dos teléfonos, landing-motion.js dejó de mostrarlo — pero su
+   JavaScript siguió corriendo igual: un requestAnimationFrame perpetuo
+   reescribiendo atributos de un filtro SVG en cada cuadro, y un
+   mousemove sobre el hero que medía con getBoundingClientRect en CADA
+   evento del ratón. Medido: 87 lecturas forzadas de layout en 87
+   movimientos, para pintar algo que nadie ve. Era la mitad de la
+   torpeza del cursor.
+   La comprobación NO puede hacerse aquí: este script corre mientras se
+   parsea la página y landing-motion.js —que es quien oculta el
+   isotipo— va con `defer`, o sea después. Se comprueba en
+   DOMContentLoaded, que ocurre cuando los dos ya pasaron. Si el
+   isotipo vuelve a mostrarse algún día, el efecto revive solo.
+   Cuando se confirme que no vuelve, este bloque y su <svg> de filtro
+   se pueden borrar enteros. */
+let marcaViva = true
+addEventListener('DOMContentLoaded', () => {
+  marcaViva = !!(markWrap && markWrap.getClientRects().length)
+}, { once: true })
+
 if (heroMark && turb && disp) {
   let t = 0                          // tiempo que avanza siempre
   let intensity    = 0               // 0 = sin efecto, 1 = efecto completo
@@ -1903,6 +2067,7 @@ if (heroMark && turb && disp) {
   let markRXT = 0, markRYT = 0      // parallax target
 
   const loop = () => {
+    if (!marcaViva) return           // oculto: el bucle se apaga y no se vuelve a pedir
     t += 0.018                       // avance temporal — controla la velocidad del agua
 
     /* intensidad sube/baja suavemente */
@@ -1937,6 +2102,7 @@ if (heroMark && turb && disp) {
 
   /* Glow y dot siguen el cursor dentro del mark */
   markWrap.addEventListener('mousemove', e => {
+    if (!marcaViva) return
     const r = markWrap.getBoundingClientRect()
     const x = e.clientX - r.left
     const y = e.clientY - r.top
@@ -1947,6 +2113,7 @@ if (heroMark && turb && disp) {
   /* Parallax: isotipo se mueve suavemente opuesto al cursor en el hero */
   if (heroSection) {
     heroSection.addEventListener('mousemove', e => {
+      if (!marcaViva) return         // sin isotipo a la vista, ni se mide
       const r = heroSection.getBoundingClientRect()
       markRXT = ((e.clientX - r.left) / r.width  - 0.5) * -24
       markRYT = ((e.clientY - r.top)  / r.height - 0.5) * -16
@@ -1967,48 +2134,232 @@ if (heroMark && turb && disp) {
    No se reproduce si el sistema pide movimiento reducido: queda el póster. */
 const filmVid = document.getElementById('filmVid')
 if (filmVid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const filmPlay = () => filmVid.play().catch(() => {})  // si lo bloquea, queda el póster
+  /* ── EL CLIP DEL CIERRE ───────────────────────────────────────────
+     Cuarta versión, y la primera que parte de cómo se comporta Safari en
+     iOS de verdad en lugar de pelearse con él. Las tres anteriores
+     fallaron así:
+       1. esperaba `canplay` para arrancar — evento de flanco que ya
+          había ocurrido durante el precalentado y no se repetía;
+       2. preguntaba por `paused`, que en iOS pasa a false en cuanto se
+          pide reproducir aunque el clip se quede sin datos;
+       3. le puso `autoplay` al elemento y lo reproducía fuera de
+          pantalla. Safari NO arranca vídeos que no se ven, y cuando
+          bloquea un `autoplay` dibuja encima su propio botón de play.
+          Ese fue el botón que apareció.
+     Regla de Safari en iOS: un vídeo muted + playsinline arranca solo
+     CUANDO ENTRA EN PANTALLA. Así que ya no se intenta antes. Lo que sí
+     se hace antes es bajar el archivo —`preload="auto"` y `load()`, que
+     descargan sin reproducir y no despiertan ninguna política—, y el
+     archivo ahora pesa 747 KB en vez de 3 MB, así que llega enseguida.
+     Al entrar en pantalla se pide reproducir, y un vigilante comprueba
+     lo único que no admite interpretación —si `currentTime` avanza— y
+     vuelve a pedirlo si se quedó quieto. Sin botón, sin esperar
+     eventos, sin adivinar. */
+  let filmVisible = false               // ¿la banda está en pantalla ahora mismo?
+  let filmUltimoT = -1
+  let filmVigia = 0
+
   const filmFetch = () => {
     if (filmVid.src) return
-    filmVid.preload = 'auto'          // en el marcado va "none" para no pedirlo al parsear
+    filmVid.muted = true                // como PROPIEDAD, no solo atributo:
+    filmVid.defaultMuted = true         // es lo que mira la política de autoarranque
+    filmVid.preload = 'auto'            // en el marcado va "none" para no pedirlo al parsear
     filmVid.src = filmVid.dataset.src
-    filmVid.load()
+    filmVid.load()                      // descarga sin reproducir: no despierta ninguna política
   }
-  if (document.readyState === 'complete') filmFetch()
-  else window.addEventListener('load', filmFetch, { once: true })
+  /* play() devuelve undefined en navegadores viejos: encadenar .catch a
+     ciegas rompería el bloque entero. */
+  const filmPedir = () => {
+    const pr = filmVid.play()
+    if (pr && typeof pr.catch === 'function') pr.catch(() => {})
+  }
 
+  /* El vigilante solo corre mientras la banda está a la vista. */
+  const filmVigilar = on => {
+    if (on && !filmVigia) {
+      filmUltimoT = -1
+      filmVigia = setInterval(() => {
+        if (!filmVisible) return
+        if (!filmVid.src) { filmFetch(); return }
+        if (filmVid.readyState === 0) { filmVid.load(); return }
+        if (filmVid.currentTime === filmUltimoT) filmPedir()   // no avanza: insiste
+        filmUltimoT = filmVid.currentTime
+      }, 600)
+    } else if (!on && filmVigia) {
+      clearInterval(filmVigia); filmVigia = 0
+    }
+  }
+
+  /* La descarga se adelanta al `load` de la página, pero en el teléfono
+     con segundo y medio de retraso: pedirla en el `load` mete la
+     descarga encima de la cortina y del titular, y el trabajo del hilo
+     principal en esa ventana pasaba de 2.000 a 3.800 ms. La banda vive
+     al final de la página; ese segundo y medio no lo nota nadie. */
+  const esMovil = !window.matchMedia('(min-width: 921px)').matches
+  const filmLuego = () => (esMovil ? setTimeout(filmFetch, 1500) : filmFetch())
+  if (document.readyState === 'complete') filmLuego()
+  else window.addEventListener('load', filmLuego, { once: true })
+
+  /* 60% y no 150%: el margen tiene que ser suficiente para que el clip
+     ya esté corriendo cuando aparece por el borde, pero no tanto como
+     para pedir la reproducción con la banda todavía fuera de pantalla,
+     que es justo lo que Safari rechaza. */
   const filmIO = new IntersectionObserver(entries => {
     entries.forEach(e => {
+      filmVisible = e.isIntersecting
+      filmVigilar(e.isIntersecting)
       if (!e.isIntersecting) { if (filmVid.src) filmVid.pause(); return }
-      filmFetch()                     // por si alguien llega ahí antes del load
-      /* readyState 3 = HAVE_FUTURE_DATA: ya hay con qué arrancar.
-         Llamar play() en el mismo tick que se asigna el src hace que la
-         promesa se rechace y el clip se quede congelado en el póster. */
-      if (filmVid.readyState >= 3) filmPlay()
-      else filmVid.addEventListener('canplay', filmPlay, { once: true })
+      filmFetch()
+      filmPedir()
     })
-  }, { rootMargin: '150% 0px' })
+  }, { rootMargin: '60% 0px' })
   filmIO.observe(filmVid)
 }
 
 const bigName = document.getElementById('bigName')
+let fitIntentos = 0
 function fitBigName() {
   if (!bigName) return
   bigName.style.fontSize = '100px'
   const sw = bigName.scrollWidth   // ancho REAL del texto (no del bloque)
-  if (sw < 10) { setTimeout(fitBigName, 200); return }
+  /* Reintento ACOTADO. Si la banda estuviera oculta, `scrollWidth` sería
+     0 para siempre y esto se convertía en un temporizador cada 200 ms
+     durante toda la visita, midiendo layout cada vez. */
+  if (sw < 10) { if (fitIntentos++ < 25) setTimeout(fitBigName, 200); return }
   /* 0.985: scrollWidth redondea hacia abajo y el isotipo del lockup
      se comía un par de píxeles contra el borde izquierdo */
   bigName.style.fontSize = (100 * window.innerWidth / sw) * 0.985 + 'px'
   bigName.classList.add('ready')
 }
-/* Espera la fuente Black antes de medir */
+/* Espera las DOS fuentes del lockup antes de medir —Regular para "Easy",
+   Bold para "Loyalty"—. Antes esperaba la Black, que ya no se usa aquí:
+   medía con la tipografía de reserva y la banda salía descuadrada. */
 ;(document.fonts && document.fonts.load
-  ? document.fonts.load('900 100px HKG')
+  ? Promise.all([document.fonts.load('400 100px HKG'), document.fonts.load('700 100px HKG')])
   : Promise.reject()
 ).then(() => { fitBigName(); setTimeout(fitBigName, 120) })
  .catch(()  => { setTimeout(fitBigName, 800) })
-window.addEventListener('resize', fitBigName)
+/* `fitBigName` escribe un tamaño, lee `scrollWidth` —layout forzado— y
+   vuelve a escribir. Colgado directamente de `resize` eso ocurría en
+   cada uno de los cientos de eventos que dispara arrastrar una ventana,
+   o mover la barra del navegador en el teléfono. Agrupado por cuadro,
+   como mucho una vez cada 16 ms. */
+let fitPedido = false
+window.addEventListener('resize', () => {
+  fitIntentos = 0
+  if (fitPedido) return
+  fitPedido = true
+  requestAnimationFrame(() => { fitPedido = false; fitBigName() })
+}, { passive: true })
+
+/* ── LA BANDA DE ESCENAS SE PUEDE EMPUJAR ──────────────────────────
+   Seguía girando sola a 34 s la vuelta, y no había manera de adelantar
+   una foto: si te interesaba la veterinaria, esperabas. Ahora se agarra
+   con el ratón o con el dedo y se empuja; al soltar, el impulso se
+   gasta y la banda vuelve sola a su ritmo de crucero.
+
+   El bucle deja de ser de CSS y pasa a JS porque una @keyframes no se
+   puede posicionar a mano a mitad de camino. Pero el marcado sigue
+   siendo el mismo —dos copias idénticas, salto invisible en la mitad—
+   y la animación de CSS se apaga SOLO cuando este bloque ya se montó:
+   si algo aquí fallara, la banda seguiría girando como antes.
+
+   Con movimiento reducido no se toca nada: ahí la banda ya es un
+   carrusel de scroll nativo, que se arrastra igual y sin JS. */
+const marq  = document.querySelector('.scene-marquee')
+const track = document.querySelector('.scene-track')
+if (marq && track && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  track.querySelectorAll('img').forEach(i => { i.draggable = false })
+
+  let mitad = track.scrollWidth / 2      // una copia entera de las cinco escenas
+  const medir = () => { mitad = track.scrollWidth / 2 }
+  window.addEventListener('resize', medir, { passive: true })
+  window.addEventListener('load', medir, { once: true })
+
+  /* Misma velocidad que tenía la animación de CSS: una copia cada 34 s.
+     Se recalcula a partir de `mitad` para que no cambie al redimensionar. */
+  const CRUCERO = () => -mitad / 34      // px/s, negativo = hacia la izquierda
+
+  let x = 0, vx = CRUCERO()
+  let quieto = false                     // el ratón encima: se para para poder leer
+  let ptr = null, xIni = 0, xBase = 0, xUlt = 0, tUlt = 0, vSuelta = 0
+
+  const pintar = () => {
+    /* El riel mide varios miles de px: sin normalizar, tras un rato de
+       empujones el número crece sin fin y pierde precisión. */
+    if (mitad > 0) { while (x <= -mitad) x += mitad; while (x > 0) x -= mitad }
+    track.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)'
+  }
+
+  /* La banda solo se mueve cuando se puede ver. Sin esto, el riel
+     escribía un transform en cada cuadro durante toda la visita —
+     mientras lees el hero, los precios o las preguntas—, para animar
+     algo que está a cinco pantallas de distancia. */
+  let marqDentro = false
+  new IntersectionObserver(es => { marqDentro = es[0].isIntersecting },
+    { rootMargin: '20% 0px' }).observe(marq)
+
+  let tPrev = performance.now()
+  const paso = t => {
+    const dt = Math.min((t - tPrev) / 1000, 0.05)   // un salto de pestaña no debe teletransportar la banda
+    tPrev = t
+    if (!ptr && marqDentro) {
+      const meta = quieto ? 0 : CRUCERO()
+      /* Vuelta al ritmo normal: cuanto más lejos esté la velocidad
+         actual de la de crucero, más rápido se corrige. Un empujón
+         fuerte se nota un segundo largo y se disuelve; no frena en seco. */
+      vx += (meta - vx) * (1 - Math.pow(0.06, dt))
+      x += vx * dt
+      pintar()
+    }
+    requestAnimationFrame(paso)
+  }
+
+  marq.addEventListener('pointerdown', e => {
+    if (e.button > 0) return
+    ptr = e.pointerId
+    try { marq.setPointerCapture(ptr) } catch (err) {}
+    xIni = xUlt = e.clientX; xBase = x; tUlt = performance.now(); vSuelta = 0
+    marq.classList.add('agarrada')
+    if (cur2) { cur2.style.width = '26px'; cur2.style.height = '26px' }
+  })
+
+  marq.addEventListener('pointermove', e => {
+    if (ptr !== e.pointerId) return
+    x = xBase + (e.clientX - xIni)
+    pintar()
+    /* La velocidad de soltada se mide sobre los últimos ~25 ms y no
+       sobre todo el gesto: lo que importa es cómo iba la mano AL FINAL.
+       Con la media de todo el recorrido, un arrastre lento que termina
+       en latigazo salía lentísimo. */
+    const ahora = performance.now()
+    if (ahora - tUlt > 25) {
+      vSuelta = (e.clientX - xUlt) / ((ahora - tUlt) / 1000)
+      xUlt = e.clientX; tUlt = ahora
+    }
+  })
+
+  const soltar = e => {
+    if (ptr !== e.pointerId) return
+    ptr = null
+    marq.classList.remove('agarrada')
+    if (cur2) { cur2.style.width = '60px'; cur2.style.height = '60px' }
+    /* Tope: un latigazo en un trackpad puede dar miles de px/s y la
+       banda se volvería un borrón ilegible. */
+    vx = Math.max(-3200, Math.min(3200, vSuelta))
+    tPrev = performance.now()
+  }
+  marq.addEventListener('pointerup', soltar)
+  marq.addEventListener('pointercancel', soltar)   // el navegador se lleva el gesto: scroll vertical
+
+  if (window.matchMedia('(hover: hover)').matches) {
+    marq.addEventListener('mouseenter', () => { quieto = true })
+    marq.addEventListener('mouseleave', () => { quieto = false })
+  }
+
+  track.style.animation = 'none'   // desde aquí manda el JS
+  requestAnimationFrame(t => { tPrev = t; paso(t) })
+}
 
 /* ── Nav logo: oculto hasta que el hero logo se va de pantalla ── */
 const navLogoEl  = document.querySelector('.nav-logo')

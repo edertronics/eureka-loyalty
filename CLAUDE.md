@@ -226,6 +226,16 @@ micro-labels bold en azul.
   altura de mayúscula real de HK Grotesk (`.697em`). Se pinta con
   máscara CSS sobre `currentColor` desde `img/logo-mark-tight.png`, no
   como `<img>`, para tomar el color de cada contexto.
+- **Los pesos del wordmark no se eligen a ojo.** "Easy" va en Regular
+  (400) y "Loyalty" en Bold (700), ambos con `letter-spacing:-0.03em`.
+  No es criterio: está medido contra `public/img/logo.png`, el archivo
+  original de la marca, comparando letra a letra a igual altura de
+  mayúscula (IoU 0.88 y 0.91; el ancho de tinta de "Loyalty" cae a 3 px
+  de los 1515 del original). Hasta 2026-07-31 decía 900 / -0.05em, dos
+  pesos más pesado que la marca, y el usuario —diseñador— lo detectó a
+  simple vista. Si hay que retocarlo, se vuelve a medir contra el PNG.
+  `fitBigName()` espera esos dos pesos con `document.fonts.load` antes
+  de medir la banda: si se cambian aquí, hay que cambiarlos allá.
 - **Recortes de tinta:** los envoltorios de barrido usan `clip-path`
   con insets negativos, no `overflow:hidden`. Con `line-height:.98` la
   caja de línea queda más baja que la tinta y cortaba descendentes. Y
@@ -245,11 +255,33 @@ pantalla, personalizado por negocio.
   mezclan: GSAP no puede animar la misma propiedad desde dos sitios.
 - **La entrada cambia según la máquina, por rendimiento:** escritorio
   recibe la "materialización" (halo de luz, desenfoque → nítido) y móvil
-  una caída desde el fondo hecha solo con transforms. Animar
-  `filter: blur()` obliga a re-rasterizar el teléfono entero en cada
-  cuadro y en un celular deja la página pasmada varios segundos. Se
-  decide una vez al construir con `matchMedia`, no con un contexto de
-  `gsap.matchMedia`, porque el efecto no debe cambiar a media entrada.
+  una llegada en 2D. Animar `filter: blur()` obliga a re-rasterizar el
+  teléfono entero en cada cuadro y en un celular deja la página pasmada
+  varios segundos. Se decide una vez al construir con `matchMedia`, no
+  con un contexto de `gsap.matchMedia`, porque el efecto no debe cambiar
+  a media entrada.
+- **EN EL TELÉFONO NO HAY ENTRADA: los aparatos ya están ahí**, flotando,
+  desde el primer pintado. Es una decisión del usuario tras tres
+  intentos fallidos de abaratarla, todos medidos: viaje desde el fondo
+  con `z:-2700` girando en X/Y; lo mismo en 2D con escala y giro en el
+  plano (-31% de `RasterTask`); y solo `y` + opacidad en 0,8 s. Las tres
+  se seguían trabando en un iPhone real, porque el hero móvil pide en el
+  mismo segundo y medio dos teléfonos de ~40 elementos bajo un contexto
+  3D, 18 manchas de media pantalla, el titular partido en letras y una
+  cortina de pantalla completa. Sin entrada, `Layerize` en esa ventana
+  cae de ~400 a ~186 ms y no queda nada que pueda dar tirones. **No
+  reintroducir una entrada en móvil sin medirla en un teléfono real.**
+  La flotación en reposo sí se queda: es un translate 2D sobre dos
+  elementos. El barrido especular periódico solo corre en escritorio.
+- **Lo que de verdad pesa en el hero móvil no son los teléfonos.**
+  Medido en la ventana de entrada con la CPU frenada a 6×: quitar los
+  teléfonos enteros baja el hilo principal a 1.969 ms; quitar los
+  campos de aurora, a 1.650. Las manchas cuestan el doble que los
+  aparatos, y no por animarse —eso ya está pausado hasta que aterrizan—
+  sino por existir: son 18 capas de casi media pantalla. **El radio del
+  desenfoque no influye** (22/38/58 px dan lo mismo, ya se probó). La
+  única palanca que queda ahí es reducir el NÚMERO de manchas, que es
+  decisión de diseño.
 - **Arrancan invisibles**, así que dependen de que la secuencia del hero
   llegue a construirse (espera a `document.fonts.ready`). Hay una red de
   seguridad a los 5 s que los destapa sin animación.
@@ -258,6 +290,69 @@ pantalla, personalizado por negocio.
   2025) — sin membresía ni token. **El repo ya trae ocho skills de GSAP
   en `.claude/skills/`**: no correr `npx skills add` para ellas, sustituye
   el archivo rastreado por un symlink y duplica el árbol en `.agents/`.
+
+**La cortina del preloader dura menos en el teléfono** (0,62 s de
+contador + 0,55 s de subida frente a 1,05 + 0,85). Medido, la página
+pasa de verse a los 2.122 ms a verse a los 1.386. En escritorio la
+cortina se gana su tiempo —tapa la carga de las siete tipografías y el
+armado de la materialización—; en móvil ya no hay materialización que
+tapar, así que la ceremonia sobraba. **En escritorio no se toca: el
+usuario dijo explícitamente que así le gusta.**
+
+**`document.fonts.ready` va con carrera contra 1,5 s.** Espera a las
+siete variantes (435 KB) cuando al titular le basta la suya, y si una
+sola no llega nunca la promesa no resuelve y el hero no se construye
+jamás. Un titular con la tipografía de reserva un instante es mucho
+menos grave que un hero que no aparece.
+
+**El video del cierre — la regla de Safari y tres intentos fallidos.**
+`escena-cafe.mp4` pesaba **3 MB para 5,5 s a 540p** (4.586 kbps, seis
+veces lo razonable) y traía una pista de audio que nunca suena. Ahora
+pesa **747 KB y no tiene audio** — re-codificado a 1.100 kbps con
+AVAssetWriter desde Swift, porque `avconvert` solo tiene presets y los
+suyos o no re-codifican o bajan a 480×272. El script quedó en el
+scratchpad de la sesión; la diferencia de imagen contra el original es
+del 1% (2,47/255 de media). **Un vídeo sin pista de audio no está sujeto
+a la política de autoarranque de iOS**, que era media batalla.
+
+La lógica se rompió tres veces, y las tres por adivinar en vez de mirar:
+1. esperaba `canplay` — evento de flanco que ya había ocurrido durante
+   el precalentado y no se repetía;
+2. preguntaba por `paused`, que en iOS pasa a `false` en cuanto se pide
+   reproducir aunque el clip se quede sin datos;
+3. le puso `autoplay` al elemento y lo reproducía fuera de pantalla.
+   **Safari en iOS no arranca vídeos que no se ven, y cuando bloquea un
+   `autoplay` dibuja encima su propio botón de play** — que es el botón
+   que el usuario reportó. Nunca poner `autoplay` en este elemento.
+
+La regla real: *un vídeo muted + playsinline arranca cuando ENTRA en
+pantalla*. Así que antes solo se **descarga** (`preload="auto"` +
+`load()`, que no despiertan ninguna política) y se pide reproducir al
+entrar, con `rootMargin: '60%'`. Un vigilante cada 600 ms, activo solo
+mientras la banda está a la vista, comprueba lo único que no admite
+interpretación —**si `currentTime` avanza**— y vuelve a pedirlo si se
+quedó quieto. La descarga se retrasa 1,5 s en móvil: pedirla en el
+`load` subía el hilo principal de esa ventana de 2.000 a 3.800 ms.
+
+**El aire entre secciones se reduce a 64 px en el teléfono** (los 120 px
+de escritorio son 240 px de vacío en cada frontera sobre una pantalla de
+844 px). La regla vive **al final de la hoja de estilos** a propósito:
+puesta con el resto de reglas móviles, `.scenes` y `.faq` la ignoraban
+porque declaran su padding más abajo, en el bloque Aurora, y a igual
+especificidad gana la última. Documento móvil: 12.883 → 12.107 px.
+
+**La banda de escenas se empuja con la mano** (2026-07-31). Sigue siendo
+el mismo marcado de siempre —dos copias idénticas de las cinco escenas y
+un salto invisible en la mitad— pero el bucle ya no es `@keyframes` sino
+un rAF en el script en línea de landing-page.html: una animación de CSS
+no se puede posicionar a mano a mitad de camino. Se agarra con ratón o
+dedo, y al soltar el impulso decae hasta la velocidad de crucero (una
+copia cada 34 s, la de antes). Dos detalles que no se pueden quitar:
+`touch-action:pan-y` en `.scene-marquee`, sin el cual o se pierde el
+arrastre horizontal o se pierde el scroll vertical de la página; y que
+`track.style.animation='none'` se ejecuta **al final** del bloque, para
+que si algo fallara la banda siguiera girando con CSS. Con movimiento
+reducido no se monta nada: ahí ya es un carrusel de scroll nativo.
 
 **Anclas del menú:** las gobierna `anchorsToPinned()` en
 landing-motion.js, y Lenis va **sin** `anchors: true` — los dos
@@ -273,6 +368,28 @@ ratón), el chequeo de sección oscura medía cuatro `getBoundingClientRect`
 por evento, y `.el-grain` era una capa de nueve pantallas con
 `mix-blend-mode`. Ver la nota de rendimiento en memoria antes de tocar
 bucles de puntero o capas de fusión.
+
+**Ningún manejador de `mousemove` puede medir el layout.** Es la causa
+que más veces ha reaparecido en esta página, y siempre se siente igual:
+"el cursor va torpe". Un trackpad entrega más de cien eventos por
+segundo y GSAP escribe estilos en cada cuadro, así que cada
+`getBoundingClientRect` dentro de un `mousemove` fuerza un recálculo
+sincrónico. En 2026-07-31 se midieron **4,1 lecturas forzadas por
+movimiento** y se dejaron en 0,01, en tres sitios:
+1. el parallax de los teléfonos medía el hero en cada evento → ahora la
+   caja se guarda y solo se re-mide en `resize`/`scroll`, y el trabajo
+   se agrupa en un `requestAnimationFrame`;
+2. `checkDark()` medía las cuatro secciones oscuras cada vez → ahora se
+   cachean por posición de scroll (mover el ratón no las mueve);
+3. **el efecto de agua del isotipo del hero seguía vivo aunque el
+   isotipo esté oculto** desde que los teléfonos ocupan ese sitio: un
+   rAF perpetuo escribiendo atributos de un filtro SVG y un `mousemove`
+   sobre el hero midiendo. Se apaga con una comprobación en
+   `DOMContentLoaded` —no antes, porque quien lo oculta es
+   landing-motion.js, que va con `defer`—. **Ese bloque y su `<svg>` de
+   filtro son código muerto y se pueden borrar enteros.**
+Si vuelve la queja del cursor, lo primero es contar lecturas forzadas
+envolviendo `Element.prototype.getBoundingClientRect`.
 
 **Precios publicados:** $35 / $79 / $199 USD al mes, más 3 meses gratis
 sin pedir tarjeta. Se fijaron por debajo de loyalzclub.com ($39/$89/$249)

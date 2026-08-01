@@ -132,9 +132,21 @@
     if (navEl)    gsap.set(navEl, { autoAlpha: 0, y: -14 })
     hero.classList.add('gsap-on')
 
-    /* El wordmark se parte en letras cuando la fuente ya midió bien */
+    /* El titular se parte en letras cuando la tipografía ya midió bien.
+       Pero `document.fonts.ready` espera a las SIETE variantes de HK
+       Grotesk —435 KB entre todas—, y basta con que llegue la del
+       titular para poder medirlo. Peor: si una sola no llega nunca, la
+       promesa no resuelve y el hero no se construye jamás.
+       Así que se corre una carrera contra un segundo y medio. Si las
+       fuentes ganan, se mide con ellas; si no, se mide con la de
+       reserva y el titular entra igual — un titular con la tipografía
+       equivocada durante un instante es mucho menos grave que un hero
+       que no aparece. */
     var fontsReady = (document.fonts && document.fonts.ready)
-      ? document.fonts.ready
+      ? Promise.race([
+          document.fonts.ready,
+          new Promise(function (r) { setTimeout(r, 1500) })
+        ])
       : Promise.resolve()
 
     fontsReady.then(function () {
@@ -362,11 +374,30 @@
     /* El de adelante manda; el de atrás responde menos y va más lejos.
        `delay` desfasa la materialización: si los dos aparecieran a la
        vez se leerían como una sola pieza partida en dos. */
+    /* Una sola pregunta —¿escritorio o teléfono?— gobierna la entrada
+       y qué adornos continuos se encienden. Se resuelve aquí arriba,
+       una vez, y no vuelve a consultarse: no es un efecto que deba
+       cambiar si giras el aparato a media animación.
+       EN EL TELÉFONO NO HAY ENTRADA, y es una decisión tomada después
+       de tres intentos de abaratarla: viaje desde el fondo con `z` y
+       giros en tres ejes; lo mismo en 2D con escala y giro en el plano
+       (-31% de rasterizado, medido); y solo desplazamiento y opacidad
+       en 0,8 s. Las tres se seguían trabando en un iPhone real. El
+       motivo de fondo es que el hero móvil pide, en el mismo segundo y
+       medio, dos teléfonos de ~40 elementos cada uno bajo un contexto
+       3D, dieciocho manchas de color de media pantalla, el titular
+       partido en letras y una cortina de pantalla completa
+       levantándose. Cada pieza se defiende sola; juntas no caben.
+       Así que en el teléfono los aparatos YA ESTÁN cuando se levanta la
+       cortina. La flotación en reposo se queda —un translate en 2D
+       sobre dos elementos, no cuesta nada— y con ella el hero sigue
+       vivo. Si algún día se quiere recuperar algo aquí, se mide en un
+       teléfono ANTES de escribirlo. */
+    var conBlur = window.matchMedia('(min-width: 921px)').matches
+
     var units = [
-      { sel: '.ph-a', baseY: -10, baseZ: -4, depth: 1.00, z: 0,   dur: 3.4, delay: 0,
-        caida: { y: -560, z: -2200, rotationZ: -40, rotationY: 32, rotationX: 22 } },
-      { sel: '.ph-b', baseY: 12,  baseZ: 5,  depth: 0.58, z: -50, dur: 4.1, delay: 0.18,
-        caida: { y: -760, z: -2700, rotationZ:  46, rotationY: -36, rotationX: 27 } }
+      { sel: '.ph-a', baseY: -10, baseZ: -4, depth: 1.00, z: 0,   dur: 3.4, delay: 0 },
+      { sel: '.ph-b', baseY: 12,  baseZ: 5,  depth: 0.58, z: -50, dur: 4.1, delay: 0.18 }
     ]
 
     units.forEach(function (u, idx) {
@@ -390,11 +421,17 @@
         yoyo: true, repeat: -1, delay: idx * 0.9
       })
 
-      /* Barrido de luz periódico, para que no se congele sin mouse. */
-      gsap.fromTo(spec, { xPercent: -55 }, {
-        xPercent: 55, duration: 2.6, ease: 'power2.inOut',
-        repeat: -1, repeatDelay: 4.4, delay: 2 + idx * 1.4
-      })
+      /* Barrido de luz periódico, para que no se congele sin mouse.
+         Solo en escritorio: en el teléfono no hay cursor al que
+         responder, el reflejo apenas se distingue a ese tamaño, y
+         cuesta un repintado dentro de la máscara squircle cada cuadro
+         de los 2,6 s que dura, para siempre. Es batería regalada. */
+      if (conBlur) {
+        gsap.fromTo(spec, { xPercent: -55 }, {
+          xPercent: 55, duration: 2.6, ease: 'power2.inOut',
+          repeat: -1, repeatDelay: 4.4, delay: 2 + idx * 1.4
+        })
+      }
 
       u.toRX = gsap.quickTo(ph, 'rotationX', { duration: 0.5, ease: 'power3.out' })
       u.toRY = gsap.quickTo(ph, 'rotationY', { duration: 0.5, ease: 'power3.out' })
@@ -404,16 +441,44 @@
       u.toSpec = gsap.quickTo(spec, 'x', { duration: 0.5, ease: 'power3.out' })
     })
 
-    hero.addEventListener('mousemove', function (e) {
-      var r = hero.getBoundingClientRect()
-      var nx = (e.clientX - r.left) / r.width - 0.5
-      var ny = (e.clientY - r.top) / r.height - 0.5
+    /* ── EL PARALLAJE NO PUEDE MEDIR EN CADA EVENTO ──────────────
+       Esto medía el hero con getBoundingClientRect dentro del propio
+       mousemove. Un trackpad entrega más de cien eventos por segundo y
+       GSAP está escribiendo estilos en cada cuadro, así que cada una de
+       esas medidas obligaba al navegador a recalcular el layout EN EL
+       ACTO, antes de poder responder. Medido: 4,1 lecturas forzadas por
+       movimiento del ratón. Eso es exactamente lo que se siente como un
+       cursor torpe, aunque el punto se dibuje en el propio evento — el
+       manejador del hero corre ANTES (el evento burbujea desde la foto
+       hacia arriba) y le mete un layout por delante.
+       Ahora el evento solo apunta dónde está el ratón, y el trabajo se
+       hace como mucho una vez por cuadro. La caja del hero se guarda y
+       solo se vuelve a medir si la ventana cambió de tamaño o si hubo
+       scroll — que es cuando de verdad se movió. */
+    var hcaja = null
+    var pedido = false
+    var pmx = 0, pmy = 0
+    var invalidar = function () { hcaja = null }
+    window.addEventListener('resize', invalidar, { passive: true })
+    window.addEventListener('scroll', invalidar, { passive: true })
+
+    function aplicarParallax () {
+      pedido = false
+      if (!hcaja) hcaja = hero.getBoundingClientRect()
+      if (!hcaja.width || !hcaja.height) return
+      var nx = (pmx - hcaja.left) / hcaja.width - 0.5
+      var ny = (pmy - hcaja.top) / hcaja.height - 0.5
       units.forEach(function (u) {
         u.toRY(u.baseY + nx * 26 * u.depth)
         u.toRX(ny * -17 * u.depth)
         u.toX(nx * 26 * u.depth)              // desplazamiento = parallax
         u.toSpec(nx * -90 * u.depth)          // la luz corre al contrario
       })
+    }
+
+    hero.addEventListener('mousemove', function (e) {
+      pmx = e.clientX; pmy = e.clientY
+      if (!pedido) { pedido = true; requestAnimationFrame(aplicarParallax) }
     }, { passive: true })
 
     hero.addEventListener('mouseleave', function () {
@@ -437,9 +502,7 @@
        Mover y girar, en cambio, lo resuelve la tarjeta gráfica sin
        repintar nada. Así que el móvil recibe la caída desde el fondo,
        que es puro transform, y el escritorio conserva la
-       materialización. Se decide una sola vez al construir: no es un
-       efecto que deba cambiar si giras el teléfono a media entrada. */
-    var conBlur = window.matchMedia('(min-width: 921px)').matches
+       materialización. `conBlur` se resolvió al principio del bloque. */
 
     units.forEach(function (u) {
       if (conBlur) {
@@ -448,12 +511,9 @@
         halo.className = 'ph-halo'
         u.float.insertBefore(halo, u.float.firstChild)
         u.halo = halo
-      } else {
-        gsap.set(u.inner, { autoAlpha: 0, y: u.caida.y, z: u.caida.z,
-                            rotationZ: u.caida.rotationZ,
-                            rotationY: u.caida.rotationY,
-                            rotationX: u.caida.rotationX })
       }
+      /* En el teléfono NO se prepara nada: los aparatos se quedan
+         visibles desde el primer pintado. Ver la nota de la entrada. */
     })
 
     var entered = false
@@ -474,21 +534,13 @@
             { autoAlpha: 1, scale: 1, filter: 'blur(0px) brightness(1)',
               duration: 1.5, ease: 'power2.out' }, u.delay + 0.15)
           tl.fromTo(sh, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.8 }, u.delay + 0.85)
-        } else {
-          /* Caída desde el fondo: solo transform y opacidad, cero
-             repintado. La desaceleración larga es lo que hace que se
-             sienta que el aparato pesa en vez de deslizarse. */
-          tl.to(u.inner, {
-            autoAlpha: 1, y: 0, z: 0, rotationZ: 0, rotationY: 0, rotationX: 0,
-            duration: 1.9, ease: MO.ease.hero
-          }, u.delay)
-          /* La sombra entra tarde: mientras cae no hay suelo que la
-             reciba, y desde el principio delataría que nunca estuvo
-             lejos de verdad. */
-          tl.fromTo(sh, { autoAlpha: 0, scaleX: 0.5 },
-            { autoAlpha: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' }, u.delay + 0.8)
         }
+        /* En el teléfono este bucle no hace nada: no hay entrada. */
       })
+      /* En el teléfono el fondo vivo se suelta pasado el momento
+         crítico —cortina levantándose y titular entrando letra a
+         letra—, no antes. */
+      if (!conBlur) tl.call(soltarAurora, null, 1.4)
       entered = true
       return tl
     }
@@ -503,9 +555,12 @@
     setTimeout(function () {
       if (entered) return
       units.forEach(function (u) {
-        gsap.set(u.inner, { autoAlpha: 1, y: 0, z: 0,
-                            rotationZ: 0, rotationY: 0, rotationX: 0 })
+        gsap.set(u.inner, { autoAlpha: 1, y: 0, rotation: 0, scale: 1,
+                            filter: 'none' })
+        var sh = u.float.querySelector('.ph-shadow')
+        if (sh) gsap.set(sh, { autoAlpha: 1, scaleX: 1 })
       })
+      soltarAurora()      // si la entrada nunca corrió, el fondo no se queda congelado
     }, 5000)
 
     /* ── LA SALIDA: se despiden mientras el hero sube ─────────────
@@ -520,7 +575,15 @@
     var bounce = (typeof CustomBounce !== 'undefined') ? 'selloIn' : 'back.out(2.4)'
 
     var out = gsap.timeline({
-      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.55 }
+      scrollTrigger: {
+        trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.55,
+        /* Las chispas se materializan al empezar a salir del hero, no
+           antes. Se enciende y no se apaga: para cuando esto ocurre la
+           entrada ya terminó y volver a quitarlas no ahorra nada. */
+        onUpdate: function (self) {
+          if (self.progress > 0.02) stage.classList.add('chispas')
+        }
+      }
     })
 
     units.forEach(function (u) {
@@ -604,21 +667,35 @@
       sessionStorage.setItem('elp', '1')
     } catch (e) {}
 
+    /* LA CORTINA DURA MENOS EN EL TELÉFONO. Medido: la página no se veía
+       hasta los 2.115 ms, y en el teléfono eso es la mitad de la
+       sensación de lentitud al abrir — no había nada que mirar.
+       En escritorio la cortina se gana su tiempo: tapa mientras se
+       cargan las siete tipografías y se construye la materialización de
+       los dos aparatos. En el teléfono ya no hay materialización que
+       tapar, así que la ceremonia sobra: contador más corto y
+       levantada más rápida dejan la página a la vista sobre los
+       1.200 ms. En escritorio no se toca nada, que ahí ya gusta. */
+    var corto = !window.matchMedia('(min-width: 921px)').matches
+    var dCuenta = quick ? 0.45 : (corto ? 0.62 : 1.05)
+    var dSube    = corto ? 0.55 : 0.85
+
     var counter = { v: 0 }
     var tl = gsap.timeline({
       onComplete: function () { el.remove(); lenis.start() }
     })
     tl.to(counter, {
       v: 100,
-      duration: quick ? 0.45 : 1.05,
+      duration: dCuenta,
       ease: 'power2.inOut',
       onUpdate: function () { num.textContent = Math.round(counter.v) }
     })
-      .to(num, { autoAlpha: 0, y: -40, duration: 0.28, ease: 'power2.in' }, quick ? 0.3 : 0.92)
+      .to(num, { autoAlpha: 0, y: -40, duration: 0.28, ease: 'power2.in' },
+          Math.max(dCuenta - 0.13, 0.2))
       .add('lift')
       .add(function () { el.classList.add('lifting') }, 'lift')
-      .to(el, { yPercent: -100, duration: 0.85, ease: 'expo.inOut' }, 'lift')
-      .add(function () { playHero() }, 'lift+=0.3')
+      .to(el, { yPercent: -100, duration: dSube, ease: 'expo.inOut' }, 'lift')
+      .add(function () { playHero() }, 'lift+=' + (corto ? 0.18 : 0.3))
   }
   preloader()
 
@@ -677,6 +754,29 @@
     ]}
   ]
 
+  /* ── EL FONDO CEDE EL PASO A LA ENTRADA ──────────────────────────
+     Medido con el trazado del navegador, en la ventana de la entrada
+     del hero (CPU frenada a 6×): quitar los campos de aurora baja el
+     trabajo del hilo principal de 2.475 ms a 1.632 ms, un 34%, y el
+     recálculo de estilos y el armado de capas caen en la misma
+     proporción. Dieciocho manchas con cuatro animaciones infinitas cada
+     una son setenta y dos tweens compitiendo justo cuando los teléfonos
+     tienen que volar.
+     En el teléfono, entonces, el fondo se queda quieto —VISIBLE, que es
+     lo que aporta: el color de la página son estas manchas— hasta que
+     los aparatos aterrizan. Y una vez suelto, la mancha ya no cambia de
+     escala: escalar una forma con 100 px de desenfoque obliga a
+     redibujarla en cada cuadro. Se mueve y respira con opacidad, que no
+     cuesta nada. En escritorio no cambia nada. */
+  var ESMOVIL = !window.matchMedia('(min-width: 921px)').matches
+  var auroraSuelta = !ESMOVIL
+  var auroraFrenos = []
+  function soltarAurora () {
+    if (auroraSuelta) return
+    auroraSuelta = true
+    auroraFrenos.forEach(function (f) { f() })
+  }
+
   function auroraField (cfg) {
     var host = document.querySelector(cfg.sel)
     if (!host) return
@@ -717,12 +817,17 @@
       }))
 
       /* 3. profundidad: acercarse/alejarse. Periodos distintos a los
-            de la órbita para que nunca coincidan los dos ciclos */
-      tweens.push(gsap.to(blob, {
-        scale: 'random(0.5, 1.75)',
-        duration: 'random(7, 13)', ease: 'sine.inOut',
-        repeat: -1, yoyo: true, repeatRefresh: true
-      }))
+            de la órbita para que nunca coincidan los dos ciclos.
+            Solo en escritorio: es la única animación de las cuatro que
+            cambia el TAMAÑO de una mancha desenfocada, y eso obliga a
+            rasterizar el desenfoque otra vez en cada cuadro. */
+      if (!ESMOVIL) {
+        tweens.push(gsap.to(blob, {
+          scale: 'random(0.5, 1.75)',
+          duration: 'random(7, 13)', ease: 'sine.inOut',
+          repeat: -1, yoyo: true, repeatRefresh: true
+        }))
+      }
       tweens.push(gsap.to(blob, {
         opacity: 'random(0.58, 1)',
         duration: 'random(9, 16)', ease: 'sine.inOut',
@@ -733,14 +838,18 @@
     /* Un fondo que no se ve no merece frames. onRefresh además del
        toggle: si solo se escuchara el toggle, un campo que arranca
        fuera de pantalla podría quedarse pausado para siempre. */
+    var enPantalla = false
     function setRunning (on) {
-      tweens.forEach(function (t) { on ? t.play() : t.pause() })
+      var v = on && auroraSuelta
+      tweens.forEach(function (t) { v ? t.play() : t.pause() })
     }
     ScrollTrigger.create({
       trigger: host, start: 'top bottom', end: 'bottom top',
-      onToggle:  function (self) { setRunning(self.isActive) },
-      onRefresh: function (self) { setRunning(self.isActive) }
+      onToggle:  function (self) { enPantalla = self.isActive; setRunning(enPantalla) },
+      onRefresh: function (self) { enPantalla = self.isActive; setRunning(enPantalla) }
     })
+    /* Cuando se levante el freno, cada campo retoma solo si le tocaba. */
+    auroraFrenos.push(function () { setRunning(enPantalla) })
   }
 
   function livingBackground () {
