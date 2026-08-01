@@ -325,14 +325,24 @@ La lógica se rompió tres veces, y las tres por adivinar en vez de mirar:
    `autoplay` dibuja encima su propio botón de play** — que es el botón
    que el usuario reportó. Nunca poner `autoplay` en este elemento.
 
-La regla real: *un vídeo muted + playsinline arranca cuando ENTRA en
-pantalla*. Así que antes solo se **descarga** (`preload="auto"` +
-`load()`, que no despiertan ninguna política) y se pide reproducir al
-entrar, con `rootMargin: '60%'`. Un vigilante cada 600 ms, activo solo
-mientras la banda está a la vista, comprueba lo único que no admite
-interpretación —**si `currentTime` avanza**— y vuelve a pedirlo si se
-quedó quieto. La descarga se retrasa 1,5 s en móvil: pedirla en el
-`load` subía el hilo principal de esa ventana de 2.000 a 3.800 ms.
+**La regla que lo resuelve todo: WebKit deja autoarrancar sin permiso a
+un vídeo CUYO ARCHIVO NO TIENE PISTA DE AUDIO, y lo hace cuando el
+elemento está en pantalla.** O sea que "que empiece solo al llegar
+bajando" es el comportamiento nativo, gratis — lo que fallaba era el JS
+estorbando. Estructura final, tres momentos y ninguno adivina:
+- **lejos** → nada, ni un byte (`preload="none"`, `src` en el marcado);
+- **cerca** (IntersectionObserver a `200%`) → `preload = 'auto'`, que
+  descarga sin reproducir y sin despertar ninguna política;
+- **en pantalla** (otro observer a `0px`) → se pone `autoplay` y se pide
+  reproducir, ya con el elemento donde Safari lo acepta.
+Más un vigilante cada 600 ms, activo solo mientras la banda se ve, que
+comprueba **si `currentTime` avanza** y vuelve a pedirlo si no.
+Verificado bajando la página poco a poco: a 1.400 px empieza a
+descargar, a 770 px ya está corriendo, y al llegar va por el segundo 1,5
+en bucle.
+**NUNCA poner `autoplay` en el marcado**: evaluado con la banda a diez
+pantallas, Safari lo da por bloqueado y dibuja encima su propio botón de
+play — que es lo que el usuario tuvo que tocar.
 
 **El aire entre secciones se reduce a 64 px en el teléfono** (los 120 px
 de escritorio son 240 px de vacío en cada frontera sobre una pantalla de

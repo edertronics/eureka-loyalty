@@ -1720,11 +1720,13 @@
 </section>
 
 <!-- ══════════════ BANDA DE VIDEO ══════════════ -->
-<!-- data-src en vez de src: el clip (3 MB) no se descarga hasta que
-     la banda está por entrar en pantalla. Ver landing-page.html → JS -->
+<!-- El `src` va aquí y `preload="none"` evita que se descargue al abrir
+     la página. El atributo `autoplay` NO va en el marcado: se pone desde
+     JS cuando la banda ya está en pantalla. Ver landing-page.html → JS -->
 <section class="filmband">
-  <video class="filmband-v" id="filmVid" muted loop playsinline preload="none"
-         poster="img/escena-cafe-poster.webp" data-src="img/escena-cafe.mp4"
+  <video class="filmband-v" id="filmVid" src="img/escena-cafe.mp4"
+         muted loop playsinline preload="none"
+         poster="img/escena-cafe-poster.webp"
          aria-label="Una clienta entra a una cafetería y muestra su tarjeta de lealtad en el teléfono"></video>
 </section>
 
@@ -2135,53 +2137,39 @@ if (heroMark && turb && disp) {
 const filmVid = document.getElementById('filmVid')
 if (filmVid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   /* ── EL CLIP DEL CIERRE ───────────────────────────────────────────
-     Cuarta versión, y la primera que parte de cómo se comporta Safari en
-     iOS de verdad en lugar de pelearse con él. Las tres anteriores
-     fallaron así:
-       1. esperaba `canplay` para arrancar — evento de flanco que ya
-          había ocurrido durante el precalentado y no se repetía;
-       2. preguntaba por `paused`, que en iOS pasa a false en cuanto se
-          pide reproducir aunque el clip se quede sin datos;
-       3. le puso `autoplay` al elemento y lo reproducía fuera de
-          pantalla. Safari NO arranca vídeos que no se ven, y cuando
-          bloquea un `autoplay` dibuja encima su propio botón de play.
-          Ese fue el botón que apareció.
-     Regla de Safari en iOS: un vídeo muted + playsinline arranca solo
-     CUANDO ENTRA EN PANTALLA. Así que ya no se intenta antes. Lo que sí
-     se hace antes es bajar el archivo —`preload="auto"` y `load()`, que
-     descargan sin reproducir y no despiertan ninguna política—, y el
-     archivo ahora pesa 747 KB en vez de 3 MB, así que llega enseguida.
-     Al entrar en pantalla se pide reproducir, y un vigilante comprueba
-     lo único que no admite interpretación —si `currentTime` avanza— y
-     vuelve a pedirlo si se quedó quieto. Sin botón, sin esperar
-     eventos, sin adivinar. */
-  let filmVisible = false               // ¿la banda está en pantalla ahora mismo?
+     Quinta versión, y la primera que deja trabajar al navegador en vez
+     de pelearse con él. El dato que lo cambia todo: **el archivo no
+     tiene pista de audio**. La política de WebKit dice que un vídeo sin
+     audio puede autoarrancar sin permiso de nadie, y que lo hará cuando
+     esté EN PANTALLA. O sea que lo que el usuario pide —que empiece solo
+     al llegar bajando— es el comportamiento nativo, gratis.
+     Lo que fallaba era mi JS estorbando. Las cuatro versiones anteriores
+     llamaban a `play()` con la banda todavía a varias pantallas de
+     distancia; Safari rechaza eso, y con el atributo `autoplay` puesto
+     de entrada además dibujaba encima su propio botón — el botón que el
+     usuario tuvo que tocar.
+     Ahora hay tres momentos y ninguno adivina nada:
+       · lejos    → nada, ni un byte;
+       · cerca    → `preload = 'auto'`, que descarga SIN reproducir;
+       · en vista → se pone `autoplay` y se pide reproducir, ya con el
+                    elemento donde Safari acepta hacerlo.
+     El vigilante se queda como red: comprueba lo único que no admite
+     interpretación —si `currentTime` avanza— y vuelve a pedirlo si no.
+     NO PONER `autoplay` EN EL MARCADO. Ese fue el botón. */
+  let filmVisible = false
   let filmUltimoT = -1
   let filmVigia = 0
 
-  const filmFetch = () => {
-    if (filmVid.src) return
-    filmVid.muted = true                // como PROPIEDAD, no solo atributo:
-    filmVid.defaultMuted = true         // es lo que mira la política de autoarranque
-    filmVid.preload = 'auto'            // en el marcado va "none" para no pedirlo al parsear
-    filmVid.src = filmVid.dataset.src
-    filmVid.load()                      // descarga sin reproducir: no despierta ninguna política
-  }
-  /* play() devuelve undefined en navegadores viejos: encadenar .catch a
-     ciegas rompería el bloque entero. */
   const filmPedir = () => {
     const pr = filmVid.play()
     if (pr && typeof pr.catch === 'function') pr.catch(() => {})
   }
 
-  /* El vigilante solo corre mientras la banda está a la vista. */
   const filmVigilar = on => {
     if (on && !filmVigia) {
       filmUltimoT = -1
       filmVigia = setInterval(() => {
         if (!filmVisible) return
-        if (!filmVid.src) { filmFetch(); return }
-        if (filmVid.readyState === 0) { filmVid.load(); return }
         if (filmVid.currentTime === filmUltimoT) filmPedir()   // no avanza: insiste
         filmUltimoT = filmVid.currentTime
       }, 600)
@@ -2190,30 +2178,25 @@ if (filmVid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
   }
 
-  /* La descarga se adelanta al `load` de la página, pero en el teléfono
-     con segundo y medio de retraso: pedirla en el `load` mete la
-     descarga encima de la cortina y del titular, y el trabajo del hilo
-     principal en esa ventana pasaba de 2.000 a 3.800 ms. La banda vive
-     al final de la página; ese segundo y medio no lo nota nadie. */
-  const esMovil = !window.matchMedia('(min-width: 921px)').matches
-  const filmLuego = () => (esMovil ? setTimeout(filmFetch, 1500) : filmFetch())
-  if (document.readyState === 'complete') filmLuego()
-  else window.addEventListener('load', filmLuego, { once: true })
+  /* CERCA — solo descargar. `preload='auto'` baja el archivo sin
+     reproducirlo y sin despertar ninguna política. Dos pantallas de
+     margen y 747 KB: llega de sobra antes que el visitante. Descargarlo
+     al abrir la página no compensa — competía con el hero y subía el
+     trabajo del hilo principal de esa ventana de 2.000 a 3.800 ms. */
+  new IntersectionObserver(es => {
+    if (es[0].isIntersecting) filmVid.preload = 'auto'
+  }, { rootMargin: '200% 0px' }).observe(filmVid)
 
-  /* 60% y no 150%: el margen tiene que ser suficiente para que el clip
-     ya esté corriendo cuando aparece por el borde, pero no tanto como
-     para pedir la reproducción con la banda todavía fuera de pantalla,
-     que es justo lo que Safari rechaza. */
-  const filmIO = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      filmVisible = e.isIntersecting
-      filmVigilar(e.isIntersecting)
-      if (!e.isIntersecting) { if (filmVid.src) filmVid.pause(); return }
-      filmFetch()
-      filmPedir()
-    })
-  }, { rootMargin: '60% 0px' })
-  filmIO.observe(filmVid)
+  /* EN PANTALLA — recién aquí se le permite arrancar. */
+  new IntersectionObserver(es => {
+    const e = es[0]
+    filmVisible = e.isIntersecting
+    filmVigilar(e.isIntersecting)
+    if (!e.isIntersecting) { filmVid.pause(); return }
+    filmVid.muted = true            // como propiedad, no solo atributo
+    filmVid.autoplay = true         // a partir de aquí el navegador manda
+    filmPedir()
+  }, { rootMargin: '0px', threshold: 0.01 }).observe(filmVid)
 }
 
 const bigName = document.getElementById('bigName')
