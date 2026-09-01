@@ -398,35 +398,21 @@
     .hero-ener{display:grid;grid-template-columns:1fr 1.25fr;gap:40px;align-items:center;position:relative;z-index:1;}
     .hero-right{display:flex;flex-direction:column;align-items:center;position:relative;}
 
-    /* Big isotipo */
-    .hero-mark-wrap{
-      position:relative;width:min(500px,100%);
-      cursor:none;
-    }
-    .hero-mark-img{
-      width:100%;height:auto;
-      mix-blend-mode:multiply;
-      filter:url(#waveFilter);
-      transform-origin:center;
-      will-change:transform;
-      transition:transform 1s cubic-bezier(.16,1,.3,1);
-    }
-    /* Radial glow that follows mouse */
-    .mark-glow{
-      position:absolute;width:160px;height:160px;border-radius:50%;
-      background:radial-gradient(circle,rgba(255,255,255,.45) 0%,rgba(0,200,150,.18) 40%,transparent 72%);
-      pointer-events:none;transform:translate(-50%,-50%);
-      opacity:0;transition:opacity .35s ease;mix-blend-mode:overlay;
-    }
-    .hero-mark-wrap:hover .mark-glow{opacity:1;}
-    /* Small floating circle that tracks mouse inside mark */
-    .mark-dot{
-      position:absolute;width:40px;height:40px;border-radius:50%;
-      border:1.5px solid rgba(16,33,79,.35);
-      pointer-events:none;transform:translate(-50%,-50%);
-      transition:transform .15s ease;opacity:0;
-    }
-    .hero-mark-wrap:hover .mark-dot{opacity:1;}
+    /* Isotipo grande — RESPALDO PARA MOVIMIENTO REDUCIDO.
+       Con `prefers-reduced-motion` el sistema de movimiento se detiene
+       antes de construir los dos teléfonos, y entonces esta imagen es
+       TODA la columna derecha del hero. No se puede borrar: sin ella esa
+       mitad queda vacía para quien tenga activada esa opción.
+       Cuando el movimiento sí corre, landing-motion.js la oculta y pone
+       los teléfonos en su lugar.
+       Llevaba encima un efecto de agua (filtro SVG con feTurbulence, un
+       resplandor y un punto que seguían al cursor) que se retiró en
+       2026-08-31: no se veía nunca —el isotipo está oculto siempre que
+       hay movimiento, y con movimiento reducido animarlo sería justo lo
+       contrario de lo que pide el usuario— y su bucle seguía corriendo
+       en cada cuadro. */
+    .hero-mark-wrap{position:relative;width:min(500px,100%);}
+    .hero-mark-img{width:100%;height:auto;mix-blend-mode:multiply;}
 
     /* Labels row above/below mark */
     .hero-mark-meta{
@@ -1256,16 +1242,6 @@
   </div>
 </nav>
 
-<!-- Hidden SVG filters -->
-<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
-  <defs>
-    <filter id="waveFilter" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
-      <feTurbulence id="turb" type="turbulence" baseFrequency="0 0" numOctaves="4" result="noise" seed="8"/>
-      <feDisplacementMap id="disp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-  </defs>
-</svg>
-
 <!-- ══════════════ HERO ══════════════ -->
 <section class="hero" id="heroSection">
   <div class="hero-aur" aria-hidden="true"></div>
@@ -1343,8 +1319,6 @@
         </div>
         <div class="hero-mark-wrap" id="markWrap">
           <img src="img/logo-mark.png" alt="" class="hero-mark-img" id="heroMark" />
-          <div class="mark-glow" id="markGlow"></div>
-          <div class="mark-dot" id="markDot"></div>
         </div>
       </div>
 
@@ -2030,101 +2004,6 @@ window.addEventListener('mousemove', e => {
   })
 }, {passive:true})
 
-/* ── Hero isotipo: efecto agua fluido + parallax ── */
-const heroMark    = document.getElementById('heroMark')
-const markWrap    = document.getElementById('markWrap')
-const markGlow    = document.getElementById('markGlow')
-const markDot     = document.getElementById('markDot')
-const turb        = document.getElementById('turb')
-const disp        = document.getElementById('disp')
-const heroSection = document.getElementById('heroSection')
-
-/* ── UN EFECTO QUE YA NO SE VE PERO SEGUÍA COBRANDO ────────────────
-   Este bloque anima el isotipo gigante con un filtro de agua (SVG
-   feTurbulence + feDisplacementMap). Cuando el hero pasó a mostrar los
-   dos teléfonos, landing-motion.js dejó de mostrarlo — pero su
-   JavaScript siguió corriendo igual: un requestAnimationFrame perpetuo
-   reescribiendo atributos de un filtro SVG en cada cuadro, y un
-   mousemove sobre el hero que medía con getBoundingClientRect en CADA
-   evento del ratón. Medido: 87 lecturas forzadas de layout en 87
-   movimientos, para pintar algo que nadie ve. Era la mitad de la
-   torpeza del cursor.
-   La comprobación NO puede hacerse aquí: este script corre mientras se
-   parsea la página y landing-motion.js —que es quien oculta el
-   isotipo— va con `defer`, o sea después. Se comprueba en
-   DOMContentLoaded, que ocurre cuando los dos ya pasaron. Si el
-   isotipo vuelve a mostrarse algún día, el efecto revive solo.
-   Cuando se confirme que no vuelve, este bloque y su <svg> de filtro
-   se pueden borrar enteros. */
-let marcaViva = true
-addEventListener('DOMContentLoaded', () => {
-  marcaViva = !!(markWrap && markWrap.getClientRects().length)
-}, { once: true })
-
-if (heroMark && turb && disp) {
-  let t = 0                          // tiempo que avanza siempre
-  let intensity    = 0               // 0 = sin efecto, 1 = efecto completo
-  let intTarget    = 0
-  let markRX = 0, markRY = 0        // parallax actual
-  let markRXT = 0, markRYT = 0      // parallax target
-
-  const loop = () => {
-    if (!marcaViva) return           // oculto: el bucle se apaga y no se vuelve a pedir
-    t += 0.018                       // avance temporal — controla la velocidad del agua
-
-    /* intensidad sube/baja suavemente */
-    intensity += (intTarget - intensity) * 0.045
-
-    /* ondas de agua: frecuencias oscilantes basadas en tiempo */
-    if (intensity > 0.001) {
-      const bfx = (0.011 + Math.sin(t * 1.2) * 0.006 + Math.cos(t * 0.4) * 0.003) * intensity
-      const bfy = (0.008 + Math.cos(t * 0.9) * 0.005 + Math.sin(t * 0.6) * 0.002) * intensity
-      turb.setAttribute('baseFrequency', `${bfx.toFixed(5)} ${bfy.toFixed(5)}`)
-      disp.setAttribute('scale', (38 * intensity).toFixed(1))
-    } else {
-      turb.setAttribute('baseFrequency', '0 0')
-      disp.setAttribute('scale', '0')
-    }
-
-    /* parallax suave */
-    markRX += (markRXT - markRX) * 0.05
-    markRY += (markRYT - markRY) * 0.05
-    heroMark.style.transform = `translate(${markRX.toFixed(2)}px,${markRY.toFixed(2)}px)`
-
-    requestAnimationFrame(loop)
-  }
-  requestAnimationFrame(loop)
-
-  /* Hover: activa el agua */
-  markWrap.addEventListener('mouseenter', () => { intTarget = 1 })
-  markWrap.addEventListener('mouseleave', () => {
-    intTarget = 0
-    if (markDot) markDot.style.opacity = '0'
-  })
-
-  /* Glow y dot siguen el cursor dentro del mark */
-  markWrap.addEventListener('mousemove', e => {
-    if (!marcaViva) return
-    const r = markWrap.getBoundingClientRect()
-    const x = e.clientX - r.left
-    const y = e.clientY - r.top
-    if (markGlow) { markGlow.style.left = x + 'px'; markGlow.style.top = y + 'px' }
-    if (markDot)  { markDot.style.left  = x + 'px'; markDot.style.top  = y + 'px'; markDot.style.opacity = '1' }
-  })
-
-  /* Parallax: isotipo se mueve suavemente opuesto al cursor en el hero */
-  if (heroSection) {
-    heroSection.addEventListener('mousemove', e => {
-      if (!marcaViva) return         // sin isotipo a la vista, ni se mide
-      const r = heroSection.getBoundingClientRect()
-      markRXT = ((e.clientX - r.left) / r.width  - 0.5) * -24
-      markRYT = ((e.clientY - r.top)  / r.height - 0.5) * -16
-    }, {passive:true})
-    heroSection.addEventListener('mouseleave', () => { markRXT = 0; markRYT = 0 })
-  }
-}
-
-/* ── Big name: inline-block + scrollWidth → llena 100% viewport ── */
 /* ── Banda de video: descarga temprana, arranque anticipado ──
    Descargar y reproducir son dos momentos distintos, y ahí estaba el
    retraso: antes el archivo se pedía a 400px de entrar en pantalla, así

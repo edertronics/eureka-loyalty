@@ -49,11 +49,33 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 |---|---|
 | `/` | Home — acceso admin por slug + CTA registro |
 | `/registro` | Onboarding 3 pasos para nuevos negocios |
-| `/[slug]` | Tarjeta del cliente (branded por negocio) |
+| `/[slug]` | Tarjeta del cliente (branded por negocio) — envoltura de servidor + `tarjeta.tsx` |
 | `/[slug]/admin` | Dashboard del negocio (stats, clientes, config) |
 | `/[slug]/scanner` | Scanner QR para staff (requiere PIN) |
 | `/super-admin` | Panel maestro — todos los negocios |
 | `/pitch` | Presentación/pitch de Easy Loyalty |
+
+**`[slug]` atrapa cualquier URL que no coincida con otra ruta**, así que
+es también quien decide qué es un 404. Hasta 2026-08-31 no lo hacía:
+`/precios`, `/contacto` o cualquier invento respondían **HTTP 200** y ya
+en el navegador pintaban "Negocio no encontrado". Para una persona da
+igual; Google lo indexa como página real y vacía. Ahora
+`src/app/[slug]/page.tsx` es un componente de **servidor** que consulta
+el slug en `businesses` y llama a `notFound()` si no está — el 404 se
+decide antes de responder. El error se pinta en `src/app/not-found.tsx`.
+
+- **Si Supabase falla, NO se manda 404.** `if (!error && !data)
+  notFound()`. Decir "este negocio no existe" porque la base no contestó
+  es peor que montar la tarjeta, que ya sabe manejar su propio error.
+- **`tarjeta.tsx` no se tocó** (419 líneas, `'use client'`, la página que
+  usan a diario los clientes de los negocios). Solo se renombró con
+  `git mv`. Cuesta una consulta extra por visita, de una sola columna.
+- **Verificar un 404 grepeando el HTML da falso positivo:** Next incrusta
+  la carga del `not-found` en TODAS las páginas para la navegación de
+  cliente, así que "Esta página no existe" aparece también en
+  `/eureka-burgers`. Se comprueba con el **código de estado**, y ojo con
+  la advertencia de la documentación: una respuesta en *streaming*
+  devuelve 200 aunque se llame a `notFound()`.
 
 ## Archivos públicos imprimibles
 
@@ -80,6 +102,27 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 | María Bonita Cafecito | `mariabonita-cafe` | 8 | Próximo café gratis | Activo |
 | cafe-ricolino | `cafe-ricolino` | — | — | Prueba (sin email) |
 | cafe-nuevo | `cafe-nuevo` | — | — | Prueba (sin email) |
+
+### Eureka Burgers está en piloto real (corte 2026-08-31)
+
+Primer negocio con uso de verdad. **270 clientes registrados en ~4
+semanas.** El embudo, medido en Supabase: 197 se registraron y nunca
+volvieron → 37 con 1 sello → 16 con 2 → ... → **1 premio canjeado**.
+Tasa de retorno **19%**; 73 personas se quedaron en cero sellos. 15
+clientes ya van por 3 o más sellos, o sea que la primera tanda de
+premios está por caer. Mediana de 7 días entre visitas. Fin de semana
+pesado (dom 54 / sáb 51 / lun 48 / mar 16) y dos horas pico (14–17 h y
+20–21 h). El 100% dejó email y teléfono.
+
+- **`device_type` está en `null` en los 270 registros** → hoy es
+  imposible reportar cuántos usan Apple Wallet y cuántos Google Wallet.
+  Es el dato que más pide un cliente al evaluar el piloto.
+- 270 clientes reales en 4 semanas es la única prueba social
+  **verificable** que tiene el producto. La landing no la usa: haría
+  falta permiso escrito de Eureka para nombrarlos.
+- **23 negocios en producción**, la mayoría basura de pruebas (`hhhhh`,
+  `jjjj`, `gggg`, `pedrito-salsas`). Conviene limpiarlos antes de que
+  alguien vea el super-admin.
 
 **Meta de sellos de Eureka Burgers bajó de 10 a 6 el 2026-07-24** (pedido del cliente). Solo fue un `UPDATE` de `stamp_goal` en Supabase — se lee en vivo en toda la app (stamp, redeem, wallets, dashboard), no hay hardcodes. La vigencia de 30 días de premios pendientes no cambió. Al momento del cambio el negocio tenía 0 clientes registrados, así que no hubo caso de retroactividad que resolver. También se actualizó el texto y la captura de pantalla del manual real (`eureka-burgers-loyalty/manual-fuente-html/manual_final.html`, PDF regenerado con Chrome headless) de 10→6 sellos. El póster QR impreso ("Eureka Burgers - QR para imprimir.pdf") se eliminó del proyecto y de `~/Downloads` — Eureka Burgers ya tiene su propia área de Diseño y hará su propio póster; el QR en sí (que apunta a `easyloyalty.io/eureka-burgers`) no cambió.
 
@@ -148,7 +191,12 @@ Plataforma de lealtad digital multi-tenant. Negocios se registran, obtienen un s
 - **Pantalla de éxito:** Links copiables + confirmación de email + PDF de links
 - Los colores tienen: swatches rápidos + `<input type="color">` (picker nativo) + campo hex (#rrggbb)
 
-## Tarjeta del cliente ([slug]/page.tsx)
+## Tarjeta del cliente ([slug]/tarjeta.tsx)
+
+*(Desde 2026-08-31 el componente de cliente se llama `tarjeta.tsx`;
+`page.tsx` es la envoltura de servidor que decide el 404 — ver "Rutas
+principales". El comportamiento de abajo no cambió.)*
+
 - **Nombre, WhatsApp y correo son obligatorios los 3** (cambió el 2026-07-14 — antes solo nombre era obligatorio)
 - Deduplicación por email: si ya existe → `already_exists: true` en respuesta
 - **UX returning customer**: cuando `already_exists=true` → "¡Hola de nuevo, {nombre}! Ya tienes tarjeta — aquí está tu QR" (distinto al flujo nuevo registro)
@@ -199,6 +247,37 @@ npm run dev    # Desarrollo local (localhost:3000)
 npm run build  # Build de producción
 npm run lint   # ESLint
 ```
+
+### ⚠️ OneDrive impide compilar aquí (2026-08-31)
+
+`npm run build` en esta carpeta muere con `ETIMEDOUT: connection timed
+out, read` leyendo `node_modules`. No es Next ni npm: el repo vive dentro
+de OneDrive, y `OneDrive File Provider` intercepta cada lectura de un
+archivo que no esté descargado para bajarlo de la nube. Medido:
+
+| | |
+|---|---|
+| 40 archivos pequeños de `node_modules` **aquí** | **2 min 10 s** (~3 s cada uno) |
+| `npm ci` de los 463 paquetes **en disco local** | **7 s** |
+
+Con decenas de miles de archivos, compilar es imposible. Funcionaba
+antes porque esos archivos ya estaban descargados; se rompe en cuanto
+algo obliga a releerlos (borrar `.next/cache/webpack`, por ejemplo).
+
+**Producción no está afectada:** Vercel compila desde GitHub. Pero para
+verificar un build en local hay que sacarlo de OneDrive:
+
+```bash
+rsync -a --exclude node_modules --exclude .next --exclude .git \
+  "<este directorio>/" /tmp/el-build/
+cd /tmp/el-build && npm ci && npm run build     # ~7 s + ~1,5 s
+rm -rf /tmp/el-build     # OBLIGATORIO: la copia lleva .env.local,
+                         # certificate.pem, key.pem y las credenciales
+                         # de Google Wallet
+```
+
+**La solución de fondo es mover el repo fuera de OneDrive** (p. ej. a
+`~/Proyectos/`) y dejar en OneDrive solo documentos y piezas de marca.
 
 ---
 
@@ -394,12 +473,24 @@ movimiento** y se dejaron en 0,01, en tres sitios:
 3. **el efecto de agua del isotipo del hero seguía vivo aunque el
    isotipo esté oculto** desde que los teléfonos ocupan ese sitio: un
    rAF perpetuo escribiendo atributos de un filtro SVG y un `mousemove`
-   sobre el hero midiendo. Se apaga con una comprobación en
-   `DOMContentLoaded` —no antes, porque quien lo oculta es
-   landing-motion.js, que va con `defer`—. **Ese bloque y su `<svg>` de
-   filtro son código muerto y se pueden borrar enteros.**
+   sobre el hero midiendo. **Retirado entero el 2026-08-31**
+   (−5.097 bytes): el filtro `feTurbulence`/`feDisplacementMap`, el
+   resplandor, el punto que seguía al cursor y sus 93 líneas de JS.
 Si vuelve la queja del cursor, lo primero es contar lecturas forzadas
 envolviendo `Element.prototype.getBoundingClientRect`.
+
+**El isotipo del hero (`.hero-mark-img`) NO se puede borrar.** Parece
+código muerto —está oculto siempre que hay movimiento, porque los dos
+teléfonos ocupan su sitio— pero con `prefers-reduced-motion` el sistema
+de movimiento se detiene **antes** de construir los teléfonos, y
+entonces esa imagen es **toda la columna derecha del hero**. Verificado
+con `Emulation.setEmulatedMedia`: con movimiento reducido los teléfonos
+no existen, el isotipo se ve y la columna mide 483 px. Sin él, media
+página en blanco para quien tenga esa opción de accesibilidad. Lo que sí
+se quitó fue el efecto que llevaba encima (ver arriba). Regla general:
+**la bandera `--force-prefers-reduced-motion` de Chrome da falsos
+negativos** —reportó teléfonos e isotipo presentes a la vez—; usar
+siempre `Emulation.setEmulatedMedia` por CDP.
 
 **Precios publicados:** $35 / $79 / $199 USD al mes, más 3 meses gratis
 sin pedir tarjeta. Se fijaron por debajo de loyalzclub.com ($39/$89/$249)
