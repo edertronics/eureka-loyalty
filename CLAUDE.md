@@ -431,11 +431,21 @@ de canje hablando, el otro convierte la tarjeta con QR en hamburguesa.
 - **Venían en 1080×1920 a 10.000 kbps: 32,5 MB y 22,6 MB.** Imposible
   para web. Re-codificados a **540×960 y ~800 kbps** con el mismo
   AVAssetReader → AVAssetWriter en Swift del clip del cierre (no hay
-  ffmpeg; `avconvert` sólo tiene presets). Quedaron en **2,7 MB y
-  1,9 MB — un 92% menos**, con la misma duración y la imagen intacta a
-  ese tamaño (se revisó un fotograma). El escalado lo hace una
-  `AVMutableVideoComposition` con `renderSize`: un writer input más
-  chico NO redimensiona solo.
+  ffmpeg; `avconvert` sólo tiene presets). Quedaron en **2,8 MB y
+  2,0 MB — un 91% menos**, con la misma duración.
+- **⚠️ La trampa que costó una publicación con los videos recortados:**
+  `AVMutableVideoComposition.videoComposition(withPropertiesOf:)` arma
+  las instrucciones en el espacio de coordenadas ORIGINAL del asset.
+  **Bajarle el `renderSize` después NO reescala nada** — sólo encoge el
+  lienzo, así que el resultado es un RECORTE de la esquina superior
+  izquierda al 200%. Salió publicado así y el usuario lo detectó de
+  inmediato ("no se ven completos"). Lo correcto es construir la
+  composición a mano y escalar **la transformación de la capa**:
+  `li.setTransform(pref.concatenating(CGAffineTransform(scaleX: s, y: s)))`
+  con `s = min(W/ancho, H/alto)` — `min` contiene el fotograma entero,
+  `max` recortaría. **Y comparar siempre un fotograma del original
+  contra uno del resultado antes de publicar**: yo sólo había mirado el
+  resultado, donde un recorte se ve perfectamente normal.
 - **Tres trampas del re-codificador, por si hay que repetirlo:** el
   `reader` debe capturarse dentro de los bloques de bombeo o ARC lo
   libera y las salidas quedan huérfanas ("cannot copy next sample
@@ -444,6 +454,9 @@ de canje hablando, el otro convierte la tarjeta con QR en hamburguesa.
   `sem.wait()` y no drena la cola, así que el archivo queda sin
   finalizar; y `AVAssetReaderTrackOutput` es más predecible que
   `AVAssetReaderAudioMixOutput` para el audio.
+- **`object-fit: contain`, nunca `cover`.** Son piezas compuestas, con
+  subtítulos abajo y logo arriba; recortarlas se come justo eso.
+  Decisión explícita del usuario el 2026-09-20.
 - **Aquí SÍ hay pista de audio** —el primero explica hablando— al
   revés que el clip del cierre. Arrancan mudos, que es lo que permite
   el autoarranque, y hay un botón para encenderlo; **suena uno a la

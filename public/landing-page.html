@@ -1085,12 +1085,15 @@
       .ads h2{margin-bottom:0;}
       .ads-grid{margin:0;grid-template-columns:repeat(2,clamp(196px,16.5vw,238px));}
     }
-    /* La proporción la fija la pantalla, no el video: con object-fit un
-       clip que no sea exactamente 9:16 se recorta en vez de deformarse. */
+    /* `contain`, NO `cover`: el encuadre del anuncio se respeta entero.
+       Son piezas que alguien compuso —con subtítulos abajo y el logo
+       arriba— y recortarlas se come justo esa información. Si algún
+       clip no fuera 9:16 exacto, se verá una franja negra a los lados
+       antes que perder imagen. Decisión del usuario, 2026-09-20. */
     .ad-screen{position:relative;aspect-ratio:9/16;border-radius:20px;overflow:hidden;
       background:#000;box-shadow:0 26px 60px -28px rgba(0,0,0,.85);
       border:1px solid rgba(241,240,236,.1);}
-    .ad-v{width:100%;height:100%;object-fit:cover;display:block;}
+    .ad-v{width:100%;height:100%;object-fit:contain;display:block;}
 
     /* Botón de sonido: lleva su propio velo para ser legible encima de
        cualquier fotograma, sea claro u oscuro. */
