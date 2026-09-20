@@ -1045,6 +1045,88 @@
       .scene-track{animation:none;}
     }
 
+    /* ── ANUNCIOS DE LOS CLIENTES ────────────────────────────────
+       Dos videos verticales 9:16 que grabaron los propios dueños para
+       sus redes y su local. Van sobre el navy para que las pantallas
+       resalten y para meter un respiro entre dos secciones de papel.
+
+       Reglas heredadas del clip del cierre, ninguna es negociable
+       (ver el bloque de JS al final del archivo):
+         · `preload="none"` y NADA de `autoplay` en el marcado. Si
+           Safari en iOS encuentra un autoplay que no puede cumplir,
+           dibuja SU PROPIO botón de play encima del póster — que es
+           justo lo que no se quiere.
+         · Arrancan MUDOS. Aquí sí hay pista de audio (el primero
+           explica la mecánica hablando), así que llevan botón de
+           sonido y sólo suena uno a la vez.
+       Pesan 2,7 MB y 1,9 MB: no se descarga ni un byte hasta que el
+       visitante se acerca a la sección. */
+    .ads{background:var(--ink-2);padding:120px 0;position:relative;overflow:hidden;}
+    .ads h2{color:var(--paper);max-width:700px;font-size:clamp(34px,4.4vw,56px);
+      font-weight:800;letter-spacing:-.025em;line-height:1.08;}
+    .ads .eye{color:#EDF0FF!important;}
+    .ads .eye::before{background:var(--g);}
+    .ads .rule{background:var(--g);margin:28px 0 26px;}
+    .ads .em{color:var(--g);}
+    .ads-sub{max-width:600px;color:rgba(241,240,236,.6);font-weight:300;
+      font-size:clamp(15px,1.35vw,18px);line-height:1.65;}
+
+    .ads-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:clamp(18px,2.4vw,28px);max-width:520px;margin:clamp(36px,4vw,52px) auto 0;}
+    .ad{margin:0;}
+
+    /* En escritorio el titular y los clips conviven en una sola fila:
+       centrados bajo un titular alineado a la izquierda dejaban medio
+       lienzo vacío a la derecha. Debajo de 900px vuelve a apilarse. */
+    @media(min-width:900px){
+      .ads .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;
+        gap:clamp(44px,6vw,92px);align-items:center;}
+      .ads-head{min-width:0;}
+      .ads h2{margin-bottom:0;}
+      .ads-grid{margin:0;grid-template-columns:repeat(2,clamp(196px,16.5vw,238px));}
+    }
+    /* La proporción la fija la pantalla, no el video: con object-fit un
+       clip que no sea exactamente 9:16 se recorta en vez de deformarse. */
+    .ad-screen{position:relative;aspect-ratio:9/16;border-radius:20px;overflow:hidden;
+      background:#000;box-shadow:0 26px 60px -28px rgba(0,0,0,.85);
+      border:1px solid rgba(241,240,236,.1);}
+    .ad-v{width:100%;height:100%;object-fit:cover;display:block;}
+
+    /* Botón de sonido: lleva su propio velo para ser legible encima de
+       cualquier fotograma, sea claro u oscuro. */
+    .ad-snd{position:absolute;right:10px;bottom:10px;width:38px;height:38px;
+      border-radius:50%;border:1px solid rgba(255,255,255,.28);
+      background:rgba(10,21,51,.55);-webkit-backdrop-filter:blur(6px);
+      backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;padding:0;transition:background .25s ease,transform .25s ease;}
+    .ad-snd:hover{background:rgba(10,21,51,.82);transform:scale(1.06);}
+    .ad-snd:focus-visible{outline:2px solid var(--g);outline-offset:3px;}
+    .ad-snd svg{display:block;pointer-events:none;}
+    .ad-snd .i-on{display:none;}
+    .ad-snd[aria-pressed="true"] .i-on{display:block;}
+    .ad-snd[aria-pressed="true"] .i-off{display:none;}
+
+    /* Las dos fichas comparten filas de la retícula: así los pies
+       arrancan a la misma altura aunque una etiqueta ocupe dos líneas. */
+    .ads-grid{grid-template-rows:auto auto;}
+    .ad{display:grid;grid-template-rows:subgrid;grid-row:span 2;}
+    @supports not (grid-template-rows: subgrid){
+      .ad figcaption .mlbl{display:block;min-height:1.2em;}
+    }
+    .ad figcaption{padding:18px 2px 0;}
+    .ad figcaption .mlbl{color:var(--g);}
+    .ad figcaption p{margin:8px 0 0;color:rgba(241,240,236,.62);
+      font-size:14.5px;line-height:1.55;font-weight:300;}
+
+    /* En el teléfono se apilan. El ancho se recorta a 280px: un 9:16 a
+       318px mide 565px de alto y entre los dos clips la sección se iba
+       a 1.871px, más de dos pantallas. Y el botón crece a 44px, que es
+       el mínimo táctil — con 38 se falla el toque. */
+    @media(max-width:560px){
+      .ads-grid{grid-template-columns:1fr;max-width:280px;gap:30px;}
+      .ad-snd{width:44px;height:44px;right:8px;bottom:8px;}
+    }
+
     /* ── BANDA DE VIDEO: respiro antes del cierre ─────────────────
        El degradado inferior funde el clip con el navy del CTA que
        sigue, para que no se vea un corte duro entre secciones. */
@@ -1200,7 +1282,7 @@
        después que lo pueda pisar.
        El hero conserva el suyo: ahí el aire lo pide el lockup. */
     @media(max-width:600px){
-      .how,.feat,.cprev,.pricing,.faq,.cfinal{padding:64px 0;}
+      .how,.feat,.cprev,.pricing,.faq,.cfinal,.ads{padding:64px 0;}
       .proof{padding:56px 0;}
       .scenes{padding:64px 0 0;}
     }
@@ -1481,6 +1563,61 @@
         <figcaption>
           <span class="mlbl">Hamburguesería</span>
           <p>Cada visita cuenta, y la hamburguesa gratis se ve venir.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ANUNCIOS DE LOS CLIENTES ══════════════ -->
+<!-- Los dos clips son de Eureka Burgers y los grabaron ellos para sus
+     propias redes. Igual que el clip del cierre: el `src` va aquí, pero
+     `preload="none"` impide que se descargue al abrir la página, y el
+     atributo `autoplay` NO va en el marcado — se pone desde JS cuando
+     la sección ya está en pantalla. Si se pone aquí, Safari en iOS
+     dibuja su propio botón de play encima. Ver el JS más abajo. -->
+<section class="ads" id="anuncios">
+  <div class="wrap">
+    <div class="ads-head">
+      <span class="eye rv">De nuestros clientes</span>
+      <h2><span class="wl"><span class="wi">Sus anuncios,</span></span><span class="wl"><span class="wi">no los nuestros.</span></span></h2>
+      <div class="rule rv" aria-hidden="true"></div>
+      <p class="ads-sub rv d1">Eureka Burgers grabó estos videos para sus redes y para su local.
+        <span class="em">Así le explican el programa a su propia gente.</span></p>
+    </div>
+
+    <div class="ads-grid">
+      <figure class="ad rv d1">
+        <div class="ad-screen">
+          <video class="ad-v" id="adVid1" src="img/anuncio-1.mp4"
+                 muted loop playsinline preload="none"
+                 poster="img/anuncio-1-poster.jpg"
+                 aria-label="Anuncio de Eureka Burgers: el equipo explica cómo se juntan los sellos, cómo se escanea el código del cliente y cómo se entrega el premio"></video>
+          <button class="ad-snd" type="button" data-for="adVid1" aria-pressed="false" aria-label="Activar sonido">
+            <svg class="i-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F1F0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <svg class="i-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F1F0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+        </div>
+        <figcaption>
+          <span class="mlbl">Cómo se canjea</span>
+          <p>La mecánica completa: el cliente muestra su código, el mostrador lo escanea y el premio se entrega ahí mismo.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="ad rv d2">
+        <div class="ad-screen">
+          <video class="ad-v" id="adVid2" src="img/anuncio-2.mp4"
+                 muted loop playsinline preload="none"
+                 poster="img/anuncio-2-poster.jpg"
+                 aria-label="Anuncio de Eureka Burgers: una clienta convierte su tarjeta con código QR en una hamburguesa gratis"></video>
+          <button class="ad-snd" type="button" data-for="adVid2" aria-pressed="false" aria-label="Activar sonido">
+            <svg class="i-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F1F0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <svg class="i-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F1F0EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </button>
+        </div>
+        <figcaption>
+          <span class="mlbl">De sellos a producto</span>
+          <p>Los sellos se convierten en algo que se come. Sin cupones y sin tarjetas de cartón que se pierden.</p>
         </figcaption>
       </figure>
     </div>
@@ -2076,6 +2213,97 @@ if (filmVid && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     filmVid.autoplay = true         // a partir de aquí el navegador manda
     filmPedir()
   }, { rootMargin: '0px', threshold: 0.01 }).observe(filmVid)
+}
+
+/* ── LOS DOS ANUNCIOS VERTICALES ──────────────────────────────────
+   Misma arquitectura que el clip del cierre, y por las mismas razones:
+     · lejos    → ni un byte (`preload="none"` en el marcado);
+     · cerca    → `preload='auto'`, descarga sin reproducir;
+     · en vista → recién aquí `autoplay` + `play()`.
+   NO PONER `autoplay` EN EL MARCADO. Safari en iOS, cuando lo encuentra
+   y no puede cumplirlo, pinta su propio botón de play sobre el póster.
+
+   Diferencia con el clip del cierre: estos SÍ traen pista de audio,
+   porque el primero explica la mecánica hablando. Arrancan mudos —que
+   es lo que permite el autoarranque— y el botón lo enciende. Suena uno
+   a la vez, y al salir de pantalla se silencia: nadie quiere oír un
+   anuncio que ya no ve.
+   Con movimiento reducido no se reproduce nada: queda el póster. */
+const anuncios = document.querySelectorAll('.ad-v')
+if (anuncios.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const adVigia = new Map()
+  const adVisible = new Map()
+
+  const adPedir = v => {
+    const pr = v.play()
+    if (pr && typeof pr.catch === 'function') pr.catch(() => {})
+  }
+
+  const adBoton = v => document.querySelector('.ad-snd[data-for="' + v.id + '"]')
+
+  const adCallar = v => {
+    v.muted = true
+    const b = adBoton(v)
+    if (b) { b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Activar sonido') }
+  }
+
+  /* El vigilante comprueba lo único que no admite interpretación: si
+     `currentTime` avanza. `paused` no sirve — iOS lo pone en false en
+     cuanto se pide reproducir, aunque el clip se quede sin datos. */
+  const adVigilar = (v, on) => {
+    if (on && !adVigia.has(v)) {
+      let ultimo = -1
+      adVigia.set(v, setInterval(() => {
+        if (!adVisible.get(v)) return
+        if (v.currentTime === ultimo) adPedir(v)
+        ultimo = v.currentTime
+      }, 600))
+    } else if (!on && adVigia.has(v)) {
+      clearInterval(adVigia.get(v)); adVigia.delete(v)
+    }
+  }
+
+  /* CERCA — sólo descargar. Dos pantallas de margen: llega de sobra
+     antes que el visitante, y sin competir con el hero al abrir. */
+  const adCerca = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (!e.isIntersecting) return
+      e.target.preload = 'auto'
+      adCerca.unobserve(e.target)
+    })
+  }, { rootMargin: '200% 0px' })
+
+  /* EN PANTALLA — recién aquí se le permite arrancar. El umbral es alto
+     a propósito: son clips verticales muy altos, y con 0.01 uno
+     arrancaría estando aún casi todo fuera de la ventana. */
+  const adEnVista = new IntersectionObserver(es => {
+    es.forEach(e => {
+      const v = e.target
+      adVisible.set(v, e.isIntersecting)
+      adVigilar(v, e.isIntersecting)
+      if (!e.isIntersecting) { v.pause(); adCallar(v); return }
+      v.muted = true              // como propiedad, no sólo atributo
+      v.autoplay = true           // a partir de aquí manda el navegador
+      adPedir(v)
+    })
+  }, { rootMargin: '0px', threshold: 0.35 })
+
+  anuncios.forEach(v => { adCerca.observe(v); adEnVista.observe(v) })
+
+  document.querySelectorAll('.ad-snd').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = document.getElementById(btn.dataset.for)
+      if (!v) return
+      const encender = v.muted
+      anuncios.forEach(adCallar)          // siempre suena uno solo
+      if (encender) {
+        v.muted = false
+        btn.setAttribute('aria-pressed', 'true')
+        btn.setAttribute('aria-label', 'Silenciar')
+        adPedir(v)
+      }
+    })
+  })
 }
 
 const bigName = document.getElementById('bigName')

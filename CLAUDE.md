@@ -423,6 +423,45 @@ en bucle.
 pantallas, Safari lo da por bloqueado y dibuja encima su propio botón de
 play — que es lo que el usuario tuvo que tocar.
 
+**Los dos anuncios verticales de los clientes** (`.ads`, 2026-09-17) van
+justo después del carrusel de fotos y antes de FEATURES. Son clips que
+grabó **Eureka Burgers** para sus propias redes: uno explica la mecánica
+de canje hablando, el otro convierte la tarjeta con QR en hamburguesa.
+
+- **Venían en 1080×1920 a 10.000 kbps: 32,5 MB y 22,6 MB.** Imposible
+  para web. Re-codificados a **540×960 y ~800 kbps** con el mismo
+  AVAssetReader → AVAssetWriter en Swift del clip del cierre (no hay
+  ffmpeg; `avconvert` sólo tiene presets). Quedaron en **2,7 MB y
+  1,9 MB — un 92% menos**, con la misma duración y la imagen intacta a
+  ese tamaño (se revisó un fotograma). El escalado lo hace una
+  `AVMutableVideoComposition` con `renderSize`: un writer input más
+  chico NO redimensiona solo.
+- **Tres trampas del re-codificador, por si hay que repetirlo:** el
+  `reader` debe capturarse dentro de los bloques de bombeo o ARC lo
+  libera y las salidas quedan huérfanas ("cannot copy next sample
+  buffer…"); `group.notify(queue: .main)` nunca corre en una
+  herramienta de línea de comandos porque el hilo principal está en
+  `sem.wait()` y no drena la cola, así que el archivo queda sin
+  finalizar; y `AVAssetReaderTrackOutput` es más predecible que
+  `AVAssetReaderAudioMixOutput` para el audio.
+- **Aquí SÍ hay pista de audio** —el primero explica hablando— al
+  revés que el clip del cierre. Arrancan mudos, que es lo que permite
+  el autoarranque, y hay un botón para encenderlo; **suena uno a la
+  vez** y al salir de pantalla se silencia solo.
+- Misma arquitectura de carga de tres tiempos que el clip del cierre, y
+  **la misma regla innegociable: `autoplay` NO va en el marcado.**
+- Verificado por CDP: antes de llegar `preload=none` y `readyState=0`;
+  en pantalla los dos corren y `currentTime` avanza; en el teléfono
+  **sólo reproduce el que se ve**; con movimiento reducido no se
+  descarga ni un byte y queda el póster. El botón mide 44 px en móvil
+  (con 38 se falla el toque) y el ancho del clip se recorta a 280 px
+  porque a 318 px la sección se iba a 1.871 px de alto.
+- **Permiso concedido (2026-09-20).** Los videos son de Eureka Burgers
+  y la sección los nombra; **ellos mismos se los pasaron al usuario**
+  para este fin. No hace falta volver a preguntar por estos dos clips
+  — pero el permiso es sobre ELLOS, no sobre las cifras del piloto,
+  que siguen necesitando su visto bueno aparte.
+
 **El aire entre secciones se reduce a 64 px en el teléfono** (los 120 px
 de escritorio son 240 px de vacío en cada frontera sobre una pantalla de
 844 px). La regla vive **al final de la hoja de estilos** a propósito:
